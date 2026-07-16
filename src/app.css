@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0c0a09;
+}
+
+.world-label {
+  white-space: nowrap;
+  border: 1px solid rgba(255, 244, 229, 0.7);
+  border-radius: 999px;
+  background: rgba(88, 43, 53, 0.9);
+  box-shadow: 0 4px 18px rgba(49, 25, 31, 0.28);
+  color: #fff8ef;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  pointer-events: none;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
