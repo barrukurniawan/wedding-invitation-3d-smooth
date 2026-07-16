@@ -5,7 +5,7 @@
   import * as THREE from 'three'
   import type { Appearance } from '../../utils/appearance'
   import { applyAppearance } from '../../utils/appearance'
-  import { createWaveClip } from '../../utils/waveAnimation'
+  import { createWaveClip, createNodClip } from '../../utils/waveAnimation'
 
   let {
     url,
@@ -14,7 +14,8 @@
     scale = 1,
     clip = 'Idle',
     appearance = {},
-    useWave = false
+    useWave = false,
+    useNod = false
   }: {
     url: string
     position?: [number, number, number]
@@ -23,6 +24,7 @@
     clip?: string
     appearance?: Partial<Appearance>
     useWave?: boolean
+    useNod?: boolean
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -30,18 +32,18 @@
 
   let group = $state<THREE.Group>()
   let waveMixer: THREE.AnimationMixer | null = null
+  let nodMixer: THREE.AnimationMixer | null = null
   let yAdjust = $state(0)
   let offsetComputed = false
   const _v3 = new THREE.Vector3()
 
-  // Play base clip saat gltf siap
   $effect(() => {
     if (!$gltf || !group) return
     const a = $actions?.[clip]
     if (a) {
       a.reset().fadeIn(0.2).play()
     }
-    // Setup wave mixer setelah scene ada
+
     if (useWave && group && !waveMixer) {
       waveMixer = new THREE.AnimationMixer(group)
       const waveClip = createWaveClip()
@@ -49,11 +51,20 @@
       action.setLoop(THREE.LoopRepeat, Infinity)
       action.fadeIn(0.3).play()
     }
+
+    if (useNod && group && !nodMixer) {
+      nodMixer = new THREE.AnimationMixer(group)
+      nodMixer.timeScale = 0.1
+      const nodClip = createNodClip()
+      const action = nodMixer.clipAction(nodClip)
+      action.setLoop(THREE.LoopRepeat, Infinity)
+      action.fadeIn(0.3).play()
+    }
   })
 
-  // Update wave mixer di render loop
   useTask((delta: number) => {
     if (waveMixer) waveMixer.update(delta)
+    if (nodMixer) nodMixer.update(delta)
   })
 
   useTask(() => {
