@@ -387,6 +387,14 @@
     [22, 4, -30, 10, 15]
   ]
 
+  const stageBushes = [
+    [-5.8, 0, -15.5, 0.5, 0.3], [5.8, 0, -15.5, 0.5, -0.3],
+    [-5.8, 0, -20.5, 0.5, 0.5], [5.8, 0, -20.5, 0.5, -0.5],
+    [-5.8, 0, -18, 0.48, 0.2], [5.8, 0, -18, 0.48, -0.2],
+    [-6.2, 0, -17, 0.45, 0.4], [6.2, 0, -17, 0.45, -0.4],
+  ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+
+
 </script>
 
 <!-- Ground: rumput kiri -->
@@ -624,7 +632,7 @@
 <T.Group position={[0, 0, -18]}>
   <T.Mesh position={[0, 0.32, 0]} castShadow receiveShadow>
     <T.BoxGeometry args={[10.5, 0.64, 4.8]} />
-    <T.MeshToonMaterial color="#a65069" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#b91c3c" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[0, 0.67, 0.1]}>
     <T.BoxGeometry args={[9.9, 0.12, 4.35]} />
@@ -686,6 +694,9 @@
     </T.Group>
   {/each}
 </T.Group>
+
+<!-- Bush di sekeliling panggung -->
+<Nature url="/nature/gltf/Bush_Common.gltf" instances={stageBushes} />
 
 <!-- Lamps -->
 {#each lamps as lamp, i}
