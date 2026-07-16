@@ -32,24 +32,22 @@
   appearance={guideSkin}
 />
 
-<!-- Pengantin wanita (Dinda) — Chef_Female, jas putih, wave -->
+<!-- Pengantin wanita (Kia) — Chef_Female, jas putih, victory -->
 <Character
   url="/models/pengantin-wanita.gltf"
   position={[-0.72, STAGE_Y, -18.6]}
   rotationY={0.3}
   scale={S}
-  clip="Idle"
+  clip="Victory"
   appearance={bride}
-  useWave
 />
 
-<!-- Pengantin pria (Reza) — Chef_Male, jas putih, wave -->
+<!-- Pengantin pria (Toni) — Chef_Male, jas putih, victory -->
 <Character
   url="/models/pengantin-pria.gltf"
   position={[0.72, STAGE_Y, -18.6]}
   rotationY={-0.3}
   scale={S}
-  clip="Idle"
+  clip="Victory"
   appearance={groom}
-  useWave
 />

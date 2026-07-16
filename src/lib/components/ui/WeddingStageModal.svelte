@@ -30,17 +30,17 @@
 
       <div class="px-5 pt-5 pb-3 text-center">
         <p class="text-base font-semibold text-rose-100">Halo, {$guestName}.</p>
-        <h3 class="mt-1 font-serif text-lg text-white">Selamat datang di pelaminan Dinda & Reza</h3>
+        <h3 class="mt-1 font-serif text-lg text-white">Selamat datang di pelaminan Kia & Toni</h3>
       </div>
 
       <div class="relative mx-4 aspect-[4/3] overflow-hidden rounded-xl bg-stone-900">
         <img
           src="https://i.pinimg.com/736x/29/63/e1/2963e125ebb7c0d22a9b420a02e18c71.jpg"
-          alt="Dinda Anindya dan Reza Pratama"
+          alt="Kia Anindya dan Toni Pratama"
           class="h-full w-full object-cover"
         />
         <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 pb-4 pt-12 text-center">
-          <p class="font-serif text-xl text-white">Dinda Anindya &amp; Reza Pratama</p>
+          <p class="font-serif text-xl text-white">Kia Anindya &amp; Toni Pratama</p>
           <p class="mt-1 text-xs text-stone-200">15 Juli 2026</p>
         </div>
       </div>
@@ -60,21 +60,21 @@
             <div class="flex items-start justify-between text-left">
               <div>
                 <p class="text-xs uppercase tracking-[0.22em] text-rose-300">Amplop Digital</p>
-                <h4 class="mt-1 text-lg font-bold text-white">Dinda & Reza</h4>
+                <h4 class="mt-1 text-lg font-bold text-white">Kia & Toni</h4>
               </div>
               <button onclick={() => (showPayment = false)} class="text-stone-400 hover:text-white">✕</button>
             </div>
             <div class="mx-auto overflow-hidden rounded-xl bg-white p-2 shadow-lg">
               <img
                 src="https://d2v6npc8wmnkqk.cloudfront.net/storage/26035/conversions/Tipe-QRIS-statis-small-large.jpg"
-                alt="QRIS Dinda dan Reza"
+                alt="QRIS Kia dan Toni"
                 class="mx-auto aspect-square w-48 rounded-lg object-cover"
               />
             </div>
             <div class="rounded-xl border border-stone-700 bg-stone-950 p-3 text-left text-sm">
               <p class="text-stone-400">Transfer BCA</p>
               <p class="mt-1 font-mono text-base text-white">1234567890</p>
-              <p class="text-xs text-stone-500">a/n Reza Pratama</p>
+              <p class="text-xs text-stone-500">a/n Toni Pratama</p>
             </div>
             <p class="text-xs leading-relaxed text-stone-400">Kode ini hanya tampilan contoh. Ganti dengan QRIS resmi dan rekening produksi sebelum undangan dibagikan.</p>
           </div>

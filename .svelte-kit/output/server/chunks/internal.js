@@ -100,10 +100,10 @@ const options = {
   service_worker_options: void 0,
   server_error_boundaries: false,
   templates: {
-    app: ({ head, body, assets, nonce, env }) => '<!doctype html>\n<html lang="id">\n  <head>\n    <meta charset="utf-8" />\n    <link rel="icon" href="' + assets + '/favicon.png" />\n    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />\n    <meta property="og:title" content="Undangan Pernikahan 3D — Dinda & Reza" />\n    <meta property="og:description" content="Jelajahi dunia 3D interaktif pernikahan Dinda & Reza" />\n    <meta property="og:type" content="website" />\n    ' + head + '\n  </head>\n  <body data-sveltekit-preload-data="hover">\n    <div style="display: contents">' + body + "</div>\n  </body>\n</html>\n",
+    app: ({ head, body, assets, nonce, env }) => '<!doctype html>\n<html lang="id">\n\n<head>\n  <meta charset="utf-8" />\n  <link rel="icon" href="' + assets + '/favicon.png" />\n  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />\n  <meta property="og:title" content="Undangan Pernikahan 3D — Kia & Toni" />\n  <meta property="og:description" content="Jelajahi dunia 3D interaktif pernikahan Kia & Toni" />\n  <meta property="og:type" content="website" />\n  ' + head + '\n</head>\n\n<body data-sveltekit-preload-data="hover">\n  <div style="display: contents">' + body + "</div>\n</body>\n\n</html>",
     error
   },
-  version_hash: "1172hg5"
+  version_hash: "wct6e1"
 };
 async function get_hooks() {
   let handle;

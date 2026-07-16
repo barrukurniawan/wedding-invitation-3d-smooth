@@ -47953,7 +47953,7 @@ const triggerZones = [
       name: "Resepsionis",
       avatar: "💁‍♀️",
       messages: [
-        "Selamat datang di pernikahan Dinda & Reza! 🎉",
+        "Selamat datang di pernikahan Kia & Toni! 🎉",
         "Silakan berjalan ke arah pelaminan melalui jalan lurus ke depan.",
         "Jangan lupa mengisi buku tamu di kotak surat ya! 📮"
       ]
@@ -47985,9 +47985,9 @@ const triggerZones = [
       messages: [
         "Halo! Saya pemandu di sini. 😊",
         "Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.",
-        "Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Dinda & Reza."
+        "Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Kia & Toni."
       ],
-      venueAddress: "Venue Pernikahan Dinda & Reza",
+      venueAddress: "Venue Pernikahan Kia & Toni",
       mapsUrl: "https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7"
     }
   }
@@ -49753,9 +49753,8 @@ function Npcs($$renderer) {
     position: [-0.72, STAGE_Y, -18.6],
     rotationY: 0.3,
     scale: S,
-    clip: "Idle",
-    appearance: bride,
-    useWave: true
+    clip: "Victory",
+    appearance: bride
   });
   $$renderer.push(`<!----> `);
   Character($$renderer, {
@@ -49763,9 +49762,8 @@ function Npcs($$renderer) {
     position: [0.72, STAGE_Y, -18.6],
     rotationY: -0.3,
     scale: S,
-    clip: "Idle",
-    appearance: groom,
-    useWave: true
+    clip: "Victory",
+    appearance: groom
   });
   $$renderer.push(`<!---->`);
 }
@@ -49850,8 +49848,8 @@ const labelDefs = [
   },
   { id: "mailbox", text: "Kotak Ucapan", world: [-5, 2.15, -10] },
   { id: "guide", text: "Pemandu Lokasi", world: [4, 2.45, -10] },
-  { id: "dinda", text: "💍 Dinda", world: [-0.72, 3.15, -18.6] },
-  { id: "reza", text: "💍 Reza", world: [0.72, 3.15, -18.6] }
+  { id: "Kia", text: "💍 Kia", world: [-0.72, 3.15, -18.6] },
+  { id: "Toni", text: "💍 Toni", world: [0.72, 3.15, -18.6] }
 ];
 const screenLabels = writable([]);
 function Labels($$renderer, $$props) {
@@ -50004,7 +50002,7 @@ function WeddingStageModal($$renderer, $$props) {
     var $$store_subs;
     if (store_get($$store_subs ??= {}, "$activeModal", activeModal) === "weddingStage") {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<div class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" tabindex="-1"><div class="relative w-full max-w-md overflow-hidden rounded-2xl border border-rose-200/20 bg-stone-950 text-stone-100 shadow-2xl"><button class="absolute right-3 top-3 z-10 rounded-full bg-black/35 px-2 py-1 text-sm text-white/80 backdrop-blur hover:text-white">✕</button> <div class="px-5 pt-5 pb-3 text-center"><p class="text-base font-semibold text-rose-100">Halo, ${escape_html(store_get($$store_subs ??= {}, "$guestName", guestName))}.</p> <h3 class="mt-1 font-serif text-lg text-white">Selamat datang di pelaminan Dinda &amp; Reza</h3></div> <div class="relative mx-4 aspect-[4/3] overflow-hidden rounded-xl bg-stone-900"><img src="https://i.pinimg.com/736x/29/63/e1/2963e125ebb7c0d22a9b420a02e18c71.jpg" alt="Dinda Anindya dan Reza Pratama" class="h-full w-full object-cover"/> <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 pb-4 pt-12 text-center"><p class="font-serif text-xl text-white">Dinda Anindya &amp; Reza Pratama</p> <p class="mt-1 text-xs text-stone-200">15 Juli 2026</p></div></div> <div class="flex gap-2 p-4"><button class="flex-1 rounded-lg border border-stone-700 bg-stone-800 py-2.5 text-xs font-semibold text-stone-200 transition hover:bg-stone-700">QRIS / Rekening</button> <button class="flex-1 rounded-lg bg-rose-600 py-2.5 text-xs font-semibold text-white transition hover:bg-rose-500">Tulis Ucapan</button></div> `);
+      $$renderer2.push(`<div class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" tabindex="-1"><div class="relative w-full max-w-md overflow-hidden rounded-2xl border border-rose-200/20 bg-stone-950 text-stone-100 shadow-2xl"><button class="absolute right-3 top-3 z-10 rounded-full bg-black/35 px-2 py-1 text-sm text-white/80 backdrop-blur hover:text-white">✕</button> <div class="px-5 pt-5 pb-3 text-center"><p class="text-base font-semibold text-rose-100">Halo, ${escape_html(store_get($$store_subs ??= {}, "$guestName", guestName))}.</p> <h3 class="mt-1 font-serif text-lg text-white">Selamat datang di pelaminan Kia &amp; Toni</h3></div> <div class="relative mx-4 aspect-[4/3] overflow-hidden rounded-xl bg-stone-900"><img src="https://i.pinimg.com/736x/29/63/e1/2963e125ebb7c0d22a9b420a02e18c71.jpg" alt="Kia Anindya dan Toni Pratama" class="h-full w-full object-cover"/> <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 pb-4 pt-12 text-center"><p class="font-serif text-xl text-white">Kia Anindya &amp; Toni Pratama</p> <p class="mt-1 text-xs text-stone-200">15 Juli 2026</p></div></div> <div class="flex gap-2 p-4"><button class="flex-1 rounded-lg border border-stone-700 bg-stone-800 py-2.5 text-xs font-semibold text-stone-200 transition hover:bg-stone-700">QRIS / Rekening</button> <button class="flex-1 rounded-lg bg-rose-600 py-2.5 text-xs font-semibold text-white transition hover:bg-rose-500">Tulis Ucapan</button></div> `);
       {
         $$renderer2.push("<!--[-1-->");
       }
@@ -50037,7 +50035,7 @@ function LoadingScreen($$renderer, $$props) {
     let progress = 0;
     if (!store_get($$store_subs ??= {}, "$isLoaded", isLoaded)) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-stone-950 p-6 text-center"><div class="mx-auto flex h-20 w-20 items-center justify-center"><div class="absolute h-16 w-16 animate-spin rounded-full border-4 border-rose-500/20 border-t-rose-500"></div> <span class="animate-pulse text-3xl">💖</span></div> <h2 class="mt-4 text-2xl font-bold text-rose-100">Dunia Undangan 3D</h2> <p class="mt-2 max-w-sm text-sm text-stone-400">Sedang memuat aset dunia interaktif pernikahan Dinda &amp; Reza. Harap tunggu sebentar...</p> <div class="mt-2 h-1.5 w-full max-w-sm overflow-hidden rounded-full border border-stone-800 bg-stone-900"><div class="h-1.5 bg-rose-500 transition-all duration-300"${attr_style(`width: ${stringify(Math.round(progress))}%`)}></div></div></div>`);
+      $$renderer2.push(`<div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-stone-950 p-6 text-center"><div class="mx-auto flex h-20 w-20 items-center justify-center"><div class="absolute h-16 w-16 animate-spin rounded-full border-4 border-rose-500/20 border-t-rose-500"></div> <span class="animate-pulse text-3xl">💖</span></div> <h2 class="mt-4 text-2xl font-bold text-rose-100">Halo Undangan Yang Terhormat</h2> <p class="mt-2 max-w-sm text-sm text-stone-400">Sedang memuat undangan pernikahan Kia &amp; Toni. Harap tunggu sebentar...</p> <div class="mt-2 h-1.5 w-full max-w-sm overflow-hidden rounded-full border border-stone-800 bg-stone-900"><div class="h-1.5 bg-rose-500 transition-all duration-300"${attr_style(`width: ${stringify(Math.round(progress))}%`)}></div></div></div>`);
     } else {
       $$renderer2.push("<!--[-1-->");
     }

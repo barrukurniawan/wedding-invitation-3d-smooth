@@ -28,7 +28,7 @@ export const triggerZones: TriggerZone[] = [
       name: 'Resepsionis',
       avatar: '💁‍♀️',
       messages: [
-        'Selamat datang di pernikahan Dinda & Reza! 🎉',
+        'Selamat datang di pernikahan Kia & Toni! 🎉',
         'Silakan berjalan ke arah pelaminan melalui jalan lurus ke depan.',
         'Jangan lupa mengisi buku tamu di kotak surat ya! 📮'
       ]
@@ -60,9 +60,9 @@ export const triggerZones: TriggerZone[] = [
       messages: [
         'Halo! Saya pemandu di sini. 😊',
         'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
-        'Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Dinda & Reza.'
+        'Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Kia & Toni.'
       ],
-      venueAddress: 'Venue Pernikahan Dinda & Reza',
+      venueAddress: 'Venue Pernikahan Kia & Toni',
       mapsUrl: 'https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7'
     }
   }
