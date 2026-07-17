@@ -68,6 +68,8 @@
     [-2.55, 0, -13.5], [2.55, 0, -13.5]
   ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], rotationY: a[0] > 0 ? -Math.PI / 2 : Math.PI / 2 }))
 
+  const treeGradient = { leaves: '#7CFC00', bark: '#6b4423' }
+
   // === POHON — hutan padat di pinggir venue ===
   // CommonTree (pohon lebar) di sisi kiri-kanan venue
   const treeLayerA = [
@@ -450,7 +452,7 @@
 <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesRight)} />
 
 <!-- POHON: CommonTree lebar -->
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={sparseTrees(treeLayerA)} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={sparseTrees(treeLayerA)} tintGradient={treeGradient} />
 <!-- Tiga pohon non-merah dikurangi agar total pohon menjadi 30 -->
 
 <!-- POHON: Pine / Cemara di latar belakang -->
@@ -470,7 +472,7 @@
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(extraTreesRight)} />
 <!-- Pohon (dari batu) banyak -->
 <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={rockMed2Left} />
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockMed2Right} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockMed2Right} tintGradient={treeGradient} />
 
 <!-- RUMPUT padat -->
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={grassTall} />
@@ -486,7 +488,7 @@
 <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
 
 <!-- BATU besar -->
-<Nature url="/nature/gltf/tree.glb" scale={3} instances={rocks} />
+<Nature url="/nature/gltf/tree.glb" scale={3} instances={rocks} tintGradient={treeGradient} />
 
 <!-- PEBBLE kecil di tepi jalan -->
 <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
@@ -523,14 +525,14 @@
 <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={plantBigRight} />
 
 <!-- BATU & pebble tambahan sisi -->
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockSidesLeft} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockSidesLeft} tintGradient={treeGradient} />
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={rockSidesRight} />
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesLeft} />
-<Nature url="/nature/gltf/tree.glb" scale={3} instances={pebbleSidesRight} />
+<Nature url="/nature/gltf/tree.glb" scale={3} instances={pebbleSidesRight} tintGradient={treeGradient} />
 
 <!-- JAMUR Laetiporus sisi -->
 <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={mushroomLaetiLeft} />
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={mushroomLaetiRight} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={mushroomLaetiRight} tintGradient={treeGradient} />
 
 <!-- Arch / Gate -->
 <T.Group position={[0, 0, 4]}>

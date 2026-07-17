@@ -7,7 +7,7 @@
   const skinCream = { skin: '#f0c8a0', hair: '#3a2418' }
   const guideSkin = { skin: '#f5ede0', hair: '#3a2418', hat: '#5a4a3a' }
   const groom = { ...skinCream, clothes: '#ffffff', darkClothes: '#e8e8e8', band: '#d4af37', hair: '#1a1a1a' }
-  const bride = { ...skinCream, clothes: '#ffffff', darkClothes: '#f5efe6', band: '#e8c4c4', hair: '#2a1810' }
+  const bride = { ...skinCream, clothes: '#ffffff', darkClothes: '#f5efe6', band: '#e8c4c4', hair: '#ffb340' }
 </script>
 
 <!-- Resepsionis -->
@@ -39,6 +39,7 @@
   scale={S}
   clip="Victory"
   appearance={bride}
+  weddingSkirt={true}
 />
 
 <!-- Pengantin pria (Toni) -->

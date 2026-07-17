@@ -15,7 +15,8 @@
     clip = 'Idle',
     appearance = {},
     useWave = false,
-    useNod = false
+    useNod = false,
+    weddingSkirt = false
   }: {
     url: string
     position?: [number, number, number]
@@ -25,6 +26,7 @@
     appearance?: Partial<Appearance>
     useWave?: boolean
     useNod?: boolean
+    weddingSkirt?: boolean
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -99,4 +101,17 @@
       }}
     />
   {/await}
+
+  {#if weddingSkirt}
+    <T.Group position={[0, 0.7, 0]}>
+      <T.Mesh castShadow receiveShadow>
+        <T.CylinderGeometry args={[0.36, 1.18, 1.46, 32]} />
+        <T.MeshStandardMaterial color="#fffdf8" roughness={0.82} />
+      </T.Mesh>
+      <T.Mesh position={[0, -0.71, 0]} rotation.x={Math.PI / 2} castShadow>
+        <T.TorusGeometry args={[1.12, 0.075, 8, 32]} />
+        <T.MeshStandardMaterial color="#f2e9df" roughness={0.85} />
+      </T.Mesh>
+    </T.Group>
+  {/if}
 </T.Group>

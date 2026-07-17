@@ -11,7 +11,7 @@ function stripQuotes(v: string): string {
   return v.trim().replace(/^["']|["']$/g, '')
 }
 
-function normalizeHex(value: unknown): string {
+export function normalizeHex(value: unknown): string {
   if (typeof value !== 'string') return WHITE
   let v = stripQuotes(value)
   if (!v) return WHITE
