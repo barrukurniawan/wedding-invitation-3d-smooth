@@ -26,11 +26,10 @@ export const triggerZones: TriggerZone[] = [
     action: 'npc',
     npcData: {
       name: 'Resepsionis',
-      avatar: '💁‍♀️',
+      avatar: '🛎',
       messages: [
-        'Selamat datang di pernikahan Kia & Toni! 🎉',
-        'Silakan berjalan ke arah pelaminan melalui jalan lurus ke depan.',
-        'Jangan lupa mengisi buku tamu di kotak surat ya! 📮'
+        'Selamat datang di pernikahan 👰🏻 Kia & 🤵🏻 Toni! Silakan berjalan ke arah pelaminan.',
+        'Jangan lupa memberikan ucapan 💌 di kotak ucapan ya! 📮'
       ]
     }
   },
@@ -56,7 +55,7 @@ export const triggerZones: TriggerZone[] = [
     action: 'npc',
     npcData: {
       name: 'Pemandu',
-      avatar: '🧑‍🦯',
+      avatar: '🗺️',
       messages: [
         'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
         'Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Kia & Toni.'
