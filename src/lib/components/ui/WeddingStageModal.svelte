@@ -3,7 +3,7 @@
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   let showPayment = $state(false)
-  let activeTab = $state<'info' | 'gallery' | 'ucapan'>('info')
+  let activeTab = $state<'info' | 'gallery'>('info')
 
   function showQris() {
     showPayment = true
@@ -38,7 +38,7 @@
     onkeydown={(e) => { if (e.code === 'Escape') handleClose() }}
     tabindex="-1"
   >
-    <div class="relative w-full max-w-md overflow-hidden rounded-2xl border border-rose-200/20 bg-stone-950 text-stone-100 shadow-2xl">
+    <div class="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-rose-200/20 bg-stone-950 text-stone-100 shadow-2xl">
       <button onclick={handleClose} class="absolute right-3 top-3 z-10 rounded-full bg-black/35 px-2 py-1 text-sm text-white/80 backdrop-blur hover:text-white">✕</button>
 
       <div class="px-5 pt-5 pb-3 text-center">
@@ -70,10 +70,6 @@
           class="flex-1 rounded-md py-1.5 text-xs font-medium transition {activeTab === 'gallery' ? 'bg-rose-600 text-white' : 'text-stone-400 hover:text-stone-200'}"
           onclick={() => (activeTab = 'gallery')}
         >Galeri</button>
-        <button
-          class="flex-1 rounded-md py-1.5 text-xs font-medium transition {activeTab === 'ucapan' ? 'bg-rose-600 text-white' : 'text-stone-400 hover:text-stone-200'}"
-          onclick={() => (activeTab = 'ucapan')}
-        >Ucapan</button>
       </div>
 
       <!-- Tab Content -->
@@ -128,8 +124,6 @@
             {/each}
           </div>
           <p class="mt-2 text-center text-xs text-stone-500">Galeri prewedding</p>
-        {:else if activeTab === 'ucapan'}
-          <p class="text-center text-xs text-stone-400">Ucapan dari para tamu akan tampil di sini setelah backend terintegrasi.</p>
         {/if}
       </div>
 

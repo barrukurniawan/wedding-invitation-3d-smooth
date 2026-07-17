@@ -8,9 +8,13 @@ import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionTo
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
 const text = (max) => z.string().trim().max(max)
+const weddingDate = z.string().trim().regex(
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
+  'Tanggal pernikahan tidak valid.',
+)
 const configSchema = z.object({
   bride_name: text(255), groom_name: text(255), bride_parents: text(255), groom_parents: text(255),
-  bride_photo: text(2048), groom_photo: text(2048), wedding_date: text(64),
+  bride_photo: text(2048), groom_photo: text(2048), wedding_date: weddingDate,
   akad_date: text(255), akad_time: text(255), akad_location: text(255),
   resepsi_date: text(255), resepsi_time: text(255), resepsi_location: text(255),
   qris_image: text(2048), bank_name: text(100), bank_account: text(100), bank_holder: text(255),
@@ -20,6 +24,12 @@ const configSchema = z.object({
 
 function invalid(res, error) {
   return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: error.issues?.[0]?.message || 'Data tidak valid.' } })
+}
+
+function serializeConfig(config) {
+  config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
+  config.wedding_date = config.wedding_date.replace(' ', 'T')
+  return config
 }
 
 router.post('/session', loginLimit, async (req, res, next) => {
@@ -55,9 +65,7 @@ router.get('/config', requireAdmin, async (req, res, next) => {
   try {
     const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
     if (!rows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Konfigurasi belum tersedia.' } })
-    const config = rows[0]
-    config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
-    res.json(config)
+    res.json(serializeConfig(rows[0]))
   } catch (error) {
     next(error)
   }
@@ -70,12 +78,14 @@ router.put('/config', requireAdmin, async (req, res, next) => {
   const fields = Object.keys(data)
   if (fields.length === 0) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Tidak ada perubahan.' } })
   try {
-    const values = fields.map((field) => field === 'gallery_photos' ? JSON.stringify(data[field]) : data[field])
+    const values = fields.map((field) => {
+      if (field === 'gallery_photos') return JSON.stringify(data[field])
+      if (field === 'wedding_date') return data[field].slice(0, 19).replace('T', ' ')
+      return data[field]
+    })
     await pool.query(`UPDATE wedding_config SET ${fields.map((field) => `${field} = ?`).join(', ')} WHERE id = 1`, values)
     const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
-    const config = rows[0]
-    config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
-    res.json(config)
+    res.json(serializeConfig(rows[0]))
   } catch (error) {
     next(error)
   }

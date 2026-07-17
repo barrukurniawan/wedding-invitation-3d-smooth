@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Konfigurasi tidak ditemukan.' } })
     const row = rows[0]
     row.gallery_photos = typeof row.gallery_photos === 'string' ? JSON.parse(row.gallery_photos) : row.gallery_photos
+    row.wedding_date = row.wedding_date.replace(' ', 'T')
     res.json(row)
   } catch (err) {
     console.error('GET /api/config error:', err.message)
