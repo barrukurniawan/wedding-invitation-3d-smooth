@@ -3,3 +3,7 @@ build/
 .svelte-kit/
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example
+server/.env

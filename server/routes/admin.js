@@ -1,0 +1,142 @@
+import { Router } from 'express'
+import bcrypt from 'bcrypt'
+import { rateLimit } from 'express-rate-limit'
+import { z } from 'zod'
+import pool from '../db.js'
+import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionToken, requireAdmin } from '../auth.js'
+
+const router = Router()
+const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
+const text = (max) => z.string().trim().max(max)
+const configSchema = z.object({
+  bride_name: text(255), groom_name: text(255), bride_parents: text(255), groom_parents: text(255),
+  bride_photo: text(2048), groom_photo: text(2048), wedding_date: text(64),
+  akad_date: text(255), akad_time: text(255), akad_location: text(255),
+  resepsi_date: text(255), resepsi_time: text(255), resepsi_location: text(255),
+  qris_image: text(2048), bank_name: text(100), bank_account: text(100), bank_holder: text(255),
+  maps_url: text(2048), venue_address: text(2000), quote: text(2000),
+  gallery_photos: z.array(text(2048)).max(30),
+}).partial().strict()
+
+function invalid(res, error) {
+  return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: error.issues?.[0]?.message || 'Data tidak valid.' } })
+}
+
+router.post('/session', loginLimit, async (req, res, next) => {
+  const parsed = z.object({ username: text(64).min(1), password: z.string().min(1).max(256) }).safeParse(req.body)
+  if (!parsed.success) return invalid(res, parsed.error)
+  try {
+    const [rows] = await pool.query('SELECT id, username, password_hash FROM admin_users WHERE username = ?', [parsed.data.username])
+    const user = rows[0]
+    if (!user || !(await bcrypt.compare(parsed.data.password, user.password_hash))) {
+      return res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Username atau password salah.' } })
+    }
+    const token = await createSession(user.id)
+    res.cookie(COOKIE_NAME, token, cookieOptions()).status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/session', requireAdmin, (req, res) => {
+  res.json({ authenticated: true, user: req.admin })
+})
+
+router.delete('/session', requireAdmin, async (req, res, next) => {
+  try {
+    await deleteSession(req.cookies[COOKIE_NAME])
+    res.clearCookie(COOKIE_NAME, cookieOptions()).status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/config', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
+    if (!rows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Konfigurasi belum tersedia.' } })
+    const config = rows[0]
+    config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
+    res.json(config)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.put('/config', requireAdmin, async (req, res, next) => {
+  const parsed = configSchema.safeParse(req.body)
+  if (!parsed.success) return invalid(res, parsed.error)
+  const data = parsed.data
+  const fields = Object.keys(data)
+  if (fields.length === 0) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Tidak ada perubahan.' } })
+  try {
+    const values = fields.map((field) => field === 'gallery_photos' ? JSON.stringify(data[field]) : data[field])
+    await pool.query(`UPDATE wedding_config SET ${fields.map((field) => `${field} = ?`).join(', ')} WHERE id = 1`, values)
+    const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
+    const config = rows[0]
+    config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
+    res.json(config)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/guestbook', requireAdmin, async (req, res, next) => {
+  const parsed = z.object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(50).default(20) }).safeParse(req.query)
+  if (!parsed.success) return invalid(res, parsed.error)
+  const { page, limit } = parsed.data
+  try {
+    const [[count], [items]] = await Promise.all([
+      pool.query('SELECT COUNT(*) AS total FROM guestbook'),
+      pool.query('SELECT * FROM guestbook ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?', [limit, (page - 1) * limit]),
+    ])
+    res.json({ items, page, limit, total: count.total })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/stats', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT COUNT(*) AS total,
+        COALESCE(SUM(attendance = 'Hadir'), 0) AS hadir,
+        COALESCE(SUM(attendance = 'Ragu-ragu'), 0) AS ragu,
+        COALESCE(SUM(attendance = 'Tidak Hadir'), 0) AS tidakHadir
+       FROM guestbook`,
+    )
+    res.json(rows[0])
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.delete('/guestbook/:id', requireAdmin, async (req, res, next) => {
+  if (!z.string().uuid().safeParse(req.params.id).success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID buku tamu tidak valid.' } })
+  try {
+    const [result] = await pool.query('DELETE FROM guestbook WHERE id = ?', [req.params.id])
+    if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Ucapan tidak ditemukan.' } })
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/password', requireAdmin, async (req, res, next) => {
+  const parsed = z.object({ currentPassword: z.string().min(1).max(256), newPassword: z.string().min(12).max(256) }).safeParse(req.body)
+  if (!parsed.success) return invalid(res, parsed.error)
+  try {
+    const [rows] = await pool.query('SELECT password_hash FROM admin_users WHERE id = ?', [req.admin.id])
+    if (!(await bcrypt.compare(parsed.data.currentPassword, rows[0].password_hash))) {
+      return res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Password saat ini salah.' } })
+    }
+    const hash = await bcrypt.hash(parsed.data.newPassword, 12)
+    await pool.query('UPDATE admin_users SET password_hash = ? WHERE id = ?', [hash, req.admin.id])
+    await pool.query('DELETE FROM admin_sessions WHERE user_id = ? AND token_hash <> ?', [req.admin.id, hashSessionToken(req.cookies[COOKIE_NAME])])
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+export default router

@@ -9,10 +9,13 @@
   import MobileControls from './lib/components/ui/MobileControls.svelte'
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
+  import CountdownTimer from './lib/components/ui/CountdownTimer.svelte'
   import { setLoaded } from './lib/stores/gameState.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
+  import { loadConfig } from './lib/stores/weddingConfig.svelte'
 
   onMount(() => {
+    loadConfig()
     const t = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(t)
   })
@@ -36,6 +39,7 @@
   </div>
 
   <InteractionHint />
+  <CountdownTimer />
   <NpcDialog />
   <GuestbookModal />
   <WeddingStageModal />

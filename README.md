@@ -30,7 +30,7 @@ Dibangun dengan **SvelteKit**, **Threlte** (Three.js), dan **Tailwind CSS**.
 |---|---|
 | **3D Walkthrough** | Pemain dapat berjalan menjelajahi venue pernikahan dalam tampilan third-person |
 | **NPC Interaktif** | Resepsionis dan Pemandu Lokasi dengan dialog multi-halaman |
-| **Buku Tamu** | Form ucapan & konfirmasi kehadiran (stub backend — perlu integrasi Firebase/Supabase) |
+| **Buku Tamu** | Form ucapan & konfirmasi kehadiran tersimpan melalui Express API + MySQL |
 | **Pelaminan** | Tampilan pengantin, foto, amplop digital (QRIS), dan confetti otomatis |
 | **Kontrol Mobile** | Virtual joystick + tombol interaksi untuk layar sentuh |
 | **Audio Latar** | Toggle musik latar (`static/audio/ambient.mp3`) |
@@ -269,7 +269,7 @@ Kustomisasi via prop `appearance` di `Player.svelte`:
 
 ## TODO Sebelum Produksi
 
-- [ ] Integrasi backend buku tamu (Firebase/Supabase) di `src/lib/services/api.ts`
+- [x] Integrasi backend buku tamu dan dashboard admin melalui Express API + MySQL
 - [ ] Ganti QRIS dan rekening di `WeddingStageModal.svelte` dengan data asli
 - [ ] Ganti foto pengantin dengan foto asli
 - [ ] Ganti URL Google Maps di `triggers.ts` dengan lokasi venue sebenarnya
