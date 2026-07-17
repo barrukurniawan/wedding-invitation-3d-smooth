@@ -64,9 +64,55 @@
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
   ]
   const lamps = [
-    [-2.55, 0, 1], [2.55, 0, 1], [-2.55, 0, -7.5], [2.55, 0, -7.5],
-    [-2.55, 0, -13.5], [2.55, 0, -13.5]
+    [-3.5, 0, -1.8], [3.5, 0, -1.8], [-3.5, 0, -7.5], [3.5, 0, -7.5],
+    [-3.5, 0, -13.5], [3.5, 0, -13.5]
   ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], rotationY: a[0] > 0 ? -Math.PI / 2 : Math.PI / 2 }))
+
+  // Iilitan tanaman rambat pada gerbang (posisi dunia; gate group di z=4).
+  const archVines: { position: [number, number, number]; scale: number }[] = [
+    { position: [-2.05, 0.95, 4], scale: 0.42 },
+    { position: [-2.05, 1.85, 4.12], scale: 0.40 },
+    { position: [-2.0, 2.75, 4.0], scale: 0.38 },
+    { position: [2.05, 0.95, 4], scale: 0.42 },
+    { position: [2.05, 1.85, 4.12], scale: 0.40 },
+    { position: [2.0, 2.75, 4.0], scale: 0.38 },
+    { position: [-1.6, 3.78, 4], scale: 0.40 },
+    { position: [-1.13, 4.25, 4], scale: 0.42 },
+    { position: [0, 5.2, 4], scale: 0.44 },
+    { position: [1.13, 4.25, 4], scale: 0.42 },
+    { position: [1.6, 3.78, 4], scale: 0.40 },
+  ]
+
+  // Kabel lampu melintang antar KEPALA lampu (bulb di ujung lengan, X≈±2.6, Y≈2.7
+  // pada skala 0.5) — bukan di pusat tiang, supaya tali menyangga di lampu dan
+  // tidak menembus ujung tiang. 3 baris tiang.
+  const stringRows = [-1.8, -7.5, -13.5]
+  const stringAnchorX = 2.6
+  const stringHeight = 2.7
+  const stringSag = 0.35
+
+  function cablePoints(z: number): [number, number, number][] {
+    const L = -stringAnchorX, R = stringAnchorX
+    const n = 10
+    return Array.from({ length: n + 1 }, (_, i) => {
+      const t = i / n
+      const x = L + (R - L) * t
+      const sag = 4 * stringSag * t * (1 - t)
+      return [x, stringHeight - sag, z] as [number, number, number]
+    })
+  }
+
+  const stringSpans = stringRows.map((z) => {
+    const pts = cablePoints(z)
+    const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)))
+    const bulbStep = 2
+    // Lewati titik ujung (i=0 & i=n) agar bola bersinar tidak menumpuk dengan
+    // kepala lampu tiang; bola hanya menggantung di tengah tali.
+    const bulbs: [number, number, number][] = pts
+      .filter((_, i) => i % bulbStep === 0 && i !== 0 && i !== pts.length - 1)
+      .map(([x, y]) => [x, y - 0.12, z] as [number, number, number])
+    return { z, curve, bulbs }
+  })
 
   const treeGradient = { leaves: '#7CFC00', bark: '#6b4423' }
 
@@ -538,35 +584,35 @@
 <T.Group position={[0, 0, 4]}>
   <T.Mesh position={[-2.0, 1.7, 0]} castShadow>
     <T.BoxGeometry args={[0.5, 3.4, 0.5]} />
-    <T.MeshToonMaterial color="#ffffff" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#b58a5a" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[-2.0, 3.48, 0]}>
     <T.BoxGeometry args={[0.62, 0.14, 0.62]} />
-    <T.MeshToonMaterial color="#fff5f5" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[-2.0, 0.08, 0]}>
     <T.BoxGeometry args={[0.65, 0.16, 0.65]} />
-    <T.MeshToonMaterial color="#fff5f5" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[2.0, 1.7, 0]} castShadow>
     <T.BoxGeometry args={[0.5, 3.4, 0.5]} />
-    <T.MeshToonMaterial color="#ffffff" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#b58a5a" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[2.0, 3.48, 0]}>
     <T.BoxGeometry args={[0.62, 0.14, 0.62]} />
-    <T.MeshToonMaterial color="#fff5f5" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[2.0, 0.08, 0]}>
     <T.BoxGeometry args={[0.65, 0.16, 0.65]} />
-    <T.MeshToonMaterial color="#fff5f5" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[0, 3.55, 0]} castShadow>
     <T.BoxGeometry args={[4.5, 0.2, 0.5]} />
-    <T.MeshToonMaterial color="#ffffff" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[0, 3.75, 0]}>
     <T.TorusGeometry args={[1.6, 0.08, 8, 16, Math.PI]} />
-    <T.MeshToonMaterial color="#fff5f5" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#c9a878" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[-2.0, 3.6, 0.28]}>
     <T.SphereGeometry args={[0.18, 8, 6]} />
@@ -589,6 +635,9 @@
     <T.MeshToonMaterial color="#ffe3a3" gradientMap={gradient} />
   </T.Mesh>
 </T.Group>
+
+<!-- Iilitan tanaman rambat pada gerbang -->
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.0} instances={archVines} />
 
 <!-- Receptionist desk -->
 <T.Group position={[4, 0, -4]} rotation.y={Math.PI / 2}>
@@ -650,7 +699,7 @@
   </T.Mesh>
   <T.Mesh position={[0, 3.25, -2.12]} castShadow>
     <T.BoxGeometry args={[9.65, 5.1, 0.25]} />
-    <T.MeshToonMaterial color="#e8b6bc" gradientMap={gradient} />
+    <T.MeshToonMaterial color="#f7efe0" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh position={[0, 3.25, -1.95]}>
     <T.TorusGeometry args={[1.55, 0.16, 10, 24]} />
@@ -706,4 +755,18 @@
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={stageBushes} />
 
 <!-- Lamps -->
-<Nature url="/nature/gltf/Street_Light.glb" scale={0.75} instances={lamps} materialColors={{ Grey: '#ffffff' }} />
+<Nature url="/nature/gltf/Street_Light.glb" scale={0.5} instances={lamps} materialColors={{ Grey: '#efe6d3' }} />
+
+<!-- Kabel lampu melintang antar pohon baris + bola kuning bersinar -->
+{#each stringSpans as span}
+  <T.Mesh>
+    <T.TubeGeometry args={[span.curve, 64, 0.018, 6, false]} />
+    <T.MeshBasicMaterial color="#3a3a3a" />
+  </T.Mesh>
+  {#each span.bulbs as b}
+    <T.Mesh position={b}>
+      <T.SphereGeometry args={[0.07, 8, 6]} />
+      <T.MeshBasicMaterial color="#ffd24a" toneMapped={false} />
+    </T.Mesh>
+  {/each}
+{/each}
