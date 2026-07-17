@@ -9,7 +9,7 @@
   import MobileControls from './lib/components/ui/MobileControls.svelte'
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
-  import { setLoaded, setGuestName } from './lib/stores/gameState.svelte'
+  import { setLoaded, setGuestName, setPlayerLabel } from './lib/stores/gameState.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
   import { loadConfig } from './lib/stores/weddingConfig.svelte'
 
@@ -25,6 +25,7 @@
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
           .join(' ')
         setGuestName(titleCased)
+        setPlayerLabel(titleCased)
       }
     } catch {
       // Malformed percent-encoding — keep default guest name.

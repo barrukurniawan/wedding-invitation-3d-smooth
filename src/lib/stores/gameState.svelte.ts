@@ -8,6 +8,7 @@ export const nearbyTrigger = writable<TriggerZone | null>(null)
 export const activeNpcData = writable<NpcData | null>(null)
 export const confettiActive = writable(false)
 export const guestName = writable('Tamu Undangan')
+export const playerLabel = writable('')
 
 export function openModal(type: ModalType, npc?: NpcData) {
   activeModal.set(type)
@@ -31,6 +32,10 @@ export function setLoaded(val: boolean) {
 
 export function setGuestName(name: string) {
   guestName.set(name.trim() || 'Tamu Undangan')
+}
+
+export function setPlayerLabel(name: string) {
+  playerLabel.set(name.trim())
 }
 
 export { triggerZones }
