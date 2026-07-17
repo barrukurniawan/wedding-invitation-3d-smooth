@@ -591,7 +591,7 @@
 </T.Group>
 
 <!-- Receptionist desk -->
-<T.Group position={[0, 0, -4]}>
+<T.Group position={[4, 0, -4]} rotation.y={Math.PI / 2}>
   <T.Mesh position={[0, 0.57, 0]} castShadow>
     <T.BoxGeometry args={[3.3, 1.14, 0.9]} />
     <T.MeshToonMaterial color="#be5c75" gradientMap={gradient} />

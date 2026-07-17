@@ -21,7 +21,7 @@ export const triggerZones: TriggerZone[] = [
   {
     id: 'receptionist',
     label: 'Resepsionis',
-    position: [0, 0, -4],
+    position: [4, 0, -4],
     radius: 2.5,
     action: 'npc',
     npcData: {
@@ -69,7 +69,7 @@ export const triggerZones: TriggerZone[] = [
 ]
 
 export const colliders = [
-  { minX: -1.85, maxX: 1.85, minZ: -4.7, maxZ: -3.3 },
+  { minX: 3.3, maxX: 4.7, minZ: -5.85, maxZ: -2.15 },
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 },
   { minX: 3.5, maxX: 4.5, minZ: -10.5, maxZ: -9.5 }
 ]

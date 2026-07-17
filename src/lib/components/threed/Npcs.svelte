@@ -13,8 +13,8 @@
 <!-- Resepsionis -->
 <Character
   url="/models/resepsionis.gltf"
-  position={[0, 0, -4.9]}
-  rotationY={0}
+  position={[4.9, 0, -4]}
+  rotationY={-Math.PI / 2}
   scale={S}
   clip="Idle"
   appearance={skinCream}
