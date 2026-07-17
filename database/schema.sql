@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS wedding_config (
   groom_name VARCHAR(255) NOT NULL DEFAULT 'Toni Pratama',
   bride_parents VARCHAR(255) NOT NULL DEFAULT 'Bpk. ... & Ibu. ...',
   groom_parents VARCHAR(255) NOT NULL DEFAULT 'Bpk. ... & Ibu. ...',
-  bride_photo TEXT NOT NULL,
-  groom_photo TEXT NOT NULL,
+  wedding_photo TEXT NOT NULL,
   wedding_date DATETIME NOT NULL DEFAULT '2026-07-15 08:00:00',
   akad_date VARCHAR(255) NOT NULL DEFAULT 'Rabu, 15 Juli 2026',
   akad_time VARCHAR(255) NOT NULL DEFAULT '08:00 - 10:00 WIB',
@@ -30,9 +29,9 @@ CREATE TABLE IF NOT EXISTS wedding_config (
 ) ENGINE=InnoDB;
 
 INSERT INTO wedding_config (
-  id, bride_photo, groom_photo, qris_image, maps_url, venue_address, gallery_photos, quote
+  id, wedding_photo, qris_image, maps_url, venue_address, gallery_photos, quote
 ) VALUES (
-  1, '', '', '', '', '', '[]', ''
+  1, '', '', '', '', '[]', ''
 ) ON DUPLICATE KEY UPDATE id = id;
 
 CREATE TABLE IF NOT EXISTS guestbook (

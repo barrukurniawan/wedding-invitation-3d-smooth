@@ -14,7 +14,7 @@ const weddingDate = z.string().trim().regex(
 )
 const configSchema = z.object({
   bride_name: text(255), groom_name: text(255), bride_parents: text(255), groom_parents: text(255),
-  bride_photo: text(2048), groom_photo: text(2048), wedding_date: weddingDate,
+  wedding_photo: text(2048), wedding_date: weddingDate,
   akad_date: text(255), akad_time: text(255), akad_location: text(255),
   resepsi_date: text(255), resepsi_time: text(255), resepsi_location: text(255),
   qris_image: text(2048), bank_name: text(100), bank_account: text(100), bank_holder: text(255),

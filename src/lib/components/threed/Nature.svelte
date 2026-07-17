@@ -10,12 +10,14 @@
     instances,
     leafColor,
     tint,
+    materialColors,
     scale = 1
   }: {
     url: string
     instances: { position: [number, number, number]; rotationY?: number; scale?: number }[]
     leafColor?: string
     tint?: string
+    materialColors?: Record<string, string>
     scale?: number
   } = $props()
 
@@ -27,6 +29,21 @@
       for (const mat of mats) {
         if (mat instanceof THREE.MeshStandardMaterial && mat.name.includes('Leaves')) {
           mat.color = new THREE.Color(color)
+          mat.needsUpdate = true
+        }
+      }
+    })
+  }
+
+  // Override warna material berdasarkan nama (mis. { Grey: '#ffffff' }).
+  function applyMaterialColors(ref: THREE.Object3D, colors: Record<string, string>) {
+    ref.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh || !mesh.material) return
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      for (const mat of mats) {
+        if (mat instanceof THREE.MeshStandardMaterial && colors[mat.name] !== undefined) {
+          mat.color = new THREE.Color(colors[mat.name])
           mat.needsUpdate = true
         }
       }
@@ -58,6 +75,7 @@
     return instances.map(() => {
       const clone = scene.clone(true)
       if (leafColor) applyLeafColor(clone, leafColor)
+      if (materialColors) applyMaterialColors(clone, materialColors)
       applyTint(clone, resolvedTint)
       return clone
     })

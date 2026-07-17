@@ -63,10 +63,10 @@
     [-3.75, 0.67, 1.1, 0.25], [-2.75, 0.67, 1.1, 0.16],
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
   ]
-  const lamps: [number, number, number][] = [
+  const lamps = [
     [-2.55, 0, 1], [2.55, 0, 1], [-2.55, 0, -7.5], [2.55, 0, -7.5],
     [-2.55, 0, -13.5], [2.55, 0, -13.5]
-  ]
+  ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], rotationY: a[0] > 0 ? -Math.PI / 2 : Math.PI / 2 }))
 
   // === POHON — hutan padat di pinggir venue ===
   // CommonTree (pohon lebar) di sisi kiri-kanan venue
@@ -704,15 +704,4 @@
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={stageBushes} />
 
 <!-- Lamps -->
-{#each lamps as lamp, i}
-  <T.Group position={lamp}>
-    <T.Mesh position={[0, 1.28, 0]}>
-      <T.CylinderGeometry args={[0.045, 0.06, 2.56, 6]} />
-      <T.MeshToonMaterial color="#4f443e" gradientMap={gradient} />
-    </T.Mesh>
-    <T.Mesh position={[0, 2.56, 0]}>
-      <T.SphereGeometry args={[0.17, 10, 8]} />
-      <T.MeshStandardMaterial color="#fff2aa" emissive="#f5b942" emissiveIntensity={1.6} />
-    </T.Mesh>
-  </T.Group>
-{/each}
+<Nature url="/nature/gltf/Street_Light.glb" scale={0.75} instances={lamps} materialColors={{ Grey: '#ffffff' }} />

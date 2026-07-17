@@ -4,6 +4,26 @@
 
   let showPayment = $state(false)
   let activeTab = $state<'info' | 'gallery'>('info')
+  let countdown = $state('')
+
+  $effect(() => {
+    const target = new Date($weddingConfig.wedding_date).getTime()
+    function update() {
+      const diff = target - Date.now()
+      if (diff <= 0) {
+        countdown = 'Hari ini adalah hari pernikahan kami!'
+        return
+      }
+      const days = Math.floor(diff / 86400000)
+      const hours = Math.floor((diff % 86400000) / 3600000)
+      const minutes = Math.floor((diff % 3600000) / 60000)
+      const seconds = Math.floor((diff % 60000) / 1000)
+      countdown = `${days} hari ${hours} jam ${minutes} menit ${seconds} detik`
+    }
+    update()
+    const interval = setInterval(update, 1000)
+    return () => clearInterval(interval)
+  })
 
   function showQris() {
     showPayment = true
@@ -43,13 +63,13 @@
 
       <div class="px-5 pt-5 pb-3 text-center">
         <p class="text-base font-semibold text-rose-100">Halo, {$guestName}.</p>
-        <h3 class="mt-1 font-serif text-lg text-white">Selamat datang di pelaminan {$weddingConfig.bride_name} & {$weddingConfig.groom_name}</h3>
+        <h3 class="mt-1 font-serif text-lg text-white">{countdown} menuju hari pernikahan kami</h3>
       </div>
 
       <div class="relative mx-4 aspect-[4/3] overflow-hidden rounded-xl bg-stone-900">
-        {#if $weddingConfig.bride_photo || $weddingConfig.groom_photo}
+        {#if $weddingConfig.wedding_photo}
           <img
-            src={$weddingConfig.bride_photo || $weddingConfig.groom_photo}
+            src={$weddingConfig.wedding_photo}
             alt="{$weddingConfig.bride_name} dan {$weddingConfig.groom_name}"
             class="h-full w-full object-cover"
           />
@@ -79,7 +99,6 @@
           <div class="space-y-3">
             <div class="rounded-xl border border-stone-800 bg-stone-900/50 p-3">
               <div class="flex items-center gap-2">
-                <span class="text-lg">💍</span>
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Akad Nikah</p>
                   <p class="text-sm font-medium text-white">{$weddingConfig.akad_date}</p>
@@ -90,7 +109,6 @@
             </div>
             <div class="rounded-xl border border-stone-800 bg-stone-900/50 p-3">
               <div class="flex items-center gap-2">
-                <span class="text-lg">🎉</span>
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Resepsi</p>
                   <p class="text-sm font-medium text-white">{$weddingConfig.resepsi_date}</p>
@@ -101,7 +119,6 @@
             </div>
             <div class="rounded-xl border border-stone-800 bg-stone-900/50 p-3">
               <div class="flex items-center gap-2">
-                <span class="text-lg">👨‍👩‍👧</span>
                 <div class="text-xs leading-relaxed text-stone-300">
                   <p><span class="text-stone-500">Mempelai Pria:</span> {$weddingConfig.groom_name} putra dari {$weddingConfig.groom_parents}</p>
                   <p class="mt-1"><span class="text-stone-500">Mempelai Wanita:</span> {$weddingConfig.bride_name} putri dari {$weddingConfig.bride_parents}</p>

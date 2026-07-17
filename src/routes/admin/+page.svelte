@@ -189,8 +189,7 @@
             <div><label for="groom-name" class={labelClass}>Nama Mempelai Pria</label><input id="groom-name" bind:value={config.groom_name} class={inputClass} /></div>
             <div><label for="bride-parents" class={labelClass}>Orangtua Wanita</label><input id="bride-parents" bind:value={config.bride_parents} class={inputClass} /></div>
             <div><label for="groom-parents" class={labelClass}>Orangtua Pria</label><input id="groom-parents" bind:value={config.groom_parents} class={inputClass} /></div>
-            <div><label for="bride-photo" class={labelClass}>Foto Wanita (URL)</label><input id="bride-photo" bind:value={config.bride_photo} class={inputClass} placeholder="https://..." /></div>
-            <div><label for="groom-photo" class={labelClass}>Foto Pria (URL)</label><input id="groom-photo" bind:value={config.groom_photo} class={inputClass} placeholder="https://..." /></div>
+            <div class="col-span-2"><label for="wedding-photo" class={labelClass}>Foto Utama Pernikahan (URL)</label><input id="wedding-photo" bind:value={config.wedding_photo} class={inputClass} placeholder="https://..." /></div>
           </div>
 
         {:else if activeTab === 'acara'}

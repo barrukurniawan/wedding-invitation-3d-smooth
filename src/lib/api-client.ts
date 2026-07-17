@@ -4,8 +4,7 @@ export interface WeddingConfig {
   groom_name: string
   bride_parents: string
   groom_parents: string
-  bride_photo: string
-  groom_photo: string
+  wedding_photo: string
   wedding_date: string
   akad_date: string
   akad_time: string
@@ -57,13 +56,12 @@ export const defaultConfig: WeddingConfig = {
   groom_name: 'Toni Pratama',
   bride_parents: 'Bpk. ... & Ibu. ...',
   groom_parents: 'Bpk. ... & Ibu. ...',
-  bride_photo: '',
-  groom_photo: '',
-  wedding_date: '2026-07-15T08:00:00+07:00',
-  akad_date: 'Rabu, 15 Juli 2026',
+  wedding_photo: '',
+  wedding_date: '2026-08-16T08:00:00+07:00',
+  akad_date: 'Minggu, 16 Agustus 2026',
   akad_time: '08:00 - 10:00 WIB',
   akad_location: 'Kediaman Mempelai Wanita',
-  resepsi_date: 'Rabu, 15 Juli 2026',
+  resepsi_date: 'Minggu, 16 Agustus 2026',
   resepsi_time: '11:00 - 14:00 WIB',
   resepsi_location: 'Gedung Serbaguna',
   qris_image: '',
