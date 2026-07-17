@@ -9,12 +9,26 @@
   import MobileControls from './lib/components/ui/MobileControls.svelte'
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
-  import { setLoaded } from './lib/stores/gameState.svelte'
+  import { setLoaded, setGuestName } from './lib/stores/gameState.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
   import { loadConfig } from './lib/stores/weddingConfig.svelte'
 
   onMount(() => {
     loadConfig()
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const raw = params.get('send')
+      if (raw) {
+        const titleCased = raw
+          .trim()
+          .split(/\s+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ')
+        setGuestName(titleCased)
+      }
+    } catch {
+      // Malformed percent-encoding — keep default guest name.
+    }
     const t = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(t)
   })

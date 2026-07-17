@@ -58,7 +58,6 @@ export const triggerZones: TriggerZone[] = [
       name: 'Pemandu',
       avatar: '🧑‍🦯',
       messages: [
-        'Halo! Saya pemandu di sini. 😊',
         'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
         'Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Kia & Toni.'
       ],
