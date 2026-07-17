@@ -3,19 +3,31 @@
   import * as THREE from 'three'
   import { getToonGradient } from '../../utils/toonMaterial'
   import Nature from './Nature.svelte'
+  import { GROUND_COLOR } from '../../constants/natureTheme'
 
   const gradient = getToonGradient()
   const sparseTrees = <T,>(items: T[]) => items.filter((_, i) => i % 8 === 0)
 
-  function createPinkGradient(reverse = false) {
+  function createGroundGradient(reverse = false) {
     const width = 256
     const data = new Uint8Array(width * 4)
-    const stops = [
-      new THREE.Color('#B92F59'),
-      new THREE.Color('#E45178'),
-      new THREE.Color('#F26B8A'),
-      new THREE.Color('#FFB3C5')
-    ]
+    let stops: THREE.Color[]
+    if (GROUND_COLOR) {
+      // Derive 4 stop dari warna dasar: jaga hue & saturasi, variasi lightness (gelap -> terang).
+      const base = new THREE.Color(GROUND_COLOR)
+      const hsl = { h: 0, s: 0, l: 0 }
+      base.getHSL(hsl)
+      const lightnesses = [0.38, 0.52, 0.66, 0.82]
+      stops = lightnesses.map((l) => new THREE.Color().setHSL(hsl.h, hsl.s, l))
+    } else {
+      // Default: gradien pink (kompabilitas balik).
+      stops = [
+        new THREE.Color('#B92F59'),
+        new THREE.Color('#E45178'),
+        new THREE.Color('#F26B8A'),
+        new THREE.Color('#FFB3C5')
+      ]
+    }
 
     for (let x = 0; x < width; x++) {
       const t = (reverse ? width - 1 - x : x) / (width - 1)
@@ -37,8 +49,8 @@
     return texture
   }
 
-  const pinkGradientLeft = createPinkGradient()
-  const pinkGradientRight = createPinkGradient(true)
+  const pinkGradientLeft = createGroundGradient()
+  const pinkGradientRight = createGroundGradient(true)
 
   // === BANGUNAN VENUE (tetap primitif) ===
   const stageFlowers: [number, number, number][] = [
@@ -140,10 +152,6 @@
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[0] * 0.2 }))
 
   const pebbles = [
-    [-2, 0, 5.5, 0.5], [2, 0, 5.5, 0.5],
-    [-3.5, 0, -1, 0.5], [3.5, 0, -1, 0.5],
-    [-1.5, 0, -8, 0.5], [1.5, 0, -8, 0.5],
-    [-3, 0, -14, 0.5], [3, 0, -14, 0.5],
     [-5, 0, 3, 0.4], [5, 0, 3, 0.4],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.3 }))
 
@@ -257,7 +265,7 @@
     [7, 0, 5, 0.2, -0.8], [12, 0, 2, 0.18, 0.6], [16, 0, 0, 0.2, -0.3],
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
 
-  // Batu Rock_Medium_2 — BANYAK di kiri & kanan
+  // Pohon (dari batu) — BANYAK di kiri & kanan
   const rockMed2Left = [
     [-7, 0, 2, 0.35, 0.3], [-12, 0, -3, 0.4, -0.5], [-9, 0, -8, 0.38, 0.8],
     [-14, 0, -10, 0.32, 0.2], [-6, 0, -14, 0.4, -0.6], [-11, 0, 6, 0.36, 0.4],
@@ -346,14 +354,6 @@
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -1.2 }))
 
   // Jalur batu tepi jalan
-  const rockPathSidesLeft = [
-    [-3.5, 0, 4, 0.55], [-3.5, 0, -2, 0.55], [-3.5, 0, -8, 0.55], [-3.5, 0, -14, 0.55],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
-
-  const rockPathSidesRight = [
-    [3.5, 0, 4, 0.55], [3.5, 0, -2, 0.55], [3.5, 0, -8, 0.55], [3.5, 0, -14, 0.55],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.5 }))
-
   // Jamur Laetiporus
   const mushroomLaetiLeft = [
     [-5, 0, -1, 0.4], [-7, 0, -9, 0.35], [-6, 0, -13, 0.42],
@@ -394,6 +394,10 @@
     [-6.2, 0, -17, 0.45, 0.4], [6.2, 0, -17, 0.45, -0.4],
   ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
 
+  // === HEWAN ===
+  const animalBunny = [{ position: [-8, 0, -1] as [number, number, number], rotationY: 0.8, scale: 0.6 }]
+  const animalCat = [{ position: [8, 0, -6] as [number, number, number], rotationY: -1.2, scale: 0.6 }]
+  const animalPanda = [{ position: [-6, 0, -12] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
 
 </script>
 
@@ -442,95 +446,91 @@
 {/each}
 
 <!-- POHON BERJAJAR di perbatasan venue (tepi jalan) -->
-<Nature url="/nature/gltf/CommonTree_5.gltf" instances={sparseTrees(liningTreesLeft)} />
-<Nature url="/nature/gltf/CommonTree_5.gltf" instances={sparseTrees(liningTreesRight)} />
+<Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesLeft)} />
+<Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesRight)} />
 
 <!-- POHON: CommonTree lebar -->
-<Nature url="/nature/gltf/CommonTree_1.gltf" instances={sparseTrees(treeLayerA)} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={sparseTrees(treeLayerA)} />
 <!-- Tiga pohon non-merah dikurangi agar total pohon menjadi 30 -->
 
 <!-- POHON: Pine / Cemara di latar belakang -->
-<Nature url="/nature/gltf/Pine_3.gltf" instances={sparseTrees(pineLayer)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(pineLayer)} />
 
 <!-- POHON berdaun merah (autumn) -->
-<Nature url="/nature/gltf/CommonTree_1.gltf" instances={sparseTrees(redLeafTrees)} leafColor="#c0392b" />
-<Nature url="/nature/gltf/CommonTree_5.gltf" instances={sparseTrees(redLeafSidesLeft)} leafColor="#d4252b" />
-<Nature url="/nature/gltf/CommonTree_5.gltf" instances={sparseTrees(redLeafSidesRight)} leafColor="#c0392b" />
-<Nature url="/nature/gltf/Pine_1.gltf" instances={sparseTrees(redPineLeft)} leafColor="#d4252b" />
-<Nature url="/nature/gltf/Pine_1.gltf" instances={sparseTrees(redPineRight)} leafColor="#c0392b" />
-<Nature url="/nature/gltf/TwistedTree_3.gltf" instances={sparseTrees(redTwistedLeft)} leafColor="#b03a2e" />
-<Nature url="/nature/gltf/TwistedTree_3.gltf" instances={sparseTrees(redTwistedRight)} leafColor="#d4252b" />
+<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={sparseTrees(redLeafTrees)} />
+<Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(redLeafSidesLeft)} />
+<Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(redLeafSidesRight)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redPineLeft)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redPineRight)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redTwistedLeft)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redTwistedRight)} />
 <!-- Pohon berdaun merah dekat Kotak Ucapan -->
-<Nature url="/nature/gltf/TwistedTree_3.gltf" instances={sparseTrees(mailboxTrees)} leafColor="#b03a2e" />
-<Nature url="/nature/gltf/TwistedTree_3.gltf" instances={sparseTrees(extraTreesLeft)} leafColor="#c0392b" />
-<Nature url="/nature/gltf/TwistedTree_3.gltf" instances={sparseTrees(extraTreesRight)} leafColor="#b03a2e" />
-<!-- Batu Rock_Medium_2 banyak -->
-<Nature url="/nature/gltf/Rock_Medium_2.gltf" instances={rockMed2Left} />
-<Nature url="/nature/gltf/Rock_Medium_2.gltf" instances={rockMed2Right} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(mailboxTrees)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(extraTreesLeft)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(extraTreesRight)} />
+<!-- Pohon (dari batu) banyak -->
+<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={rockMed2Left} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockMed2Right} />
 
 <!-- RUMPUT padat -->
-<Nature url="/nature/gltf/Bush_Common.gltf" instances={grassTall} />
-<Nature url="/nature/gltf/Bush_Common_Flowers.gltf" instances={grassWispy} />
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={grassTall} />
+<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={grassWispy} />
 
 <!-- BUNGA berkelompok -->
-<Nature url="/nature/gltf/Flower_3_Group.gltf" instances={flower3} />
-<Nature url="/nature/gltf/Flower_4_Group.gltf" instances={flower4} />
+<Nature url="/nature/gltf/Grass_2_A_Color1.glb" scale={1.1} instances={flower3} />
+<Nature url="/nature/gltf/Grass_1_C_Color1.glb" scale={1.1} instances={flower4} />
 
 <!-- SEMAK & TANAMAN -->
-<Nature url="/nature/gltf/Bush_Common.gltf" instances={bushes} />
-<Nature url="/nature/gltf/Fern_1.gltf" instances={ferns} />
-<Nature url="/nature/gltf/Plant_1.gltf" instances={plants} />
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={bushes} />
+<Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
+<Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
 
 <!-- BATU besar -->
-<Nature url="/nature/gltf/Rock_Medium_1.gltf" instances={rocks} />
+<Nature url="/nature/gltf/tree.glb" scale={3} instances={rocks} />
 
 <!-- PEBBLE kecil di tepi jalan -->
-<Nature url="/nature/gltf/Pebble_Round_1.gltf" instances={pebbles} />
+<Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
 
 <!-- JAMUR -->
-<Nature url="/nature/gltf/Mushroom_Common.gltf" instances={mushrooms} />
+<Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={mushrooms} />
 
 <!-- ========== TAMBAHAN: VEGETASI SISI KIRI-KANAN ========== -->
 
 <!-- POHON tambahan sisi -->
-<Nature url="/nature/gltf/CommonTree_2.gltf" instances={sparseTrees(sideTreesLeft)} />
-<Nature url="/nature/gltf/CommonTree_4.gltf" instances={sparseTrees(sideTreesRight)} />
-<Nature url="/nature/gltf/Pine_1.gltf" instances={sparseTrees(pineSidesLeft)} />
-<Nature url="/nature/gltf/Pine_2.gltf" instances={sparseTrees(pineSidesRight)} />
+<Nature url="/nature/gltf/Tree_2_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
+<Nature url="/nature/gltf/Tree_3_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesRight)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(pineSidesLeft)} />
+<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(pineSidesRight)} />
 <!-- Pohon twisted non-merah sisi dihilangkan; pohon merah tetap dipertahankan -->
 <!-- (DeadTree sides diganti pohon berdaun merah di atas) -->
 
 <!-- RUMPUT pendek sisi -->
-<Nature url="/nature/gltf/Bush_Common.gltf" instances={grassShortLeft} />
-<Nature url="/nature/gltf/Bush_Common_Flowers.gltf" instances={grassShortRight} />
-<Nature url="/nature/gltf/Bush_Common_Flowers.gltf" instances={grassWispyShortLeft} />
-<Nature url="/nature/gltf/Bush_Common.gltf" instances={grassWispyShortRight} />
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={grassShortLeft} />
+<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={grassShortRight} />
+<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={grassWispyShortLeft} />
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={grassWispyShortRight} />
 
 <!-- BUNGA tunggal & clover sisi -->
-<Nature url="/nature/gltf/Flower_3_Single.gltf" instances={flowerSingleLeft} />
-<Nature url="/nature/gltf/Flower_4_Single.gltf" instances={flowerSingleRight} />
-<Nature url="/nature/gltf/Clover_1.gltf" instances={cloversLeft} />
-<Nature url="/nature/gltf/Clover_2.gltf" instances={cloversRight} />
+<Nature url="/nature/gltf/Grass_1_A_Color1.glb" scale={1.1} instances={flowerSingleLeft} />
+<Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
+<Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
+<Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
 
 <!-- SEMAK berbunga & tanaman besar sisi -->
-<Nature url="/nature/gltf/Bush_Common_Flowers.gltf" instances={bushFlowersLeft} />
-<Nature url="/nature/gltf/Bush_Common_Flowers.gltf" instances={bushFlowersRight} />
-<Nature url="/nature/gltf/Plant_1_Big.gltf" instances={plantBigLeft} />
-<Nature url="/nature/gltf/Plant_1_Big.gltf" instances={plantBigRight} />
+<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={bushFlowersLeft} />
+<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={bushFlowersRight} />
+<Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={plantBigLeft} />
+<Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={plantBigRight} />
 
 <!-- BATU & pebble tambahan sisi -->
-<Nature url="/nature/gltf/Rock_Medium_2.gltf" instances={rockSidesLeft} />
-<Nature url="/nature/gltf/Rock_Medium_3.gltf" instances={rockSidesRight} />
-<Nature url="/nature/gltf/Pebble_Round_2.gltf" instances={pebbleSidesLeft} />
-<Nature url="/nature/gltf/Pebble_Round_3.gltf" instances={pebbleSidesRight} />
-
-<!-- JALUR BATU tepi jalan -->
-<Nature url="/nature/gltf/RockPath_Round_Small_1.gltf" instances={rockPathSidesLeft} />
-<Nature url="/nature/gltf/RockPath_Round_Small_2.gltf" instances={rockPathSidesRight} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockSidesLeft} />
+<Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={rockSidesRight} />
+<Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesLeft} />
+<Nature url="/nature/gltf/tree.glb" scale={3} instances={pebbleSidesRight} />
 
 <!-- JAMUR Laetiporus sisi -->
-<Nature url="/nature/gltf/Mushroom_Laetiporus.gltf" instances={mushroomLaetiLeft} />
-<Nature url="/nature/gltf/Mushroom_Laetiporus.gltf" instances={mushroomLaetiRight} />
+<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={mushroomLaetiLeft} />
+<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={mushroomLaetiRight} />
 
 <!-- Arch / Gate -->
 <T.Group position={[0, 0, 4]}>
@@ -691,12 +691,17 @@
         <T.CylinderGeometry args={[0.035, 0.035, 0.5, 5]} />
         <T.MeshToonMaterial color="#80583d" gradientMap={gradient} />
       </T.Mesh>
-    </T.Group>
-  {/each}
+  </T.Group>
+{/each}
+
+<!-- HEWAN -->
+<Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
+<Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
+<Nature url="/nature/gltf/animal-panda.glb" scale={0.6} instances={animalPanda} />
 </T.Group>
 
 <!-- Bush di sekeliling panggung -->
-<Nature url="/nature/gltf/Bush_Common.gltf" instances={stageBushes} />
+<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={stageBushes} />
 
 <!-- Lamps -->
 {#each lamps as lamp, i}
