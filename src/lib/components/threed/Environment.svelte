@@ -100,6 +100,20 @@
 
   const bulbWarm = ['#ffd24a', '#ffe08a', '#ffca5a']
 
+  // Motif bunga datar di jalur krem, berulang simetris di kedua sisi karpet.
+  const aisleMotifs = [7.5, 4.7, 1.9, -0.9, -3.7, -6.5, -9.3, -12.1].flatMap((z, i) => [
+    { position: [-1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? 0 : Math.PI },
+    { position: [1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? Math.PI : 0 }
+  ])
+  const motifPetalGeo = new THREE.CircleGeometry(0.17, 12)
+  const motifCenterGeo = new THREE.CircleGeometry(0.1, 12)
+  const motifLeafGeo = new THREE.CircleGeometry(0.15, 10)
+  const motifStemGeo = new THREE.BoxGeometry(0.035, 0.012, 0.72)
+  const motifPetalMat = new THREE.MeshToonMaterial({ color: '#d9899d', gradientMap: gradient })
+  const motifPetalLightMat = new THREE.MeshToonMaterial({ color: '#f4b8c7', gradientMap: gradient })
+  const motifCenterMat = new THREE.MeshToonMaterial({ color: '#d9b77b', gradientMap: gradient })
+  const motifLeafMat = new THREE.MeshToonMaterial({ color: '#789b78', gradientMap: gradient })
+
   // Wedding arch di kaki tangga (world z≈-14.9). Dua tiang kokoh di X±4.5 (di
   // luar jalur jalan ±1.0), crossbar atas di Y≈3.9. Kabel utama tergantung di
   // antara ujung crossbar — tinggi titik terendah ≥3.6m (di atas kepala karakter
@@ -476,6 +490,19 @@
   <T.PlaneGeometry args={[0.06, 43]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
+<!-- Corak bunga bordir pada jalur krem di kanan-kiri karpet -->
+{#each aisleMotifs as motif}
+  <T.Group position={motif.position} rotation.y={motif.rotationY}>
+    <T.Mesh geometry={motifStemGeo} material={motifLeafMat} position={[0, 0, 0.18]} />
+    <T.Mesh geometry={motifLeafGeo} material={motifLeafMat} rotation.x={-Math.PI / 2} position={[-0.1, 0.008, 0.18]} scale={[0.52, 1, 1]} rotation.z={-0.7} />
+    <T.Mesh geometry={motifLeafGeo} material={motifLeafMat} rotation.x={-Math.PI / 2} position={[0.1, 0.008, 0.36]} scale={[0.52, 1, 1]} rotation.z={0.7} />
+    <T.Mesh geometry={motifPetalGeo} material={motifPetalMat} rotation.x={-Math.PI / 2} position={[0, 0.012, -0.25]} scale={[0.72, 1.18, 1]} />
+    <T.Mesh geometry={motifPetalGeo} material={motifPetalMat} rotation.x={-Math.PI / 2} position={[0, 0.012, 0.05]} scale={[0.72, 1.18, 1]} />
+    <T.Mesh geometry={motifPetalGeo} material={motifPetalLightMat} rotation.x={-Math.PI / 2} position={[-0.15, 0.013, -0.1]} scale={[1.18, 0.72, 1]} />
+    <T.Mesh geometry={motifPetalGeo} material={motifPetalLightMat} rotation.x={-Math.PI / 2} position={[0.15, 0.013, -0.1]} scale={[1.18, 0.72, 1]} />
+    <T.Mesh geometry={motifCenterGeo} material={motifCenterMat} rotation.x={-Math.PI / 2} position={[0, 0.018, -0.1]} />
+  </T.Group>
+{/each}
 <!-- Landing carpet persegi panjang di kaki tangga (mengganti oval) — dusty rose + border emas -->
 <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.012, -14.9]} receiveShadow>
   <T.PlaneGeometry args={[4.0, 1.6]} />
