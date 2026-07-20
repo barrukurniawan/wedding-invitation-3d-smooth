@@ -59,13 +59,34 @@
   const pinkGradientRight = createGroundGradient(true)
 
   // === BANGUNAN VENUE (tetap primitif) ===
-  // Bunga panggung: komposisi seimbang kiri-kanan di kaki panggung + backdrop.
-  const stageFlowers: [number, number, number][] = [
-    [-4.5, 0.85, 1.7], [-4.2, 1.15, 1.55], [-3.8, 0.95, 1.75],
-    [4.5, 0.85, 1.7], [4.2, 1.15, 1.55], [3.8, 0.95, 1.75],
-    [-3.9, 1.1, -2.0], [3.9, 1.1, -2.0]
+  // Rangkaian bunga besar di sisi pasangan dan sudut depan panggung.
+  const stageBouquets = [
+    { position: [-3.25, 0.72, -0.65] as [number, number, number], scale: 1.18, rotationY: 0.08 },
+    { position: [3.25, 0.72, -0.65] as [number, number, number], scale: 1.18, rotationY: -0.08 },
+    { position: [-4.15, 0.72, 1.65] as [number, number, number], scale: 0.82, rotationY: 0.18 },
+    { position: [4.15, 0.72, 1.65] as [number, number, number], scale: 0.82, rotationY: -0.18 }
   ]
-  const flowerColors = ['#f08aa4', '#ffe3a3', '#f9b3c6', '#ffffff', '#d995c3']
+  const bouquetBlooms = [
+    { position: [-0.52, 1.42, 0.02] as [number, number, number], scale: 1.05, color: '#d96f91' },
+    { position: [0, 1.72, -0.02] as [number, number, number], scale: 1.2, color: '#f3a7bd' },
+    { position: [0.52, 1.4, 0.04] as [number, number, number], scale: 1.0, color: '#f7d9aa' },
+    { position: [-0.26, 1.08, 0.12] as [number, number, number], scale: 0.9, color: '#fff3e1' },
+    { position: [0.3, 1.08, 0.14] as [number, number, number], scale: 0.92, color: '#d99ac8' },
+    { position: [-0.02, 1.32, 0.2] as [number, number, number], scale: 0.88, color: '#ef829f' }
+  ]
+  const bouquetLeaves = [
+    [-0.7, 0.86, 0.02, -0.75], [-0.5, 1.18, -0.08, -0.5], [-0.25, 1.48, -0.12, -0.3],
+    [0.7, 0.86, 0.02, 0.75], [0.5, 1.18, -0.08, 0.5], [0.25, 1.48, -0.12, 0.3],
+    [-0.58, 0.65, 0.12, -0.9], [0.58, 0.65, 0.12, 0.9]
+  ] as const
+  const bouquetStemGeo = new THREE.CylinderGeometry(0.025, 0.035, 1.35, 6)
+  const bouquetLeafGeo = new THREE.SphereGeometry(0.22, 8, 6)
+  const bouquetPetalGeo = new THREE.SphereGeometry(0.2, 10, 8)
+  const bouquetCenterGeo = new THREE.SphereGeometry(0.105, 10, 8)
+  const bouquetStemMat = new THREE.MeshToonMaterial({ color: '#58755b', gradientMap: gradient })
+  const bouquetLeafMat = new THREE.MeshToonMaterial({ color: '#76956f', gradientMap: gradient })
+  const bouquetLeafDarkMat = new THREE.MeshToonMaterial({ color: '#4f7658', gradientMap: gradient })
+  const bouquetCenterMat = new THREE.MeshToonMaterial({ color: '#d9a441', gradientMap: gradient })
   const chairs: [number, number, number, number][] = [
     [-3.75, 0.67, 1.1, 0.25], [-2.75, 0.67, 1.1, 0.16],
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
@@ -800,16 +821,53 @@
   </T.Mesh>
   <!-- Cahaya hangat dekat backdrop (tanpa shadow, hemat) -->
   <T.PointLight position={[0, 4.2, -1.6]} color="#ffd9a0" intensity={1.5} distance={14} decay={1.4} />
-  {#each stageFlowers as flower, i}
-    <T.Mesh position={flower}>
-      <T.SphereGeometry args={[0.28, 8, 6]} />
-      <T.MeshToonMaterial color={flowerColors[i % flowerColors.length]} gradientMap={gradient} />
-    </T.Mesh>
+  <!-- Buket panggung besar: vas emas, foliage bertingkat, dan bunga berlapis. -->
+  {#each stageBouquets as bouquet}
+    <T.Group position={bouquet.position} scale={bouquet.scale} rotation.y={bouquet.rotationY}>
+      <T.Mesh position={[0, 0.24, 0]} castShadow>
+        <T.CylinderGeometry args={[0.34, 0.22, 0.48, 10]} />
+        <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
+      </T.Mesh>
+      <T.Mesh position={[0, 0.48, 0]}>
+        <T.TorusGeometry args={[0.34, 0.045, 6, 16]} />
+        <T.MeshToonMaterial color="#f1d99e" gradientMap={gradient} />
+      </T.Mesh>
+      {#each [-0.42, -0.2, 0, 0.2, 0.42] as stemX, i}
+        <T.Mesh
+          geometry={bouquetStemGeo}
+          material={bouquetStemMat}
+          position={[stemX * 0.62, 0.98 + (i % 2) * 0.1, 0]}
+          rotation.z={stemX * -0.42}
+        />
+      {/each}
+      {#each bouquetLeaves as leaf, i}
+        <T.Mesh
+          geometry={bouquetLeafGeo}
+          material={i % 2 === 0 ? bouquetLeafMat : bouquetLeafDarkMat}
+          position={[leaf[0], leaf[1], leaf[2]]}
+          rotation.z={leaf[3]}
+          scale={[0.55, 1.35, 0.38]}
+          castShadow
+        />
+      {/each}
+      {#each bouquetBlooms as bloom}
+        <T.Group position={bloom.position} scale={bloom.scale}>
+          {#each [0, Math.PI / 3, (Math.PI * 2) / 3, Math.PI, (Math.PI * 4) / 3, (Math.PI * 5) / 3] as angle}
+            <T.Mesh
+              geometry={bouquetPetalGeo}
+              position={[Math.cos(angle) * 0.2, Math.sin(angle) * 0.2, 0]}
+              scale={[1.25, 0.72, 0.5]}
+              rotation.z={angle}
+              castShadow
+            >
+              <T.MeshToonMaterial color={bloom.color} gradientMap={gradient} />
+            </T.Mesh>
+          {/each}
+          <T.Mesh geometry={bouquetCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.12]} castShadow />
+        </T.Group>
+      {/each}
+    </T.Group>
   {/each}
-  <T.Mesh position={[0, 1.3, -0.2]}>
-    <T.SphereGeometry args={[0.25, 8, 6]} />
-    <T.MeshToonMaterial color="#f1b7c7" gradientMap={gradient} />
-  </T.Mesh>
 
   {#each chairs as chair, i}
     <T.Group position={[chair[0], chair[1], chair[2]]} rotation.y={chair[3]}>
