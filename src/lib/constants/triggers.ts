@@ -66,7 +66,52 @@ export const triggerZones: TriggerZone[] = [
   }
 ]
 
+// === Light pole system (data-driven, shared by Environment + collision) ===
+export const LIGHT_POLE_OFFSET = 4.0
+export const LIGHT_POLE_Z_POSITIONS = [4, -1, -6, -11, -14]
+export const LIGHT_POLE_HOOK_HEIGHT = 3.8
+export const LIGHT_POLE_HOOK_REACH = 0.35
+export const LIGHT_POLE_COLLISION_RADIUS = 0.35
+
+export type LightPoleSide = 'left' | 'right'
+
+export interface LightPoleConfig {
+  id: string
+  side: LightPoleSide
+  position: [number, number, number]
+  hookWorld: [number, number, number]
+  variant: 'endpoint' | 'middle'
+}
+
+export const lightPoles: LightPoleConfig[] = (() => {
+  const poles: LightPoleConfig[] = []
+  for (const side of ['left', 'right'] as const) {
+    const x = side === 'left' ? -LIGHT_POLE_OFFSET : LIGHT_POLE_OFFSET
+    const dir = side === 'left' ? 1 : -1
+    LIGHT_POLE_Z_POSITIONS.forEach((z, i) => {
+      const hookX = x + dir * LIGHT_POLE_HOOK_REACH
+      poles.push({
+        id: `pole_${side}_${i}`,
+        side,
+        position: [x, 0, z],
+        hookWorld: [hookX, LIGHT_POLE_HOOK_HEIGHT, z],
+        variant: i === 0 || i === LIGHT_POLE_Z_POSITIONS.length - 1 ? 'endpoint' : 'middle'
+      })
+    })
+  }
+  return poles
+})()
+
+export const lightPoleColliders = lightPoles.map((p) => ({
+  minX: p.position[0] - LIGHT_POLE_COLLISION_RADIUS,
+  maxX: p.position[0] + LIGHT_POLE_COLLISION_RADIUS,
+  minZ: p.position[2] - LIGHT_POLE_COLLISION_RADIUS,
+  maxZ: p.position[2] + LIGHT_POLE_COLLISION_RADIUS
+}))
+
 export const colliders = [
+  // Light poles (prevent walking through 10 poles)
+  ...lightPoleColliders,
   // Meja resepsionis (world bounds menyam ukuran meja baru: x~3.58-4.42, z~-5.3-2.7)
   { minX: 3.5, maxX: 4.45, minZ: -5.3, maxZ: -2.7 },
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 },

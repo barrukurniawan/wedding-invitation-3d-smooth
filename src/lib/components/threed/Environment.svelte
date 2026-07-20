@@ -6,6 +6,7 @@
   import { GROUND_COLOR } from '../../constants/natureTheme'
   import HangingLights from './HangingLights.svelte'
   import { setOccluderGroup } from '../../stores/cameraOccluders.svelte'
+  import { lightPoles, LIGHT_POLE_HOOK_HEIGHT } from '../../constants/triggers'
 
   let occluders = $state<THREE.Group>()
   $effect(() => setOccluderGroup(occluders ?? null))
@@ -69,31 +70,35 @@
     [-3.75, 0.67, 1.1, 0.25], [-2.75, 0.67, 1.1, 0.16],
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
   ]
-  // Tiang lampu jalan (Street_Light.glb, skala 0.5). Ujung lengan ~Y=2.7,
-  // X≈±3.5. Dipakai sebagai anchor kabel lampu (lihat HangingLights).
-  const lamps = [
-    [-3.5, 0, -1.8], [3.5, 0, -1.8], [-3.5, 0, -7.5], [3.5, 0, -7.5],
-    [-3.5, 0, -13.5], [3.5, 0, -13.5]
-  ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], rotationY: a[0] > 0 ? -Math.PI / 2 : Math.PI / 2 }))
 
-  // === Kabel lampu berbasis anchor ===
-  // Tiang Street_Light di z=-1.8,-7.5,-13.5 (X±3.5). Dua kabel memanjang di kiri
-  // & kanan jalan (sejajar jalur, tidak memotong wajah). Kabel melintang di depan
-  // panggung dihapus karena memotong wajah pengantin & pandang kamera; diganti
-  // satu kabel utama pada wedding arch di kaki tangga (tinggi ≥3.6m, di atas
-  // kepala). Ujung kabel menempel pada bracket tiang/arch (Y sesuai).
-  const POLE_TOP = 2.75
-  const lightCableSag = 0.18
+  // === Light pole system — procedural straight poles (shared geometry) ===
+  // Tiang vertikal lurus low-poly: base, shaft, gold trim, bracket, hook.
+  // Geometri & material dibuat sekali, dipakai untuk semua 10 tiang.
+  const poleBaseGeo = new THREE.CylinderGeometry(0.36, 0.42, 0.16, 8)
+  const poleShaftGeo = new THREE.CylinderGeometry(0.085, 0.11, 3.62, 8)
+  const poleTrimGeo = new THREE.TorusGeometry(0.13, 0.025, 6, 12)
+  const poleBracketGeo = new THREE.BoxGeometry(0.42, 0.05, 0.05)
+  const poleHookGeo = new THREE.SphereGeometry(0.06, 8, 6)
+
+  const poleBaseMat = new THREE.MeshToonMaterial({ color: '#d9b77b', gradientMap: gradient })
+  const poleShaftMat = new THREE.MeshToonMaterial({ color: '#fff3dd', gradientMap: gradient })
+  const poleTrimMat = new THREE.MeshToonMaterial({ color: '#d9b77b', gradientMap: gradient })
+
+  // Hook offset toward path center: left = +X, right = -X
+  const poleHooks = lightPoles.map((p) => ({
+    ...p,
+    bracketDir: p.side === 'left' ? 1 : -1
+  }))
+
+  // Cable anchors per side: hook world positions for HangingLights
+  const cableLeftAnchors: [number, number, number][] = lightPoles
+    .filter((p) => p.side === 'left')
+    .map((p) => p.hookWorld)
+  const cableRightAnchors: [number, number, number][] = lightPoles
+    .filter((p) => p.side === 'right')
+    .map((p) => p.hookWorld)
+
   const bulbWarm = ['#ffd24a', '#ffe08a', '#ffca5a']
-
-  // Kabel memanjang sisi kiri (X=-3.5) menembus 3 tiang — ujung persis di tiang.
-  const cableLeftLong: [number, number, number][] = [
-    [-3.5, POLE_TOP, -1.8], [-3.5, POLE_TOP, -7.5], [-3.5, POLE_TOP, -13.5]
-  ]
-  // Kabel memanjang sisi kanan (X=3.5).
-  const cableRightLong: [number, number, number][] = [
-    [3.5, POLE_TOP, -1.8], [3.5, POLE_TOP, -7.5], [3.5, POLE_TOP, -13.5]
-  ]
 
   // Wedding arch di kaki tangga (world z≈-14.9). Dua tiang kokoh di X±4.5 (di
   // luar jalur jalan ±1.0), crossbar atas di Y≈3.9. Kabel utama tergantung di
@@ -145,32 +150,29 @@
   // === RUMPUT — tersebar padat di sepanjang jalan ===
   const grassTall = [
     [-6, 0, -8], [6, 0, -8], [-8, 0, -13], [8, 0, -13],
-    [-4, 0, 2.5], [4, 0, 2.5], [-6.5, 0, -6], [6.5, 0, -6],
-    [-5, 0, -12], [5, 0, -12],
-    [-7, 0, -3], [7, 0, -3], [-9, 0, -8], [9, 0, -8],
-    [-8, 0, 2], [8, 0, 2],
+    [-7, 0, 2.5], [7, 0, 2.5], [-7.5, 0, -6], [7.5, 0, -6],
+    [-7, 0, -12], [7, 0, -12], [-7.5, 0, -3], [7.5, 0, -3]
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.45 + (i % 3) * 0.08, rotationY: i * 0.7 }))
 
   const grassWispy = [
-    [-4.5, 0, 1], [4.5, 0, 1], [-5.5, 0, -3], [5.5, 0, -3],
-    [-7.5, 0, -10], [7.5, 0, -10], [-6.5, 0, -15], [6.5, 0, -15],
-    [-9.5, 0, -5], [9.5, 0, -5],
+    [-6.5, 0, 1], [6.5, 0, 1], [-7, 0, -3], [7, 0, -3],
+    [-7.5, 0, -10], [7.5, 0, -10]
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.38 + (i % 3) * 0.06, rotationY: i * 0.9 }))
 
   // === BUNGA — berkelompok di tepi jalan ===
   const flower3 = [
-    [-4.2, 0, 3], [4.2, 0, 3], [-5.8, 0, -7], [5.8, 0, -7],
+    [-7, 0, 3], [7, 0, 3], [-6.5, 0, -7], [6.5, 0, -7],
     [-7.5, 0, -12], [7.5, 0, -12],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.4, rotationY: i * 0.5 }))
 
   const flower4 = [
-    [-7, 0, -11.5], [7, 0, -11.5], [-5.6, 0, -16.5], [5.6, 0, -16.5],
-    [-3.8, 0, 4.5], [3.8, 0, 4.5],
+    [-7, 0, -11.5], [7, 0, -11.5], [-6.5, 0, -16.5], [6.5, 0, -16.5],
+    [-7, 0, 4.5], [7, 0, 4.5],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.4, rotationY: i * 0.6 }))
 
   // === SEMAK & TANAMAN ===
   const bushes = [
-    [-3, 0, 3.5], [3, 0, 3.5], [-6, 0, 0], [6, 0, 0],
+    [-6.5, 0, 3.5], [6.5, 0, 3.5], [-6, 0, 0], [6, 0, 0],
     [-8.5, 0, -6], [8.5, 0, -6],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.5, rotationY: i * 0.5 }))
 
@@ -180,8 +182,8 @@
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[0] * 0.3 }))
 
   const plants = [
-    [-5, 0, 4], [5, 0, 4], [-8, 0, -2], [8, 0, -2],
-    [-6.5, 0, -9], [6.5, 0, -9],
+    [-7, 0, 4], [7, 0, 4], [-8, 0, -2], [8, 0, -2],
+    [-7.5, 0, -9], [7.5, 0, -9],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.5, rotationY: i * 0.7 }))
 
   // === BATU & PEBBLE ===
@@ -191,13 +193,13 @@
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[0] * 0.2 }))
 
   const pebbles = [
-    [-5, 0, 3, 0.4], [5, 0, 3, 0.4],
+    [-7, 0, 3, 0.4], [7, 0, 3, 0.4],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.3 }))
 
   // === JAMUR ===
   const mushrooms = [
-    [-4.5, 0, 0, 0.4], [4.5, 0, 0, 0.45], [-7, 0, -5, 0.4], [7, 0, -5, 0.35],
-    [-9, 0, -11, 0.45], [9, 0, -11, 0.4], [-6, 0, -14, 0.35], [6, 0, -14, 0.4],
+    [-7, 0, 0, 0.4], [7, 0, 0, 0.45], [-7.5, 0, -5, 0.4], [7.5, 0, -5, 0.35],
+    [-9, 0, -11, 0.45], [9, 0, -11, 0.4], [-7, 0, -14, 0.35], [7, 0, -14, 0.4],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.8 }))
 
   // ============================================================
@@ -261,7 +263,7 @@
     [-12, 0, 6, 0.2, 0.9], [-15, 0, -5, 0.22, 0.3],
     [-10, 0, -2, 0.18, -0.8], [-17, 0, -14, 0.2, 0.5],
     [-9, 0, 8, 0.2, 0.2], [-13, 0, -20, 0.22, -0.4],
-    [-6, 0, 3, 0.2, 0.6], [-14, 0, 0, 0.18, -0.3],
+    [-7.5, 0, 3, 0.2, 0.6], [-14, 0, 0, 0.18, -0.3],
     [-11, 0, -16, 0.22, 0.8], [-7, 0, -6, 0.2, -0.5],
     [-16, 0, -8, 0.2, 0.7], [-9, 0, -16, 0.22, -0.2], [-13, 0, -4, 0.2, 0.5],
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
@@ -271,7 +273,7 @@
     [12, 0, 6, 0.2, -0.9], [15, 0, -5, 0.22, -0.3],
     [10, 0, -2, 0.18, 0.8], [17, 0, -14, 0.2, -0.5],
     [9, 0, 8, 0.2, -0.2], [13, 0, -20, 0.22, 0.4],
-    [6, 0, 3, 0.2, -0.6], [14, 0, 0, 0.18, 0.3],
+    [7.5, 0, 3, 0.2, -0.6], [14, 0, 0, 0.18, 0.3],
     [11, 0, -16, 0.22, -0.8], [7, 0, -6, 0.2, 0.5],
     [16, 0, -8, 0.2, -0.7], [9, 0, -16, 0.22, 0.2], [13, 0, -4, 0.2, -0.5],
   ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
@@ -307,53 +309,51 @@
   // Pohon (dari batu) — BANYAK di kiri & kanan
   const rockMed2Left = [
     [-7, 0, 2, 0.35, 0.3], [-12, 0, -3, 0.4, -0.5], [-9, 0, -8, 0.38, 0.8],
-    [-14, 0, -10, 0.32, 0.2], [-6, 0, -14, 0.4, -0.6], [-11, 0, 6, 0.36, 0.4],
+    [-14, 0, -10, 0.32, 0.2], [-7.5, 0, -14, 0.4, -0.6], [-11, 0, 6, 0.36, 0.4],
     [-15, 0, 4, 0.3, -0.3], [-8, 0, -18, 0.38, 0.7],
-    [-5, 0, -5, 0.3, 0.4], [-8, 0, -1, 0.36, -0.8], [-10, 0, -15, 0.32, 0.6],
+    [-6.5, 0, -5, 0.3, 0.4], [-8, 0, -1, 0.36, -0.8], [-10, 0, -15, 0.32, 0.6],
     [-13, 0, 2, 0.38, -0.2], [-16, 0, -3, 0.34, 0.9], [-7, 0, -20, 0.3, -0.5],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
 
   const rockMed2Right = [
     [7, 0, 2, 0.35, -0.3], [12, 0, -3, 0.4, 0.5], [9, 0, -8, 0.38, -0.8],
-    [14, 0, -10, 0.32, -0.2], [6, 0, -14, 0.4, 0.6], [11, 0, 6, 0.36, -0.4],
+    [14, 0, -10, 0.32, -0.2], [7.5, 0, -14, 0.4, 0.6], [11, 0, 6, 0.36, -0.4],
     [15, 0, 4, 0.3, 0.3], [8, 0, -18, 0.38, -0.7],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.5 }))
 
   // Rumput pendek di sisi
   const grassShortLeft = [
-    [-5, 0, 1, 0.45], [-7, 0, -3, 0.5], [-4, 0, -7, 0.42], [-8, 0, -10, 0.48],
-    [-6, 0, -15, 0.45], [-9, 0, 5, 0.5],
+    [-7, 0, 1, 0.45], [-8, 0, -3, 0.5], [-7, 0, -7, 0.42], [-8.5, 0, -10, 0.48],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.6 }))
 
   const grassShortRight = [
-    [5, 0, 1, 0.45], [7, 0, -3, 0.5], [4, 0, -7, 0.42], [8, 0, -10, 0.48],
-    [6, 0, -15, 0.45], [9, 0, 5, 0.5],
+    [7, 0, 1, 0.45], [8, 0, -3, 0.5], [7, 0, -7, 0.42], [8.5, 0, -10, 0.48],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.7 }))
 
   const grassWispyShortLeft = [
-    [-4.5, 0, -1, 0.4], [-6.5, 0, -8, 0.38], [-7.5, 0, -12, 0.42],
+    [-7, 0, -1, 0.4], [-7.5, 0, -8, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.9 }))
 
   const grassWispyShortRight = [
-    [4.5, 0, -1, 0.4], [6.5, 0, -8, 0.38], [7.5, 0, -12, 0.42],
+    [7, 0, -1, 0.4], [7.5, 0, -8, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.8 }))
 
   // Bunga tunggal di sisi
   const flowerSingleLeft = [
-    [-5, 0, 3, 0.38], [-6, 0, -6, 0.4], [-4, 0, -11, 0.36], [-7, 0, 2, 0.38],
+    [-7, 0, 3, 0.38], [-7.5, 0, -6, 0.4], [-7, 0, -11, 0.36], [-8, 0, 2, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
 
   const flowerSingleRight = [
-    [5, 0, 3, 0.38], [6, 0, -6, 0.4], [4, 0, -11, 0.36], [7, 0, 2, 0.38],
+    [7, 0, 3, 0.38], [7.5, 0, -6, 0.4], [7, 0, -11, 0.36], [8, 0, 2, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.6 }))
 
   // Clover di sisi
   const cloversLeft = [
-    [-4, 0, 0, 0.4], [-5.5, 0, -4, 0.42], [-6, 0, -9, 0.38],
+    [-7, 0, 0, 0.4], [-7.5, 0, -4, 0.42], [-7.5, 0, -9, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.7 }))
 
   const cloversRight = [
-    [4, 0, 0, 0.4], [5.5, 0, -4, 0.42], [6, 0, -9, 0.38],
+    [7, 0, 0, 0.4], [7.5, 0, -4, 0.42], [7.5, 0, -9, 0.38],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.7 }))
 
   // Semak berbunga
@@ -395,26 +395,26 @@
   // Jalur batu tepi jalan
   // Jamur Laetiporus
   const mushroomLaetiLeft = [
-    [-5, 0, -1, 0.4], [-7, 0, -9, 0.35], [-6, 0, -13, 0.42],
+    [-9, 0, -1, 0.4], [-10, 0, -9, 0.35], [-9, 0, -13, 0.42],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.8 }))
 
   const mushroomLaetiRight = [
-    [5, 0, -1, 0.4], [7, 0, -9, 0.35], [6, 0, -13, 0.42],
+    [9, 0, -1, 0.4], [10, 0, -9, 0.35], [9, 0, -13, 0.42],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.8 }))
 
 
   // === POHON BERJAJAR di perbatasan venue (tepi kiri & kanan jalan) ===
-  // Jarak cukup dari jalan (X=±5.5) dan tidak terlalu rapat antar pohon
+  // Beri ruang dari tiang lampu di X=±4 agar batang dan kanopi tidak bertabrakan.
   const liningTreesLeft = [
-    [-5.5, 0, 5, 0.4], [-5.5, 0, 1, 0.42], [-5.5, 0, -3, 0.4],
-    [-5.5, 0, -7, 0.42], [-5.5, 0, -11, 0.4], [-5.5, 0, -15, 0.42],
-    [-5.5, 0, -19, 0.4],
+    [-7, 0, 5, 0.4], [-7, 0, 1, 0.42], [-7, 0, -3, 0.4],
+    [-7, 0, -7, 0.42], [-7, 0, -11, 0.4], [-7, 0, -15, 0.42],
+    [-7, 0, -19, 0.4],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.3 }))
 
   const liningTreesRight = [
-    [5.5, 0, 5, 0.42], [5.5, 0, 1, 0.4], [5.5, 0, -3, 0.42],
-    [5.5, 0, -7, 0.4], [5.5, 0, -11, 0.42], [5.5, 0, -15, 0.4],
-    [5.5, 0, -19, 0.42],
+    [7, 0, 5, 0.42], [7, 0, 1, 0.4], [7, 0, -3, 0.42],
+    [7, 0, -7, 0.4], [7, 0, -11, 0.42], [7, 0, -15, 0.4],
+    [7, 0, -19, 0.42],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.3 }))
 
   // === GUNUNG di belakang panggung — 3 lapis kedalaman ===
@@ -437,10 +437,10 @@
   ]
 
   const stageBushes = [
-    [-5.8, 0, -15.5, 0.5, 0.3], [5.8, 0, -15.5, 0.5, -0.3],
-    [-5.8, 0, -20.5, 0.5, 0.5], [5.8, 0, -20.5, 0.5, -0.5],
-    [-5.8, 0, -18, 0.48, 0.2], [5.8, 0, -18, 0.48, -0.2],
-    [-6.2, 0, -17, 0.45, 0.4], [6.2, 0, -17, 0.45, -0.4],
+    [-7.5, 0, -15.5, 0.5, 0.3], [7.5, 0, -15.5, 0.5, -0.3],
+    [-7.5, 0, -20.5, 0.5, 0.5], [7.5, 0, -20.5, 0.5, -0.5],
+    [-7.5, 0, -18, 0.48, 0.2], [7.5, 0, -18, 0.48, -0.2],
+    [-8, 0, -17, 0.45, 0.4], [8, 0, -17, 0.45, -0.4],
   ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
 
   // === HEWAN ===
@@ -545,9 +545,13 @@
 <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesLeft)} />
 <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesRight)} />
 
-<!-- POHON: CommonTree lebar (warna original GLB: batang coklat, daun hijau) -->
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={sparseTrees(treeLayerA)} tint="#ffffff" />
-<!-- Tiga pohon non-merah dikurangi agar total pohon menjadi 30 -->
+<!-- POHON: CommonTree lebar -->
+<Nature
+  url="/nature/gltf/tree-high.glb"
+  scale={3.5}
+  instances={sparseTrees(treeLayerA)}
+  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
+/>
 
 <!-- POHON: Pine / Cemara di latar belakang -->
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(pineLayer)} />
@@ -560,13 +564,11 @@
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redPineRight)} />
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redTwistedLeft)} />
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(redTwistedRight)} />
-<!-- Pohon berdaun merah dekat Kotak Ucapan -->
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(mailboxTrees)} />
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(extraTreesLeft)} />
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(extraTreesRight)} />
-<!-- Pohon (dari batu) banyak -->
 <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={rockMed2Left} />
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockMed2Right} tint="#ffffff" />
+<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={rockMed2Right} />
 
 <!-- RUMPUT padat -->
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={grassTall} />
@@ -581,10 +583,15 @@
 <Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
 <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
 
-<!-- BATU besar -->
-<Nature url="/nature/gltf/tree.glb" scale={3} instances={rocks} tint="#ffffff" />
+<!-- BATU besar (aset pohon legacy) -->
+<Nature
+  url="/nature/gltf/tree.glb"
+  scale={3}
+  instances={rocks}
+  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
+/>
 
-<!-- PEBBLE kecil di tepi jalan -->
+<!-- PEBBLE kecil di tepi jalan (aset pohon legacy) -->
 <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
 
 <!-- JAMUR -->
@@ -619,14 +626,19 @@
 <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={plantBigRight} />
 
 <!-- BATU & pebble tambahan sisi -->
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={rockSidesLeft} tint="#ffffff" />
+<Nature
+  url="/nature/gltf/tree-high.glb"
+  scale={3.5}
+  instances={rockSidesLeft}
+  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
+/>
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={rockSidesRight} />
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesLeft} />
-<Nature url="/nature/gltf/tree.glb" scale={3} instances={pebbleSidesRight} tint="#ffffff" />
+<Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesRight} />
 
 <!-- JAMUR Laetiporus sisi -->
 <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={mushroomLaetiLeft} />
-<Nature url="/nature/gltf/tree-high.glb" scale={3.5} instances={mushroomLaetiRight} tint="#ffffff" />
+<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={mushroomLaetiRight} />
 
 <!-- Receptionist desk (lebih kecil & elegan: panel dusty rose, meja ivory, trim emas) -->
 <T.Group position={[4, 0, -4]} rotation.y={Math.PI / 2}>
@@ -841,18 +853,21 @@
 <!-- Bush di sekeliling panggung -->
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={stageBushes} />
 
-<!-- Lamps + base penyangga tiang (menambahkan kokoh/grounding) -->
-<Nature url="/nature/gltf/Street_Light.glb" scale={0.5} instances={lamps} materialColors={{ Grey: '#efe6d3' }} />
-{#each lamps as l}
-  <T.Mesh position={[l.position[0], 0.06, l.position[2]]} castShadow>
-    <T.BoxGeometry args={[0.5, 0.12, 0.5]} />
-    <T.MeshToonMaterial color="#e8dcc4" gradientMap={gradient} />
-  </T.Mesh>
-  <!-- Bracket kecil di kepala tiang sebagai titik tambat kabel -->
-  <T.Mesh position={[l.position[0], POLE_TOP, l.position[2]]}>
-    <T.SphereGeometry args={[0.09, 8, 6]} />
-    <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
-  </T.Mesh>
+<!-- Straight_Light_Pole — 10 tiang prosedural lurus (5 kiri, 5 kanan).
+     Shared geometry/material; bracket menghadap pusat jalur. Hook = titik tambat kabel. -->
+{#each poleHooks as pole}
+  <T.Group position={pole.position}>
+    <!-- Pole_Base -->
+    <T.Mesh geometry={poleBaseGeo} material={poleBaseMat} position={[0, 0.08, 0]} castShadow receiveShadow />
+    <!-- Pole_Shaft -->
+    <T.Mesh geometry={poleShaftGeo} material={poleShaftMat} position={[0, 1.99, 0]} castShadow receiveShadow />
+    <!-- Gold trim band -->
+    <T.Mesh geometry={poleTrimGeo} material={poleTrimMat} position={[0, 3.62, 0]} />
+    <!-- Pole_Bracket (extends toward path center) -->
+    <T.Mesh geometry={poleBracketGeo} material={poleTrimMat} position={[pole.bracketDir * 0.175, 3.72, 0]} />
+    <!-- Pole_Cable_Hook -->
+    <T.Mesh geometry={poleHookGeo} material={poleTrimMat} position={[pole.bracketDir * 0.35, 3.77, 0]} />
+  </T.Group>
 {/each}
 
 <!-- Wedding arch di kaki tangga: dua tiang kokoh + crossbar + bracket -->
@@ -894,12 +909,12 @@
   </T.Mesh>
 </T.Group>
 
-<!-- Kabel lampu: dua memanjang sisi jalan (di tiang) + satu utama di arch (tinggi) -->
-<HangingLights anchors={cableLeftLong} sag={lightCableSag} bulbSpacing={1.5} bulbColors={bulbWarm} />
-<HangingLights anchors={cableRightLong} sag={lightCableSag} bulbSpacing={1.5} bulbColors={bulbWarm} />
+<!-- Kabel lampu: dua memanjang sisi jalan (5 tiang per sisi, hook Y=3.8m) + satu utama di arch -->
+<HangingLights anchors={cableLeftAnchors} sag={0.25} bulbSpacing={1.4} bulbColors={bulbWarm} />
+<HangingLights anchors={cableRightAnchors} sag={0.25} bulbSpacing={1.4} bulbColors={bulbWarm} />
 <HangingLights anchors={archCable} sag={0.2} bulbSpacing={0.9} bulbColors={bulbWarm} />
 
-<!-- Proxy collision untuk kamera (invisible, ~6 kotak). Hanya grup ini yang
+<!-- Proxy collision untuk kamera (invisible). Hanya grup ini yang
      di-raycast CameraRig — bukan seluruh scene — agar tidak membebani memori.
      Koordinat dunia; material diperlukan agar Mesh.raycast berfungsi. -->
 <T.Group bind:ref={occluders}>
@@ -927,4 +942,11 @@
     <T.BoxGeometry args={[0.8, 1.6, 0.7]} />
     <T.MeshBasicMaterial />
   </T.Mesh>
+  <!-- Light pole proxies (10 poles, thin boxes from ground to hook) -->
+  {#each lightPoles as pole}
+    <T.Mesh position={[pole.position[0], LIGHT_POLE_HOOK_HEIGHT / 2, pole.position[2]]} visible={false}>
+      <T.BoxGeometry args={[0.3, LIGHT_POLE_HOOK_HEIGHT, 0.3]} />
+      <T.MeshBasicMaterial />
+    </T.Mesh>
+  {/each}
 </T.Group>
