@@ -113,13 +113,6 @@
 
 
   // === POHON — hutan padat di pinggir venue ===
-  // CommonTree (pohon lebar) di sisi kiri-kanan venue
-  const treeLayerA = [
-    [-10, 0, 2, 0.45, 0.3], [10, 0, 2, 0.42, -0.6], [-16, 0, -10, 0.5, 1.2],
-    [-12, 0, 8, 0.4, 0.8], [12, 0, 8, 0.38, -0.4],
-    [-15, 0, -3, 0.42, 1.5], [15, 0, -3, 0.45, -0.9],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
-
   const treeLayerB = [
     [16, 0, -12, 0.36, -0.4], [-17, 0, -16, 0.38, 0.6],
     [-13, 0, -22, 0.4, 1.0], [13, 0, -22, 0.4, -0.5],
@@ -186,12 +179,7 @@
     [-7.5, 0, -9], [7.5, 0, -9],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.5, rotationY: i * 0.7 }))
 
-  // === BATU & PEBBLE ===
-  const rocks = [
-    [-9, 0, 5, 0.35], [9, 0, 5, 0.4], [-14, 0, -7, 0.3], [14, 0, -7, 0.35],
-    [-16, 0, -14, 0.25], [16, 0, -14, 0.3],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[0] * 0.2 }))
-
+  // === PEBBLE ===
   const pebbles = [
     [-7, 0, 3, 0.4], [7, 0, 3, 0.4],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.3 }))
@@ -374,11 +362,6 @@
     [12, 0, -5, 0.3], [11, 0, -17, 0.28],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.6 }))
 
-  // Batu besar tambahan
-  const rockSidesLeft = [
-    [-10, 0, 0, 0.35], [-14, 0, -10, 0.3], [-12, 0, -22, 0.32],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.4 }))
-
   const rockSidesRight = [
     [10, 0, 0, 0.35], [14, 0, -10, 0.3], [12, 0, -22, 0.32],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.4 }))
@@ -545,14 +528,6 @@
 <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesLeft)} />
 <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={sparseTrees(liningTreesRight)} />
 
-<!-- POHON: CommonTree lebar -->
-<Nature
-  url="/nature/gltf/tree-high.glb"
-  scale={3.5}
-  instances={sparseTrees(treeLayerA)}
-  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
-/>
-
 <!-- POHON: Pine / Cemara di latar belakang -->
 <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={sparseTrees(pineLayer)} />
 
@@ -582,14 +557,6 @@
 <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={bushes} />
 <Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
 <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
-
-<!-- BATU besar (aset pohon legacy) -->
-<Nature
-  url="/nature/gltf/tree.glb"
-  scale={3}
-  instances={rocks}
-  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
-/>
 
 <!-- PEBBLE kecil di tepi jalan (aset pohon legacy) -->
 <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
@@ -626,12 +593,6 @@
 <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={plantBigRight} />
 
 <!-- BATU & pebble tambahan sisi -->
-<Nature
-  url="/nature/gltf/tree-high.glb"
-  scale={3.5}
-  instances={rockSidesLeft}
-  tintGradient={{ leaves: '#4f9f45', bark: '#75452d' }}
-/>
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={rockSidesRight} />
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesLeft} />
 <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={pebbleSidesRight} />
