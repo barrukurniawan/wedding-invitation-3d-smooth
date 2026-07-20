@@ -67,7 +67,8 @@ export const triggerZones: TriggerZone[] = [
 ]
 
 export const colliders = [
-  { minX: 3.3, maxX: 4.7, minZ: -5.85, maxZ: -2.15 },
+  // Meja resepsionis (world bounds menyam ukuran meja baru: x~3.58-4.42, z~-5.3-2.7)
+  { minX: 3.5, maxX: 4.45, minZ: -5.3, maxZ: -2.7 },
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 },
   { minX: 3.5, maxX: 4.5, minZ: -10.5, maxZ: -9.5 }
 ]
@@ -84,6 +85,16 @@ export const RAMP = { minZ: -15.8, maxZ: -14.7, height: STAGE.height }
 
 export const HALF_WORLD = 18
 export const PLAYER_RADIUS = 0.42
+
+// === Movement tuning (units are in *seconds*, frame-rate independent) ===
+// Legacy per-frame SPEED is kept for reference; movement now uses WALK/RUN below.
 export const SPEED = 0.08
+export const WALK_SPEED = 4.8 // units / second
+export const RUN_SPEED = 8.4 // units / second (sprint)
+export const ACCEL_LAMBDA = 10 // velocity approach rate while input held
+export const DECEL_LAMBDA = 14 // velocity decay rate when input released
+export const ROT_LAMBDA = 12 // character turn smoothing rate
+export const SPRINT_JOY_THRESHOLD = 0.9 // joystick magnitude that triggers run
+export const VEL_DEAD = 0.02 // below this speed, snap velocity to zero
 
 export const flowerColors = ['#f08aa4', '#ffe3a3', '#f9b3c6', '#ffffff', '#d995c3']

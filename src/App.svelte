@@ -44,8 +44,8 @@
   <div class="pointer-events-none absolute inset-0 overflow-hidden">
     {#each $screenLabels as label (label.id)}
       <div
-        class="world-label absolute -translate-x-1/2 -translate-y-full"
-        style="left: {label.x}px; top: {label.y}px; opacity: {label.behind ? 0 : 1}"
+        class="world-label absolute -translate-x-1/2 -translate-y-full transition-opacity duration-200"
+        style="left: {label.x}px; top: {label.y}px; opacity: {label.behind ? 0 : label.opacity}"
       >
         {label.text}
       </div>

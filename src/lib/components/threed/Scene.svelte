@@ -22,8 +22,8 @@
   })
 
   // Render loop utama: gerakan -> deteksi proximity
-  useTask(() => {
-    tick()
+  useTask((delta: number) => {
+    tick(delta)
     setNearbyTrigger(getNearbyTrigger(playerPos.x, playerPos.z))
   })
 </script>

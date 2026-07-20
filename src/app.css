@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ivory: #fff8ef;
+  --rose: #d96b7a;
+  --deep-rose: #8b3f50;
+  --champagne: #d9b77b;
+  --sage: #a8b99a;
+  --ink: #33262b;
+  --panel-bg: rgba(35, 24, 28, 0.92);
+  --panel-border: rgba(217, 183, 123, 0.34);
+  --panel-shadow: 0 24px 64px -24px rgba(28, 16, 20, 0.7);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -23,6 +35,68 @@ body {
   font-weight: 700;
   padding: 6px 10px;
   pointer-events: none;
+}
+
+@layer components {
+  .w-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--panel-shadow);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: var(--ivory);
+  }
+  .w-card {
+    background: rgba(255, 248, 239, 0.05);
+    border: 1px solid rgba(217, 183, 123, 0.16);
+  }
+  .w-input {
+    background: rgba(20, 12, 14, 0.55);
+    border: 1px solid rgba(217, 183, 123, 0.22);
+    color: var(--ivory);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .w-input::placeholder {
+    color: rgba(255, 248, 239, 0.4);
+  }
+  .w-input:focus {
+    outline: none;
+    border-color: var(--rose);
+    box-shadow: 0 0 0 1px var(--rose);
+  }
+  .w-btn-primary {
+    background: linear-gradient(135deg, var(--rose), #c25a68);
+    color: #fff;
+    box-shadow: 0 10px 24px -10px rgba(217, 107, 122, 0.7);
+  }
+  .w-btn-gold {
+    background: linear-gradient(135deg, var(--champagne), #c69d56);
+    color: var(--ink);
+  }
+  .w-btn-ghost {
+    background: rgba(255, 248, 239, 0.06);
+    border: 1px solid rgba(217, 183, 123, 0.25);
+    color: var(--ivory);
+  }
+  .w-tab {
+    border: 1px solid transparent;
+    color: rgba(255, 248, 239, 0.6);
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .w-tab-active {
+    background: linear-gradient(135deg, var(--rose), #c25a68);
+    color: #fff;
+    border-color: rgba(217, 183, 123, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce {
+    animation: none !important;
+  }
+  .animate-spin {
+    animation-duration: 2.5s !important;
+  }
 }
 
 .fade-enter-active,

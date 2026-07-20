@@ -11,8 +11,9 @@ const env = import.meta.env
 // Default tint per jenis (dipakai bila .env tidak men-set var terkait).
 export const NATURE_TINTS: Record<string, string> = {
   // === POHON ===
-  'tree-high.glb': '#27cd46',
-  'tree.glb': '#27cd46',
+  // tree.glb & tree-high.glb: pakai warna original GLB (batang coklat, daun hijau)
+  'tree-high.glb': '#ffffff',
+  'tree.glb': '#ffffff',
   'tree_1_a_color1.glb': '#27cd46',
   'tree_1_b_color1.glb': '#27cd46',
   'tree_1_c_color1.glb': '#27cd46',

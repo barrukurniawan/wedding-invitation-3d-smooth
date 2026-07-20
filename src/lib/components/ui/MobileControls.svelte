@@ -42,9 +42,9 @@
   }
 </script>
 
-<div class="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex items-end justify-between p-6 select-none md:hidden">
+<div class="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex items-end justify-between p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] select-none md:hidden">
   <div
-    class="pointer-events-auto relative flex h-32 w-32 touch-none items-center justify-center rounded-full border border-stone-800 bg-stone-900/60 backdrop-blur-md"
+    class="pointer-events-auto relative flex h-32 w-32 touch-none items-center justify-center rounded-full border border-[var(--champagne)]/40 bg-[var(--panel-bg)] backdrop-blur-md"
     role="application"
     aria-label="Joystick gerak"
     ontouchstart={handleTouchStart}
@@ -52,7 +52,7 @@
     ontouchend={handleTouchEnd}
   >
     <div
-      class="absolute h-12 w-12 rounded-full bg-rose-500 shadow-lg shadow-rose-900/50 transition-transform duration-75"
+      class="absolute h-12 w-12 rounded-full bg-gradient-to-tr from-[var(--rose)] to-[#e98a96] shadow-lg shadow-rose-900/40 transition-transform duration-75"
       style="transform: translate({knobOffset.x}px, {knobOffset.y}px)"
     ></div>
   </div>
@@ -60,7 +60,7 @@
   {#if $nearbyTrigger}
     <div class="pointer-events-auto">
       <button
-        class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-rose-600 to-rose-500 text-lg font-bold text-white shadow-lg border border-rose-400/30 transition-transform active:scale-95 hover:from-rose-500 hover:to-rose-400"
+        class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-[var(--rose)] to-[#e98a96] text-lg font-bold text-white shadow-lg border border-[var(--champagne)]/40 transition-transform active:scale-95 hover:from-[#e98a96] hover:to-[var(--rose)]"
         onclick={interact}
       >
         E
