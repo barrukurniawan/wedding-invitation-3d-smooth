@@ -19,7 +19,7 @@
 
 <!-- Resepsionis -->
 <Character
-  url="/models/resepsionis.gltf"
+  url="/models/resepsionis.glb"
   position={[4.9, 0, -4]}
   rotationY={-Math.PI / 2}
   scale={S}
@@ -29,7 +29,7 @@
 
 <!-- Pemandu -->
 <Character
-  url="/models/pemandu.gltf"
+  url="/models/pemandu.glb"
   position={[4, 0, -10]}
   rotationY={-Math.PI / 2}
   scale={S}
@@ -40,7 +40,7 @@
 
 <!-- Pengantin wanita (Kia) -->
 <Character
-  url="/models/pengantin-wanita.gltf"
+  url="/models/pengantin-wanita.glb"
   position={[-0.72, STAGE_Y, -18.6]}
   rotationY={0.3}
   scale={S}
@@ -51,7 +51,7 @@
 
 <!-- Pengantin pria (Toni) -->
 <Character
-  url="/models/pengantin-pria.gltf"
+  url="/models/pengantin-pria.glb"
   position={[0.72, STAGE_Y, -18.6]}
   rotationY={-0.3}
   scale={S}

@@ -9,10 +9,16 @@
   import { WALK_SPEED, RUN_SPEED } from '../../constants/triggers'
 
   let {
-    url = '/models/tamu.gltf',
+    url = '/models/tamu.glb',
     scale = 0.62,
-    appearance = {}
-  }: { url?: string; scale?: number; appearance?: Partial<Appearance> } = $props()
+    appearance = {},
+    onReady
+  }: {
+    url?: string
+    scale?: number
+    appearance?: Partial<Appearance>
+    onReady?: () => void
+  } = $props()
 
   const gltf = untrack(() => useGltf(url))
   const { actions } = useGltfAnimations(() => $gltf)
@@ -92,6 +98,7 @@
       castShadow
       oncreate={(ref) => {
         applyAppearance(ref, appearance)
+        onReady?.()
       }}
     />
   {/await}

@@ -2,11 +2,10 @@
   import * as THREE from 'three'
   import { useTask, useThrelte } from '@threlte/core'
   import { SoftShadows } from '@threlte/extras'
+  import { onMount, type Component } from 'svelte'
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
-  import Environment from './Environment.svelte'
   import Player from './Player.svelte'
-  import Npcs from './Npcs.svelte'
   import Confetti from './Confetti.svelte'
   import Labels from './Labels.svelte'
   import { tick, playerPos } from '../../stores/playerMovement.svelte'
@@ -14,6 +13,28 @@
   import { getNearbyTrigger } from '../../utils/interaction'
 
   const { scene } = useThrelte()
+
+  const isMobile = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
+
+  let playerReady = $state(false)
+  let Environment = $state<Component>()
+  let Npcs = $state<Component>()
+
+  onMount(() => {
+    void import('./Environment.svelte').then((module) => {
+      Environment = module.default
+    })
+  })
+
+  $effect(() => {
+    if (!playerReady) return
+    const t = setTimeout(() => {
+      void import('./Npcs.svelte').then((module) => {
+        Npcs = module.default
+      })
+    }, 500)
+    return () => clearTimeout(t)
+  })
 
   // Background langit hangat + fog lembut ala Summer Afternoon
   $effect(() => {
@@ -28,12 +49,19 @@
   })
 </script>
 
-<SoftShadows size={28} samples={12} focus={0.6} />
+<SoftShadows size={isMobile ? 16 : 28} samples={isMobile ? 4 : 12} focus={0.6} />
 
 <CameraRig />
 <Lighting />
-<Environment />
-<Player appearance={{ skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }} />
-<Npcs />
+{#if Environment}
+  <Environment />
+{/if}
+<Player
+  appearance={{ skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }}
+  onReady={() => { playerReady = true }}
+/>
+{#if Npcs}
+  <Npcs />
+{/if}
 <Confetti />
 <Labels />
