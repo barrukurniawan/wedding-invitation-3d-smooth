@@ -87,6 +87,32 @@
   const bouquetLeafMat = new THREE.MeshToonMaterial({ color: '#76956f', gradientMap: gradient })
   const bouquetLeafDarkMat = new THREE.MeshToonMaterial({ color: '#4f7658', gradientMap: gradient })
   const bouquetCenterMat = new THREE.MeshToonMaterial({ color: '#d9a441', gradientMap: gradient })
+
+  const backdropHeart = new THREE.Shape()
+  backdropHeart.moveTo(0, -0.52)
+  backdropHeart.bezierCurveTo(-0.14, -0.34, -0.62, 0.02, -0.62, 0.4)
+  backdropHeart.bezierCurveTo(-0.62, 0.82, -0.1, 0.92, 0, 0.52)
+  backdropHeart.bezierCurveTo(0.1, 0.92, 0.62, 0.82, 0.62, 0.4)
+  backdropHeart.bezierCurveTo(0.62, 0.02, 0.14, -0.34, 0, -0.52)
+  const backdropHeartGeo = new THREE.ShapeGeometry(backdropHeart, 18)
+  const backdropFlowerPetalGeo = new THREE.SphereGeometry(0.16, 10, 8)
+  const backdropFlowerCenterGeo = new THREE.SphereGeometry(0.08, 10, 8)
+  const backdropLeafGeo = new THREE.SphereGeometry(0.15, 8, 6)
+  const backdropFlowerColors = ['#ef8daa', '#f7bfd0', '#fff0dc', '#e6a8d2', '#f4d79b']
+  const backdropFlowers = [
+    [-1.08, 4.2, 0.9], [-0.68, 4.42, 0.72], [-0.22, 4.5, 0.82],
+    [0.22, 4.5, 0.78], [0.68, 4.42, 0.72], [1.08, 4.2, 0.9],
+    [-1.22, 2.12, 0.82], [-0.86, 1.88, 0.7], [0.86, 1.88, 0.7], [1.22, 2.12, 0.82],
+    [-2.82, 3.52, 0.72], [-2.62, 2.82, 0.62], [-2.36, 3.12, 0.68],
+    [2.82, 3.52, 0.72], [2.62, 2.82, 0.62], [2.36, 3.12, 0.68]
+  ] as const
+  const backdropLeaves = [
+    [-1.42, 4.02, -0.6], [-0.9, 4.48, -0.3], [-0.45, 4.62, -0.2],
+    [0.45, 4.62, 0.2], [0.9, 4.48, 0.3], [1.42, 4.02, 0.6],
+    [-1.48, 2.22, -0.8], [-1.02, 1.72, -0.45], [1.02, 1.72, 0.45], [1.48, 2.22, 0.8],
+    [-3.05, 3.82, -0.65], [-2.92, 2.98, -0.9], [-2.2, 2.72, 0.8],
+    [3.05, 3.82, 0.65], [2.92, 2.98, 0.9], [2.2, 2.72, -0.8]
+  ] as const
   const chairs: [number, number, number, number][] = [
     [-3.75, 0.67, 1.1, 0.25], [-2.75, 0.67, 1.1, 0.16],
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
@@ -731,12 +757,12 @@
   <!-- 3 anak tangga terpisah (kotak bertingkat, riser tegas) sejajar ramp.
        Ramp: world z -15.8 (y=0.7) → -14.7 (y=0); local z 2.2→3.3.
        Tiap step: tinggi 0.23, kedalaman 0.37, lebar 3.5. -->
-  <!-- Step 3 (teratas, top = 0.70) -->
-  <T.Mesh position={[0, 0.585, 2.38]} castShadow receiveShadow>
+  <!-- Step 3: sedikit di atas lantai panggung agar bidang yang overlap tidak z-fighting. -->
+  <T.Mesh position={[0, 0.595, 2.38]} castShadow receiveShadow>
     <T.BoxGeometry args={[3.5, 0.23, 0.37]} />
     <T.MeshToonMaterial color="#fff0dc" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.702, 2.38]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.712, 2.38]} receiveShadow>
     <T.PlaneGeometry args={[1.5, 0.37]} />
     <T.MeshToonMaterial color="#9c2a40" gradientMap={gradient} />
   </T.Mesh>
@@ -767,7 +793,7 @@
     <T.BoxGeometry args={[3.5, 0.04, 0.02]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh position={[0, 0.585, 2.565]}>
+  <T.Mesh position={[0, 0.595, 2.565]}>
     <T.BoxGeometry args={[3.5, 0.04, 0.02]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
@@ -819,6 +845,44 @@
     <T.TorusGeometry args={[0.85, 0.12, 8, 22]} />
     <T.MeshToonMaterial color="#e8c98a" gradientMap={gradient} />
   </T.Mesh>
+  <!-- Simbol cinta berlapis di tengah lingkaran utama. -->
+  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.82]} scale={[1.18, 1.18, 1]} castShadow>
+    <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
+  </T.Mesh>
+  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.79]} scale={[0.98, 0.98, 1]} castShadow>
+    <T.MeshToonMaterial color="#c95778" gradientMap={gradient} />
+  </T.Mesh>
+  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.16, -1.76]} scale={[0.5, 0.5, 1]}>
+    <T.MeshToonMaterial color="#f9d7df" gradientMap={gradient} />
+  </T.Mesh>
+  <!-- Garland daun mengikuti ketiga lingkaran backdrop. -->
+  {#each backdropLeaves as leaf, i}
+    <T.Mesh
+      geometry={backdropLeafGeo}
+      material={i % 2 === 0 ? bouquetLeafMat : bouquetLeafDarkMat}
+      position={[leaf[0], leaf[1], -1.8]}
+      rotation.z={leaf[2]}
+      scale={[1.45, 0.58, 0.42]}
+      castShadow
+    />
+  {/each}
+  <!-- Bunga berlapis pada bagian atas, bawah, dan lingkaran samping. -->
+  {#each backdropFlowers as flower, i}
+    <T.Group position={[flower[0], flower[1], -1.72]} scale={flower[2]}>
+      {#each [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2] as angle}
+        <T.Mesh
+          geometry={backdropFlowerPetalGeo}
+          position={[Math.cos(angle) * 0.15, Math.sin(angle) * 0.15, 0]}
+          rotation.z={angle}
+          scale={[1.18, 0.76, 0.48]}
+          castShadow
+        >
+          <T.MeshToonMaterial color={backdropFlowerColors[i % backdropFlowerColors.length]} gradientMap={gradient} />
+        </T.Mesh>
+      {/each}
+      <T.Mesh geometry={backdropFlowerCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.1]} />
+    </T.Group>
+  {/each}
   <!-- Cahaya hangat dekat backdrop (tanpa shadow, hemat) -->
   <T.PointLight position={[0, 4.2, -1.6]} color="#ffd9a0" intensity={1.5} distance={14} decay={1.4} />
   <!-- Buket panggung besar: vas emas, foliage bertingkat, dan bunga berlapis. -->
