@@ -57,7 +57,7 @@
     ></div>
   </div>
 
-  {#if $nearbyTrigger}
+  {#if $nearbyTrigger && !$activeModal}
     <div class="pointer-events-auto">
       <button
         class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-[var(--rose)] to-[#e98a96] text-lg font-bold text-white shadow-lg border border-[var(--champagne)]/40 transition-transform active:scale-95 hover:from-[#e98a96] hover:to-[var(--rose)]"

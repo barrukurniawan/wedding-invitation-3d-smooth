@@ -6,7 +6,7 @@
   import { GROUND_COLOR } from '../../constants/natureTheme'
   import HangingLights from './HangingLights.svelte'
   import { setOccluderGroup } from '../../stores/cameraOccluders.svelte'
-  import { lightPoles, LIGHT_POLE_HOOK_HEIGHT } from '../../constants/triggers'
+  import { lightPoles } from '../../constants/triggers'
 
   let occluders = $state<THREE.Group>()
   $effect(() => setOccluderGroup(occluders ?? null))
@@ -441,7 +441,7 @@
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.1 }))
 
   const pebbleSidesRight = [
-    [4.5, 0, -2, 0.5], [6, 0, -6, 0.55], [5, 0, -10, 0.48], [7, 0, -14, 0.5],
+    [5.5, 0, -2, 0.5], [6, 0, -6, 0.55], [5, 0, -10, 0.48], [7, 0, -14, 0.5],
   ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -1.2 }))
 
   // Jalur batu tepi jalan
@@ -1123,11 +1123,4 @@
     <T.BoxGeometry args={[0.8, 1.6, 0.7]} />
     <T.MeshBasicMaterial />
   </T.Mesh>
-  <!-- Light pole proxies (10 poles, thin boxes from ground to hook) -->
-  {#each lightPoles as pole}
-    <T.Mesh position={[pole.position[0], LIGHT_POLE_HOOK_HEIGHT / 2, pole.position[2]]} visible={false}>
-      <T.BoxGeometry args={[0.3, LIGHT_POLE_HOOK_HEIGHT, 0.3]} />
-      <T.MeshBasicMaterial />
-    </T.Mesh>
-  {/each}
 </T.Group>

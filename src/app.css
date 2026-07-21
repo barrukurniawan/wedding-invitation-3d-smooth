@@ -37,6 +37,24 @@ body {
   pointer-events: none;
 }
 
+.objective-label {
+  border-color: rgba(255, 244, 229, 0.95);
+  background: rgba(139, 63, 80, 0.94);
+  box-shadow: 0 0 0 4px rgba(217, 183, 123, 0.2), 0 6px 22px rgba(49, 25, 31, 0.36);
+  animation: objective-pulse 2.2s ease-in-out infinite;
+}
+
+.objective-label span {
+  margin-right: 6px;
+  color: #f1d99e;
+  font-size: 9px;
+}
+
+@keyframes objective-pulse {
+  0%, 100% { transform: translate(-50%, -100%) scale(1); }
+  50% { transform: translate(-50%, -100%) scale(1.04); }
+}
+
 @layer components {
   .w-panel {
     background: var(--panel-bg);
@@ -96,6 +114,9 @@ body {
   }
   .animate-spin {
     animation-duration: 2.5s !important;
+  }
+  .objective-label {
+    animation: none;
   }
 }
 

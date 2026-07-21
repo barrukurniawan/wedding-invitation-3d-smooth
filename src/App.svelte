@@ -44,9 +44,11 @@
   <div class="pointer-events-none absolute inset-0 overflow-hidden">
     {#each $screenLabels as label (label.id)}
       <div
+        class:objective-label={label.objective}
         class="world-label absolute -translate-x-1/2 -translate-y-full transition-opacity duration-200"
         style="left: {label.x}px; top: {label.y}px; opacity: {label.behind ? 0 : label.opacity}"
       >
+        {#if label.objective}<span aria-hidden="true">&#9670;</span>{/if}
         {label.text}
       </div>
     {/each}

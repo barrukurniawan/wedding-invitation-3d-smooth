@@ -25,7 +25,7 @@
     if (!cam || !r) return
     const w = r.domElement.clientWidth
     const h = r.domElement.clientHeight
-    const labels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number }[] = []
+    const labels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
     for (const def of labelDefs) {
       const dist = Math.hypot(def.world[0] - playerPos.x, def.world[2] - playerPos.z)
       const opacity = opacityFor(dist)
@@ -35,7 +35,7 @@
       const behind = _v3.z > 1
       const x = (_v3.x * 0.5 + 0.5) * w
       const y = (-_v3.y * 0.5 + 0.5) * h
-      labels.push({ id: def.id, text: def.text, x, y, behind, opacity })
+      labels.push({ id: def.id, text: def.text, x, y, behind, opacity, objective: def.objective ?? false })
     }
 
     if ($playerLabel) {
@@ -44,7 +44,7 @@
       const behind = _v3.z > 1
       const x = (_v3.x * 0.5 + 0.5) * w
       const y = (-_v3.y * 0.5 + 0.5) * h
-      labels.push({ id: 'player', text: $playerLabel, x, y, behind, opacity: 1 })
+      labels.push({ id: 'player', text: $playerLabel, x, y, behind, opacity: 1, objective: false })
     }
 
     screenLabels.set(labels)
