@@ -42,7 +42,7 @@
   }
 </script>
 
-<div class="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex items-end justify-between p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] select-none md:hidden">
+<div class="pointer-events-none absolute inset-x-0 bottom-16 z-30 flex items-end justify-between p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] select-none md:hidden">
   <div
     class="pointer-events-auto relative flex h-32 w-32 touch-none items-center justify-center rounded-full border border-[var(--champagne)]/40 bg-[var(--panel-bg)] backdrop-blur-md"
     role="application"

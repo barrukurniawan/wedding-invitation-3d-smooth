@@ -121,10 +121,6 @@
     [-1.08, 0.72, -0.55], [-0.62, 0.68, 0.45], [-0.22, 0.62, -0.35],
     [0.22, 0.62, 0.35], [0.62, 0.68, -0.45], [1.08, 0.72, 0.55]
   ] as const
-  const deskBouquetFlowers = [
-    [-0.2, 0.48, 0.9], [0, 0.62, 1.08], [0.2, 0.48, 0.88],
-    [-0.1, 0.3, 0.78], [0.11, 0.29, 0.8]
-  ] as const
   const chairs: [number, number, number, number][] = [
     [-3.75, 0.67, 1.1, 0.25], [-2.75, 0.67, 1.1, 0.16],
     [2.75, 0.67, 1.1, -0.16], [3.75, 0.67, 1.1, -0.25]
@@ -735,43 +731,48 @@
       <T.Mesh geometry={backdropFlowerCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.08]} scale={0.82} />
     </T.Group>
   {/each}
-  <!-- Vas bunga meja: keramik ivory dengan kaki dan bibir emas. -->
-  <T.Group position={[0.88, 1.08, 0.04]} scale={0.72}>
-    <T.Mesh position={[0, 0.2, 0]} castShadow>
-      <T.CylinderGeometry args={[0.22, 0.15, 0.4, 10]} />
-      <T.MeshToonMaterial color="#fff3dd" gradientMap={gradient} />
-    </T.Mesh>
-    <T.Mesh position={[0, 0.4, 0]}>
-      <T.TorusGeometry args={[0.22, 0.035, 6, 16]} />
+  <!-- Pot meja: reuse design stageBouquet, scale kecil -->
+  <T.Group position={[0.88, 1.08, 0.04]} scale={0.32} rotation.y={Math.PI + 0.05}>
+    <T.Mesh position={[0, 0.24, 0]} castShadow>
+      <T.CylinderGeometry args={[0.34, 0.22, 0.48, 10]} />
       <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
     </T.Mesh>
-    <T.Mesh position={[0, 0.035, 0]}>
-      <T.CylinderGeometry args={[0.16, 0.18, 0.07, 10]} />
-      <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
+    <T.Mesh position={[0, 0.48, 0]}>
+      <T.TorusGeometry args={[0.34, 0.045, 6, 16]} />
+      <T.MeshToonMaterial color="#f1d99e" gradientMap={gradient} />
     </T.Mesh>
-    {#each [-0.18, -0.08, 0.08, 0.18] as stemX}
+    {#each [-0.42, -0.2, 0, 0.2, 0.42] as stemX, i}
       <T.Mesh
         geometry={bouquetStemGeo}
         material={bouquetStemMat}
-        position={[stemX * 0.45, 0.75, 0]}
-        rotation.z={stemX * -0.7}
-        scale={[0.7, 0.6, 0.7]}
+        position={[stemX * 0.62, 0.98 + (i % 2) * 0.1, 0]}
+        rotation.z={stemX * -0.42}
       />
     {/each}
-    {#each deskBouquetFlowers as flower, i}
-      <T.Group position={[flower[0], flower[1] + 0.52, 0.04]} scale={flower[2]}>
-        {#each [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2] as angle}
+    {#each bouquetLeaves as leaf, i}
+      <T.Mesh
+        geometry={bouquetLeafGeo}
+        material={i % 2 === 0 ? bouquetLeafMat : bouquetLeafDarkMat}
+        position={[leaf[0], leaf[1], leaf[2]]}
+        rotation.z={leaf[3]}
+        scale={[0.55, 1.35, 0.38]}
+        castShadow
+      />
+    {/each}
+    {#each bouquetBlooms as bloom}
+      <T.Group position={bloom.position} scale={bloom.scale}>
+        {#each [0, Math.PI / 3, (Math.PI * 2) / 3, Math.PI, (Math.PI * 4) / 3, (Math.PI * 5) / 3] as angle}
           <T.Mesh
-            geometry={backdropFlowerPetalGeo}
-            position={[Math.cos(angle) * 0.14, Math.sin(angle) * 0.14, 0]}
+            geometry={bouquetPetalGeo}
+            position={[Math.cos(angle) * 0.2, Math.sin(angle) * 0.2, 0]}
+            scale={[1.25, 0.72, 0.5]}
             rotation.z={angle}
-            scale={[1.02, 0.62, 0.42]}
             castShadow
           >
-            <T.MeshToonMaterial color={i % 2 === 0 ? '#ef8daa' : '#f7bfd0'} gradientMap={gradient} />
+            <T.MeshToonMaterial color={bloom.color} gradientMap={gradient} />
           </T.Mesh>
         {/each}
-        <T.Mesh geometry={backdropFlowerCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.09]} />
+        <T.Mesh geometry={bouquetCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.12]} castShadow />
       </T.Group>
     {/each}
   </T.Group>
