@@ -17,7 +17,7 @@ import {
 } from '../constants/triggers'
 import { dampAngle } from '../utils/damp'
 
-export const playerPos = { x: 0, y: 0, z: 2 }
+export const playerPos = { x: 0, y: 0, z: 5 }
 export const playerAngle = { value: Math.PI }
 export const playerSpeed = { value: 0 }
 export const playerMoving = writable(false)

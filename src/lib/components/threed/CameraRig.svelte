@@ -13,10 +13,8 @@
   const CAM_HEIGHT = 3.2
   const CAM_DISTANCE = 6.5
   const MOBILE_CAM_DISTANCE = 8
-  const MOBILE_CAM_LEFT = 1.6
   const MOBILE_FOV = 58
   const MOBILE_LOOK_AHEAD = 3.4
-  const MOBILE_LOOK_RIGHT = 1.2
   const CAM_LAMBDA = 4.2 // critically-damped follow (slight, stable lag)
   const LOOK_OFFSET = 1.35 // aim at the chest/upper body
   const GROUND_MIN = 0.8 // never dip the camera under the ground plane
@@ -24,7 +22,11 @@
   const COLLISION_MARGIN = 0.35 // keep the camera slightly in front of occluders
   const COLLISION_LAMBDA = 8 // smoothing rate for collision distance (anti-jitter)
 
-  const camPos = new THREE.Vector3(0, CAM_HEIGHT + 1, CAM_DISTANCE + 2)
+  const camPos = new THREE.Vector3(
+    playerPos.x,
+    playerPos.y + CAM_HEIGHT,
+    playerPos.z + CAM_DISTANCE
+  )
   const desired = new THREE.Vector3()
   const lookTarget = new THREE.Vector3()
   const dir = new THREE.Vector3()
@@ -50,7 +52,7 @@
 
     const cameraDistance = isMobile ? MOBILE_CAM_DISTANCE : CAM_DISTANCE
     desired.set(
-      playerPos.x - (isMobile ? MOBILE_CAM_LEFT : 0),
+      playerPos.x,
       playerPos.y + CAM_HEIGHT,
       playerPos.z + cameraDistance
     )
@@ -59,7 +61,7 @@
     camPos.z = damp(camPos.z, desired.z, CAM_LAMBDA, dt)
 
     lookTarget.set(
-      playerPos.x + (isMobile ? MOBILE_LOOK_RIGHT : 0),
+      playerPos.x,
       playerPos.y + LOOK_OFFSET,
       playerPos.z - (isMobile ? MOBILE_LOOK_AHEAD : 0)
     )
@@ -107,7 +109,7 @@
 <T.PerspectiveCamera
   bind:ref={camera}
   makeDefault
-  position={[0, 4, 10]}
+  position={[playerPos.x, playerPos.y + CAM_HEIGHT, playerPos.z + CAM_DISTANCE]}
   fov={isMobile ? MOBILE_FOV : 50}
   near={0.1}
   far={120}
