@@ -11,3 +11,4 @@ server/.env
 server/.env.docker
 !server/.env.example
 !server/.env.docker.example
+.kilo/
