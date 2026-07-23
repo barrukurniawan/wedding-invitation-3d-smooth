@@ -16,7 +16,8 @@
     appearance = {},
     useWave = false,
     useNod = false,
-    weddingSkirt = false
+    weddingSkirt = false,
+    onReady
   }: {
     url: string
     position?: [number, number, number]
@@ -27,6 +28,7 @@
     useWave?: boolean
     useNod?: boolean
     weddingSkirt?: boolean
+    onReady?: () => void
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -100,6 +102,7 @@
       castShadow
       oncreate={(ref) => {
         applyAppearance(ref, appearance)
+        onReady?.()
       }}
     />
   {/await}

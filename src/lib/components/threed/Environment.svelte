@@ -1,18 +1,60 @@
 <script lang="ts">
   import { T } from '@threlte/core'
   import * as THREE from 'three'
+  import { onMount } from 'svelte'
   import { getToonGradient } from '../../utils/toonMaterial'
   import Nature from './Nature.svelte'
   import { GROUND_COLOR } from '../../constants/natureTheme'
   import HangingLights from './HangingLights.svelte'
   import { setOccluderGroup } from '../../stores/cameraOccluders.svelte'
   import { lightPoles } from '../../constants/triggers'
+  import { isLoaded } from '../../stores/gameState.svelte'
+
+  let {
+    lowPower = false,
+    onReady
+  }: {
+    lowPower?: boolean
+    onReady?: () => void
+  } = $props()
 
   let occluders = $state<THREE.Group>()
+  let showDecor = $state(false)
+  let readySent = false
   $effect(() => setOccluderGroup(occluders ?? null))
 
   const gradient = getToonGradient()
-  const sparseTrees = <T,>(items: T[]) => items.filter((_, i) => i % 8 === 0)
+  // lowPower: thinner vegetation density (less instance work after reveal)
+  const sparseTrees = <T,>(items: T[]) =>
+    items.filter((_, i) => i % (lowPower ? 12 : 8) === 0)
+
+  // Critical path is procedural geometry only — fire after first paint frames.
+  onMount(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (readySent) return
+        readySent = true
+        onReady?.()
+      })
+    })
+  })
+
+  // Far Nature / animals after overlay dismiss (idle or short timeout).
+  $effect(() => {
+    if (!$isLoaded || showDecor) return
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+    }
+    if (typeof win.requestIdleCallback === 'function') {
+      win.requestIdleCallback(() => {
+        showDecor = true
+      }, { timeout: 500 })
+    } else {
+      setTimeout(() => {
+        showDecor = true
+      }, 120)
+    }
+  })
 
   function createGroundGradient(reverse = false) {
     const width = 256
@@ -606,25 +648,32 @@
   </T.Group>
 {/each}
 
-<!-- VEGETASI — merged per URL+scale to reduce component count & clone setup -->
-<Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={[...sparseTrees(liningTreesLeft), ...sparseTrees(liningTreesRight), ...sparseTrees(redLeafSidesLeft), ...sparseTrees(redLeafSidesRight)]} />
-<Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={[...sparseTrees(pineLayer), ...sparseTrees(redPineLeft), ...sparseTrees(redPineRight), ...sparseTrees(redTwistedLeft), ...sparseTrees(redTwistedRight), ...sparseTrees(mailboxTrees), ...sparseTrees(extraTreesLeft), ...sparseTrees(extraTreesRight), ...sparseTrees(pineSidesLeft), ...sparseTrees(pineSidesRight)]} />
-<Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={[...sparseTrees(redLeafTrees), ...rockMed2Left, ...rockMed2Right, ...mushroomLaetiLeft, ...mushroomLaetiRight]} />
-<Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={[...grassTall, ...bushes, ...grassWispyShortRight, ...grassShortLeft, ...stageBushes]} />
-<Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={[...grassWispy, ...grassShortRight, ...grassWispyShortLeft, ...bushFlowersLeft, ...bushFlowersRight]} />
-<Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={[...mushrooms, ...rockSidesRight, ...pebbleSidesLeft, ...pebbleSidesRight]} />
-<Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={[...plantBigLeft, ...plantBigRight]} />
-<Nature url="/nature/gltf/Grass_2_A_Color1.glb" scale={1.1} instances={flower3} />
-<Nature url="/nature/gltf/Grass_1_C_Color1.glb" scale={1.1} instances={flower4} />
-<Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
-<Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
-<Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
-<Nature url="/nature/gltf/Tree_2_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
-<Nature url="/nature/gltf/Tree_3_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesRight)} />
-<Nature url="/nature/gltf/Grass_1_A_Color1.glb" scale={1.1} instances={flowerSingleLeft} />
-<Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
-<Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
-<Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
+<!-- VEGETASI deferred — not on critical ready path (pop-in after overlay OK) -->
+{#if showDecor}
+  <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={[...sparseTrees(liningTreesLeft), ...sparseTrees(liningTreesRight), ...sparseTrees(redLeafSidesLeft), ...sparseTrees(redLeafSidesRight)]} />
+  <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={[...sparseTrees(pineLayer), ...sparseTrees(redPineLeft), ...sparseTrees(redPineRight), ...sparseTrees(redTwistedLeft), ...sparseTrees(redTwistedRight), ...sparseTrees(mailboxTrees), ...sparseTrees(extraTreesLeft), ...sparseTrees(extraTreesRight), ...sparseTrees(pineSidesLeft), ...sparseTrees(pineSidesRight)]} />
+  <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={[...sparseTrees(redLeafTrees), ...rockMed2Left, ...rockMed2Right, ...mushroomLaetiLeft, ...mushroomLaetiRight]} />
+  <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={[...grassTall, ...bushes, ...grassWispyShortRight, ...grassShortLeft, ...stageBushes]} />
+  <Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={[...grassWispy, ...grassShortRight, ...grassWispyShortLeft, ...bushFlowersLeft, ...bushFlowersRight]} />
+  <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={[...mushrooms, ...rockSidesRight, ...pebbleSidesLeft, ...pebbleSidesRight]} />
+  <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={[...plantBigLeft, ...plantBigRight]} />
+  <Nature url="/nature/gltf/Grass_2_A_Color1.glb" scale={1.1} instances={flower3} />
+  <Nature url="/nature/gltf/Grass_1_C_Color1.glb" scale={1.1} instances={flower4} />
+  <Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
+  <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
+  <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
+  <Nature url="/nature/gltf/Tree_2_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
+  <Nature url="/nature/gltf/Tree_3_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesRight)} />
+  <Nature url="/nature/gltf/Grass_1_A_Color1.glb" scale={1.1} instances={flowerSingleLeft} />
+  <Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
+  <Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
+  <Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
+  {#if !lowPower}
+    <Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
+    <Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
+    <Nature url="/nature/gltf/animal-panda.glb" scale={0.6} instances={animalPanda} />
+  {/if}
+{/if}
 
 <!-- Receptionist desk (lebih kecil & elegan: panel dusty rose, meja ivory, trim emas) -->
 <T.Group position={[4, 0, -4]} rotation.y={Math.PI / 2}>
@@ -966,12 +1015,7 @@
         <T.MeshToonMaterial color="#80583d" gradientMap={gradient} />
       </T.Mesh>
   </T.Group>
-{/each}
-
-<!-- HEWAN -->
-<Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
-<Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
-<Nature url="/nature/gltf/animal-panda.glb" scale={0.6} instances={animalPanda} />
+  {/each}
 </T.Group>
 
 <!-- Straight_Light_Pole — 10 tiang prosedural lurus (5 kiri, 5 kanan).

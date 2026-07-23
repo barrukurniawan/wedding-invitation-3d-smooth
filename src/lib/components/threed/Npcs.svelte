@@ -1,6 +1,14 @@
 <script lang="ts">
   import Character from './Character.svelte'
 
+  let { onReady }: { onReady?: () => void } = $props()
+  let readyCount = 0
+
+  function markReady() {
+    readyCount += 1
+    if (readyCount === 4) onReady?.()
+  }
+
   const S = 0.62
   const STAGE_Y = 0.7
 
@@ -25,6 +33,7 @@
   scale={S}
   clip="Idle"
   appearance={receptionist}
+  onReady={markReady}
 />
 
 <!-- Pemandu -->
@@ -36,6 +45,7 @@
   clip="Idle"
   useNod={true}
   appearance={guide}
+  onReady={markReady}
 />
 
 <!-- Pengantin wanita (Kia) -->
@@ -47,6 +57,7 @@
   clip="Victory"
   appearance={bride}
   weddingSkirt={true}
+  onReady={markReady}
 />
 
 <!-- Pengantin pria (Toni) -->
@@ -57,4 +68,5 @@
   scale={S}
   clip="Victory"
   appearance={groom}
+  onReady={markReady}
 />

@@ -6,19 +6,29 @@
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
   import Player from './Player.svelte'
+  import Npcs from './Npcs.svelte'
   import Confetti from './Confetti.svelte'
   import Labels from './Labels.svelte'
   import { tick, playerPos } from '../../stores/playerMovement.svelte'
-  import { setNearbyTrigger, confettiActive } from '../../stores/gameState.svelte'
+  import { setNearbyTrigger } from '../../stores/gameState.svelte'
   import { getNearbyTrigger } from '../../utils/interaction'
+  import { bumpCriticalLoaded } from '../../stores/loadProgress.svelte'
 
   const { scene } = useThrelte()
 
-  const isMobile = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
+  let {
+    lowPower = false,
+    onReady
+  }: {
+    lowPower?: boolean
+    onReady?: () => void
+  } = $props()
 
   let playerReady = $state(false)
+  let npcsReady = $state(false)
+  let envCriticalReady = $state(false)
   let Environment = $state<Component>()
-  let Npcs = $state<Component>()
+  let readySent = false
 
   onMount(() => {
     void import('./Environment.svelte').then((module) => {
@@ -27,19 +37,16 @@
   })
 
   $effect(() => {
-    if (!playerReady) return
-    const t = setTimeout(() => {
-      void import('./Npcs.svelte').then((module) => {
-        Npcs = module.default
-      })
-    }, 500)
-    return () => clearTimeout(t)
+    if (!playerReady || !npcsReady || !envCriticalReady || readySent) return
+    readySent = true
+    requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()))
   })
 
   // Background langit hangat + fog lembut ala Summer Afternoon
+  // lowPower: slightly closer fog far plane (less fill cost)
   $effect(() => {
     scene.background = new THREE.Color('#bfe3f0')
-    scene.fog = new THREE.Fog('#fcd9a0', 18, 54)
+    scene.fog = new THREE.Fog('#fcd9a0', lowPower ? 14 : 18, lowPower ? 42 : 54)
   })
 
   // Render loop utama: gerakan -> deteksi proximity
@@ -49,19 +56,36 @@
   })
 </script>
 
-<SoftShadows size={isMobile ? 16 : 28} samples={isMobile ? 4 : 12} focus={0.6} />
+{#if !lowPower}
+  <SoftShadows size={28} samples={12} focus={0.6} />
+{/if}
 
 <CameraRig />
-<Lighting />
+<Lighting shadows={!lowPower} />
 {#if Environment}
-  <Environment />
+  <Environment
+    {lowPower}
+    onReady={() => {
+      if (envCriticalReady) return
+      envCriticalReady = true
+      bumpCriticalLoaded()
+    }}
+  />
 {/if}
 <Player
   appearance={{ skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }}
-  onReady={() => { playerReady = true }}
+  onReady={() => {
+    if (playerReady) return
+    playerReady = true
+    bumpCriticalLoaded()
+  }}
 />
-{#if Npcs}
-  <Npcs />
-{/if}
+<Npcs
+  onReady={() => {
+    if (npcsReady) return
+    npcsReady = true
+    bumpCriticalLoaded(4)
+  }}
+/>
 <Confetti />
 <Labels />

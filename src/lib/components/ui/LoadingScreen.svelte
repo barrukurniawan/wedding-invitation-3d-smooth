@@ -1,15 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { isLoaded } from '../../stores/gameState.svelte'
+  import { loadProgress } from '../../stores/loadProgress.svelte'
 
-  // Progress simulasi (useProgress dari @threlte/extras hanya bekerja di dalam <Canvas>)
-  let progress = $state(0)
-  $effect(() => {
-    if ($isLoaded) return
-    const interval = setInterval(() => {
-      progress = Math.min(95, progress + Math.random() * 12)
-    }, 200)
-    return () => clearInterval(interval)
+  onMount(() => {
+    document.getElementById('startup-shell')?.remove()
   })
+
+  const pct = $derived(Math.round($loadProgress * 100))
 </script>
 
 {#if !$isLoaded}
@@ -23,8 +21,17 @@
       Sedang memuat undangan pernikahan KIA &amp; TONI<br />
       <span class="text-[var(--ink)]/40">Harap tunggu sebentar…</span>
     </p>
-    <div class="mt-8 h-1.5 w-full max-w-sm overflow-hidden rounded-full border border-[var(--champagne)]/30 bg-white/50">
-      <div class="h-1.5 rounded-full bg-gradient-to-r from-[var(--rose)] to-[var(--champagne)] transition-all duration-300" style="width: {Math.round(progress)}%"></div>
+    <div
+      class="loading-track mt-8 h-1.5 w-full max-w-sm overflow-hidden rounded-full border border-[var(--champagne)]/30 bg-white/50"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+    >
+      <div
+        class="loading-bar h-full rounded-full bg-gradient-to-r from-[var(--rose)] to-[var(--champagne)] transition-[width] duration-300 ease-out"
+        style="width: {Math.max(8, pct)}%"
+      ></div>
     </div>
   </div>
 {/if}
