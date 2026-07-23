@@ -45,6 +45,12 @@
     <p>Sedang menyiapkan undangan pernikahan KIA &amp; TONI</p>
     <div class="bar" aria-hidden="true"></div>
   </div>
+  <script>
+    // Admin is SPA-routed via the same index.html; never show invitation shell there.
+    if (location.pathname.startsWith('/admin')) {
+      document.getElementById('startup-shell')?.remove()
+    }
+  </script>
   <div style="display: contents">%sveltekit.body%</div>
 </body>
 
