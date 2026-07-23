@@ -5,13 +5,20 @@
   import * as THREE from 'three'
   import type { Appearance } from '../../utils/appearance'
   import { applyAppearance } from '../../utils/appearance'
-  import { playerPos, playerAngle, playerMoving } from '../../stores/playerMovement.svelte'
+  import { playerPos, playerAngle, playerMoving, playerSprinting, playerSpeed } from '../../stores/playerMovement.svelte'
+  import { WALK_SPEED, RUN_SPEED } from '../../constants/triggers'
 
   let {
-    url = '/models/tamu.gltf',
+    url = '/models/tamu.glb',
     scale = 0.62,
-    appearance = {}
-  }: { url?: string; scale?: number; appearance?: Partial<Appearance> } = $props()
+    appearance = {},
+    onReady
+  }: {
+    url?: string
+    scale?: number
+    appearance?: Partial<Appearance>
+    onReady?: () => void
+  } = $props()
 
   const gltf = untrack(() => useGltf(url))
   const { actions } = useGltfAnimations(() => $gltf)
@@ -23,18 +30,21 @@
   let offsetComputed = false
   const _v3 = new THREE.Vector3()
 
-  // Walk / Idle crossfade
+  // Idle / Walk / Run crossfade dengan referensi action aktif (untuk timeScale).
   let currentClip = 'Idle'
+  let activeAction: THREE.AnimationAction | null = null
   $effect(() => {
     if (!$gltf) return
     const moving = $playerMoving
-    const nextClip = moving ? 'Walk' : 'Idle'
+    const sprinting = $playerSprinting
+    const nextClip = !moving ? 'Idle' : sprinting ? 'Run' : 'Walk'
     if (nextClip === currentClip) return
     const next = $actions?.[nextClip]
     const prev = $actions?.[currentClip]
-    if (next) next.reset().fadeIn(0.15).play()
-    if (prev) prev.fadeOut(0.15)
+    if (next) next.reset().fadeIn(0.18).play()
+    if (prev) prev.fadeOut(0.18)
     currentClip = nextClip
+    activeAction = next ?? null
   })
 
   $effect(() => {
@@ -66,6 +76,18 @@
 
     group.position.set(playerPos.x, playerPos.y + groundOffset, playerPos.z)
     group.rotation.y = playerAngle.value
+
+    // Skala kecepatan animasi mengikuti kecepatan gerak supaya langkah terasa
+    // sinkron (lebih cepat saat lari, melambat saat deselerasi).
+    if (activeAction) {
+      if (currentClip === 'Walk') {
+        activeAction.timeScale = THREE.MathUtils.clamp(playerSpeed.value / WALK_SPEED, 0.5, 1.4)
+      } else if (currentClip === 'Run') {
+        activeAction.timeScale = THREE.MathUtils.clamp(playerSpeed.value / RUN_SPEED, 0.6, 1.3)
+      } else {
+        activeAction.timeScale = 1
+      }
+    }
   })
 </script>
 
@@ -76,6 +98,7 @@
       castShadow
       oncreate={(ref) => {
         applyAppearance(ref, appearance)
+        onReady?.()
       }}
     />
   {/await}

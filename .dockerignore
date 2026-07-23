@@ -1,0 +1,19 @@
+node_modules/
+server/node_modules/
+build/
+.svelte-kit/
+.git/
+.kilo/
+plans/
+Stylized_Nature/
+# Allow root .env so Vite can bake VITE_* at build time (only VITE_* is embedded).
+# Still exclude server secrets from the web image context.
+server/.env
+server/.env.docker
+server/.env.*
+*.log
+.DS_Store
+README.md
+AGENTS.md
+DECORATION_STYLE.md
+deploy/ecosystem.config.cjs

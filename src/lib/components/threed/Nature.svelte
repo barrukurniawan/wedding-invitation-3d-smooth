@@ -1,7 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core'
   import { useGltf } from '@threlte/extras'
-  import { untrack } from 'svelte'
+  import { onDestroy, untrack } from 'svelte'
   import * as THREE from 'three'
   import { getNatureTintForUrl } from '../../constants/natureColors'
 
@@ -156,33 +156,96 @@
     })
   }
 
+  type InstancedNature = {
+    meshes: THREE.InstancedMesh[]
+    dispose: () => void
+  }
+
+  let instancedNature: InstancedNature | undefined
+  let destroyed = false
+
   const gltf = untrack(() => useGltf(url))
-  const scenes = untrack(async () => {
+  const nature = untrack(async () => {
     const { scene } = await gltf
     const resolvedTint = tint ?? getNatureTintForUrl(url)
+    const prepared = scene.clone(true)
 
-    return instances.map(() => {
-      const clone = scene.clone(true)
-      if (leafColor) applyLeafColor(clone, leafColor)
-      if (materialColors) applyMaterialColors(clone, materialColors)
-      if (tintGradient) {
-        applyTintGradientByHeight(clone, tintGradient.leaves, tintGradient.bark)
-      } else {
-        applyTint(clone, resolvedTint)
-      }
-      return clone
+    prepared.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh) return
+      mesh.geometry = mesh.geometry.clone()
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map((material) => material.clone())
+        : mesh.material.clone()
     })
+
+    if (leafColor) applyLeafColor(prepared, leafColor)
+    if (materialColors) applyMaterialColors(prepared, materialColors)
+    if (tintGradient) {
+      applyTintGradientByHeight(prepared, tintGradient.leaves, tintGradient.bark)
+    } else {
+      applyTint(prepared, resolvedTint)
+    }
+
+    prepared.updateMatrixWorld(true)
+    const meshes: THREE.InstancedMesh[] = []
+    const transform = new THREE.Matrix4()
+    const position = new THREE.Vector3()
+    const rotation = new THREE.Quaternion()
+    const instanceScale = new THREE.Vector3()
+    const rotationEuler = new THREE.Euler()
+
+    prepared.traverse((obj) => {
+      const source = obj as THREE.Mesh
+      if (!source.isMesh || source instanceof THREE.SkinnedMesh) return
+
+      const mesh = new THREE.InstancedMesh(source.geometry, source.material, instances.length)
+      mesh.name = `${source.name || 'nature'}-instances`
+      mesh.castShadow = false
+      mesh.receiveShadow = false
+
+      instances.forEach((instance, index) => {
+        const resolvedScale = (instance.scale ?? 1) * scale
+        position.fromArray(instance.position)
+        rotation.setFromEuler(rotationEuler.set(0, instance.rotationY ?? 0, 0))
+        instanceScale.setScalar(resolvedScale)
+        transform.compose(position, rotation, instanceScale)
+        transform.multiply(source.matrixWorld)
+        mesh.setMatrixAt(index, transform)
+      })
+
+      mesh.instanceMatrix.needsUpdate = true
+      mesh.computeBoundingBox()
+      mesh.computeBoundingSphere()
+      meshes.push(mesh)
+    })
+
+    const dispose = () => {
+      for (const mesh of meshes) {
+        mesh.dispose()
+        mesh.geometry.dispose()
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        for (const material of materials) material.dispose()
+      }
+    }
+
+    const result = { meshes, dispose }
+    if (destroyed) {
+      dispose()
+    } else {
+      instancedNature = result
+    }
+    return result
+  })
+
+  onDestroy(() => {
+    destroyed = true
+    instancedNature?.dispose()
   })
 </script>
 
-{#await scenes then clones}
-  {#each instances as inst, i}
-    <T.Group position={inst.position} rotation.y={inst.rotationY ?? 0} scale={(inst.scale ?? 1) * scale}>
-      <T
-        is={clones[i]}
-        castShadow
-        receiveShadow
-      />
-    </T.Group>
+{#await nature then { meshes }}
+  {#each meshes as mesh}
+    <T is={mesh} />
   {/each}
 {/await}

@@ -16,7 +16,8 @@
     appearance = {},
     useWave = false,
     useNod = false,
-    weddingSkirt = false
+    weddingSkirt = false,
+    onReady
   }: {
     url: string
     position?: [number, number, number]
@@ -27,6 +28,7 @@
     useWave?: boolean
     useNod?: boolean
     weddingSkirt?: boolean
+    onReady?: () => void
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -65,11 +67,8 @@
   })
 
   useTask((delta: number) => {
-    if (waveMixer) waveMixer.update(delta)
-    if (nodMixer) nodMixer.update(delta)
-  })
-
-  useTask(() => {
+    waveMixer?.update(delta)
+    nodMixer?.update(delta)
     if (!group) return
     if (!offsetComputed) {
       group.updateMatrixWorld(true)
@@ -86,18 +85,24 @@
         offsetComputed = true
       }
     }
-    group.position.set(position[0], position[1] + yAdjust, position[2])
-    group.rotation.y = rotationY
+  }, {
+    running: () => !offsetComputed || useWave || useNod
   })
 </script>
 
-<T.Group bind:ref={group} {scale}>
+<T.Group
+  bind:ref={group}
+  position={[position[0], position[1] + yAdjust, position[2]]}
+  rotation.y={rotationY}
+  {scale}
+>
   {#await gltf then { scene }}
     <T
       is={scene}
       castShadow
       oncreate={(ref) => {
         applyAppearance(ref, appearance)
+        onReady?.()
       }}
     />
   {/await}
