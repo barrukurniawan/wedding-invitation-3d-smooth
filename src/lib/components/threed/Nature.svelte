@@ -5,6 +5,66 @@
   import * as THREE from 'three'
   import { getNatureTintForUrl } from '../../constants/natureColors'
 
+  // Shared across Nature mounts so same atlas map is remapped once.
+  const whiteShadeCache = new WeakMap<THREE.Texture, THREE.Texture>()
+  const WHITE_SHADE_FLOOR = 0.9
+
+  function cloneTextureProps(src: THREE.Texture, out: THREE.CanvasTexture) {
+    out.colorSpace = src.colorSpace
+    out.wrapS = src.wrapS
+    out.wrapT = src.wrapT
+    out.minFilter = src.minFilter
+    out.magFilter = src.magFilter
+    out.generateMipmaps = src.generateMipmaps
+    out.needsUpdate = true
+  }
+
+  // White petals: max(R,G,B) + p90 stretch + floor lift so body is near white.
+  function toWhiteShadeTexture(tex: THREE.Texture): THREE.Texture | null {
+    if (whiteShadeCache.has(tex)) return whiteShadeCache.get(tex)!
+    const img = tex.image as (HTMLImageElement | HTMLCanvasElement) | undefined
+    if (!img || !img.width || !img.height) return null
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img as CanvasImageSource, 0, 0)
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const d = data.data
+      const values: number[] = []
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 16) continue
+        values.push(Math.max(d[i], d[i + 1], d[i + 2]))
+      }
+      values.sort((a, b) => a - b)
+      const p90 =
+        values.length > 0
+          ? values[Math.min(values.length - 1, Math.floor(values.length * 0.9))]
+          : 255
+      const scale = p90 > 1 ? 255 / p90 : 1
+      for (let i = 0; i < d.length; i += 4) {
+        const a = d[i + 3]
+        if (a === 0) {
+          d[i] = d[i + 1] = d[i + 2] = 0
+          continue
+        }
+        const v = Math.max(d[i], d[i + 1], d[i + 2])
+        const scaled = Math.min(255, v * scale) / 255
+        const lifted = WHITE_SHADE_FLOOR + (1 - WHITE_SHADE_FLOOR) * scaled
+        const remapped = Math.min(255, Math.round(lifted * 255))
+        d[i] = d[i + 1] = d[i + 2] = remapped
+      }
+      ctx.putImageData(data, 0, 0)
+      const out = new THREE.CanvasTexture(canvas)
+      cloneTextureProps(tex, out)
+      whiteShadeCache.set(tex, out)
+      return out
+    } catch {
+      return null
+    }
+  }
+
   let {
     url,
     instances,
@@ -12,6 +72,7 @@
     tint,
     materialColors,
     tintGradient,
+    flowerColor,
     scale = 1
   }: {
     url: string
@@ -20,6 +81,7 @@
     tint?: string
     materialColors?: Record<string, string>
     tintGradient?: { leaves: string; bark: string }
+    flowerColor?: string
     scale?: number
   } = $props()
 
@@ -76,13 +138,7 @@
       }
       ctx.putImageData(data, 0, 0)
       const out = new THREE.CanvasTexture(canvas)
-      out.colorSpace = tex.colorSpace
-      out.wrapS = tex.wrapS
-      out.wrapT = tex.wrapT
-      out.minFilter = tex.minFilter
-      out.magFilter = tex.magFilter
-      out.generateMipmaps = tex.generateMipmaps
-      out.needsUpdate = true
+      cloneTextureProps(tex, out)
       luminanceCache.set(tex, out)
       return out
     } catch {
@@ -156,6 +212,32 @@
     })
   }
 
+  // Flower-only recolor: max-channel + lift map, then set color (leaves untouched).
+  function applyFlowerColor(ref: THREE.Object3D, color: string) {
+    const target = new THREE.Color(color)
+    ref.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh || !mesh.material) return
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      for (const mat of mats) {
+        if (!(mat instanceof THREE.MeshStandardMaterial)) continue
+        if (!/flower/i.test(mat.name)) continue
+        if (mat.map) {
+          const shaded = toWhiteShadeTexture(mat.map)
+          if (shaded) {
+            mat.map = shaded
+          } else {
+            mat.map = null
+          }
+        }
+        mat.color = target
+        mat.emissive = target.clone()
+        mat.emissiveIntensity = 0.08
+        mat.needsUpdate = true
+      }
+    })
+  }
+
   type InstancedNature = {
     meshes: THREE.InstancedMesh[]
     dispose: () => void
@@ -186,6 +268,7 @@
     } else {
       applyTint(prepared, resolvedTint)
     }
+    if (flowerColor) applyFlowerColor(prepared, flowerColor)
 
     prepared.updateMatrixWorld(true)
     const meshes: THREE.InstancedMesh[] = []

@@ -20,6 +20,7 @@
 
   let occluders = $state<THREE.Group>()
   let showDecor = $state(false)
+  let showFlowers = $state(false)
   let readySent = false
   $effect(() => setOccluderGroup(occluders ?? null))
 
@@ -27,6 +28,26 @@
   // lowPower: thinner vegetation density (less instance work after reveal)
   const sparseTrees = <T,>(items: T[]) =>
     items.filter((_, i) => i % (lowPower ? 12 : 8) === 0)
+  // Floral density: keep more on desktop, thinner on mobile
+  const sparseDecor = <T,>(items: T[]) =>
+    items.filter((_, i) => i % (lowPower ? 3 : 1) === 0)
+
+  type NatureInst = { position: [number, number, number]; scale?: number; rotationY?: number }
+  const inst = (
+    rows: number[][],
+    scaleDefault = 1,
+  ): NatureInst[] =>
+    rows.map((a, i) => ({
+      position: [a[0], a[1] ?? 0, a[2]] as [number, number, number],
+      scale: a[3] ?? scaleDefault,
+      rotationY: a[4] ?? i * 0.55,
+    }))
+  // Symmetric aisle runner helpers (x outside carpet/poles; z along path)
+  const aisleZs = (from: number, to: number, step: number) => {
+    const zs: number[] = []
+    for (let z = from; z >= to; z -= step) zs.push(z)
+    return zs
+  }
 
   // Critical path is procedural geometry only — fire after first paint frames.
   onMount(() => {
@@ -39,7 +60,7 @@
     })
   })
 
-  // Far Nature / animals after overlay dismiss (idle or short timeout).
+  // Landmarks (gate) after overlay dismiss; flowers one frame later.
   $effect(() => {
     if (!$isLoaded || showDecor) return
     const win = window as Window & {
@@ -54,6 +75,14 @@
         showDecor = true
       }, 120)
     }
+  })
+
+  $effect(() => {
+    if (!showDecor || showFlowers) return
+    const id = requestAnimationFrame(() => {
+      showFlowers = true
+    })
+    return () => cancelAnimationFrame(id)
   })
 
   function createGroundGradient(reverse = false) {
@@ -197,7 +226,7 @@
 
   const bulbWarm = ['#ffd24a', '#ffe08a', '#ffca5a']
 
-  // Motif bunga datar di jalur krem, berulang simetris di kedua sisi karpet.
+  // Motif bunga datar di jalur krem muda, berulang simetris di kedua sisi karpet merah.
   const aisleMotifs = [7.5, 4.7, 1.9, -0.9, -3.7, -6.5, -9.3, -12.1].flatMap((z, i) => [
     { position: [-1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? 0 : Math.PI },
     { position: [1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? Math.PI : 0 }
@@ -206,8 +235,8 @@
   const motifCenterGeo = new THREE.CircleGeometry(0.1, 12)
   const motifLeafGeo = new THREE.CircleGeometry(0.15, 10)
   const motifStemGeo = new THREE.BoxGeometry(0.035, 0.012, 0.72)
-  const motifPetalMat = new THREE.MeshToonMaterial({ color: '#d9899d', gradientMap: gradient })
-  const motifPetalLightMat = new THREE.MeshToonMaterial({ color: '#f4b8c7', gradientMap: gradient })
+  const motifPetalMat = new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: gradient })
+  const motifPetalLightMat = new THREE.MeshToonMaterial({ color: '#fff8f0', gradientMap: gradient })
   const motifCenterMat = new THREE.MeshToonMaterial({ color: '#d9b77b', gradientMap: gradient })
   const motifLeafMat = new THREE.MeshToonMaterial({ color: '#789b78', gradientMap: gradient })
 
@@ -223,298 +252,199 @@
   ]
 
 
-  // === POHON — hutan padat di pinggir venue ===
-  const treeLayerB = [
-    [16, 0, -12, 0.36, -0.4], [-17, 0, -16, 0.38, 0.6],
-    [-13, 0, -22, 0.4, 1.0], [13, 0, -22, 0.4, -0.5],
-    [17, 0, 6, 0.35, 0.3],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
-
-  // Pine (cemara tinggi) di latar belakang
-  const pineLayer = [
-    [-12, 0, -5, 0.4, 0.8], [12, 0, -5, 0.38, -1.0],
-    [-11, 0, -15, 0.4, 0.5], [11, 0, -15, 0.42, -0.3],
-    [-9, 0, -21, 0.38, 1.1], [9, 0, -21, 0.4, -0.7],
-    [-14, 0, -25, 0.42, 0.4], [14, 0, -25, 0.4, -0.8],
-    [0, 0, -27, 0.45, 0.2], [-7, 0, -28, 0.4, 1.2], [7, 0, -28, 0.42, -0.6],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
-
-  // Pohon berdaun merah (autumn) — banyak, tersebar di venue
-  const redLeafTrees = [
-    [-16, 0, 4, 0.4, 0.5], [16, 0, 4, 0.38, -0.7], [-17, 0, -8, 0.42, 1.0],
-    [-14, 0, 6, 0.36, 0.8], [14, 0, 6, 0.4, -0.5],
-    [-13, 0, -2, 0.38, 0.3], [13, 0, -2, 0.4, -1.0],
-    [-15, 0, -16, 0.36, 0.6], [15, 0, -16, 0.38, -0.4],
-    [-10, 0, 8, 0.35, 0.9], [10, 0, 8, 0.37, -0.8],
-    [-17, 0, -12, 0.34, 0.4], [17, 0, -12, 0.36, -0.6],
-    [-11, 0, -20, 0.4, 0.7], [11, 0, -20, 0.38, -0.9],
-    [-6, 0, 9, 0.36, 0.2], [6, 0, 9, 0.38, -0.3],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
-
-  // === RUMPUT — tersebar padat di sepanjang jalan ===
-  const grassTall = [
-    [-6, 0, -8], [6, 0, -8], [-8, 0, -13], [8, 0, -13],
-    [-7, 0, 2.5], [7, 0, 2.5], [-7.5, 0, -6], [7.5, 0, -6],
-    [-7, 0, -12], [7, 0, -12], [-7.5, 0, -3], [7.5, 0, -3]
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.45 + (i % 3) * 0.08, rotationY: i * 0.7 }))
-
-  const grassWispy = [
-    [-6.5, 0, 1], [6.5, 0, 1], [-7, 0, -3], [7, 0, -3],
-    [-7.5, 0, -10], [7.5, 0, -10]
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.38 + (i % 3) * 0.06, rotationY: i * 0.9 }))
-
-  // === BUNGA — berkelompok di tepi jalan ===
-  const flower3 = [
-    [-7, 0, 3], [7, 0, 3], [-6.5, 0, -7], [6.5, 0, -7],
-    [-7.5, 0, -12], [7.5, 0, -12],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.4, rotationY: i * 0.5 }))
-
-  const flower4 = [
-    [-7, 0, -11.5], [7, 0, -11.5], [-6.5, 0, -16.5], [6.5, 0, -16.5],
-    [-7, 0, 4.5], [7, 0, 4.5],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.4, rotationY: i * 0.6 }))
-
-  // === SEMAK & TANAMAN ===
-  const bushes = [
-    [-6.5, 0, 3.5], [6.5, 0, 3.5], [-6, 0, 0], [6, 0, 0],
-    [-8.5, 0, -6], [8.5, 0, -6],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.5, rotationY: i * 0.5 }))
-
-  const ferns = [
-    [-9, 0, 6, 0.3], [9, 0, 6, 0.35], [-13, 0, -3, 0.3], [13, 0, -3, 0.3],
-    [-15, 0, -13, 0.25], [15, 0, -13, 0.28],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[0] * 0.3 }))
-
-  const plants = [
-    [-7, 0, 4], [7, 0, 4], [-8, 0, -2], [8, 0, -2],
-    [-7.5, 0, -9], [7.5, 0, -9],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: 0.5, rotationY: i * 0.7 }))
-
-  // === PEBBLE ===
-  const pebbles = [
-    [-7, 0, 3, 0.4], [7, 0, 3, 0.4],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.3 }))
-
-  // === JAMUR ===
-  const mushrooms = [
-    [-7, 0, 0, 0.4], [7, 0, 0, 0.45], [-7.5, 0, -5, 0.4], [7.5, 0, -5, 0.35],
-    [-9, 0, -11, 0.45], [9, 0, -11, 0.4], [-7, 0, -14, 0.35], [7, 0, -14, 0.4],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.8 }))
-
   // ============================================================
-  // === TAMBAHAN: Vegetasi sisi kiri-kanan (hutan padat) ===
+  // FLORAL GARDEN VENUE — modular flower pack (post-gazebo restore)
+  // Clearance: red carpet |x|<~1.0, cream walk |x|~1.9–3.2, poles x=±4,
+  // desk [4,-4], mailbox [-5,-10], stage STAGE box.
   // ============================================================
 
-  // Pohon CommonTree tambahan di sisi
-  const sideTreesLeft = [
-    [-8, 0, 6, 0.4, 0.5], [-13, 0, -2, 0.38, 1.1], [-7, 0, -8, 0.42, 0.3],
-    [-14, 0, -18, 0.36, -0.6], [-6, 0, 3, 0.4, 0.8],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Single-type white flowering bush border ON dark cream side paths
+  const creamPathBushes = aisleZs(7.4, -13.6, 1.35).flatMap((z, i) => {
+    const sL = 0.5 + (i % 3) * 0.05
+    const sR = 0.52 + (i % 2) * 0.04
+    const ox = (i % 2 === 0 ? 0.06 : -0.05)
+    return [
+      { position: [-2.55 + ox, 0, z] as [number, number, number], scale: sL, rotationY: i * 0.47 },
+      { position: [2.55 - ox, 0, z] as [number, number, number], scale: sR, rotationY: -i * 0.43 },
+    ]
+  })
 
-  const sideTreesRight = [
-    [8, 0, 6, 0.42, -0.4], [13, 0, -2, 0.38, 0.9], [7, 0, -8, 0.4, -1.2],
-    [14, 0, -18, 0.36, 0.5], [6, 0, 3, 0.4, -0.7],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Outer L/R aisle — thinned & spread
+  const aisleBorderLow = aisleZs(7.0, -13.2, 2.4).flatMap((z, i) => {
+    const sx = 0.4 + (i % 2) * 0.06
+    return [
+      { position: [-6.2, 0, z] as [number, number, number], scale: sx, rotationY: i * 0.5 },
+      { position: [6.2, 0, z] as [number, number, number], scale: sx * 0.98, rotationY: -i * 0.45 },
+    ]
+  })
 
-  // Pine tambahan di sisi
-  const pineSidesLeft = [
-    [-10, 0, -10, 0.38, 0.6], [-16, 0, -6, 0.4, -0.5], [-12, 0, -20, 0.42, 1.0],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  const aisleBorderMid = aisleZs(6.5, -12.8, 3.2).flatMap((z, i) => {
+    const s = 0.52 + (i % 2) * 0.08
+    return [
+      { position: [-7.6, 0, z + (i % 2) * 0.25] as [number, number, number], scale: s, rotationY: i * 0.7 },
+      { position: [7.6, 0, z - (i % 2) * 0.2] as [number, number, number], scale: s * 1.02, rotationY: -i * 0.65 },
+    ]
+  })
 
-  const pineSidesRight = [
-    [10, 0, -10, 0.38, -0.8], [16, 0, -6, 0.4, 0.4], [12, 0, -20, 0.42, -1.1],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  const aisleBushFlowers = aisleZs(6.8, -13.5, 3.6).flatMap((z, i) => [
+    { position: [-8.8, 0, z] as [number, number, number], scale: 0.68 + (i % 2) * 0.06, rotationY: i * 0.55 },
+    { position: [8.8, 0, z] as [number, number, number], scale: 0.7 + (i % 2) * 0.05, rotationY: -i * 0.5 },
+  ])
 
-  // TwistedTree (sangat tinggi H=15-17, scale kecil 0.18-0.22)
-  const twistedSidesLeft = [
-    [-15, 0, -12, 0.18, 0.7], [-9, 0, -16, 0.2, -0.4],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Light-pole base clusters (poles at x=±4, z = 4,-1,-6,-11,-14)
+  const poleBaseBushes = [4, -1, -6, -11, -14].flatMap((z, i) => {
+    const s = 0.48 + (i % 2) * 0.05
+    return [
+      { position: [-4.85, 0, z + 0.45] as [number, number, number], scale: s, rotationY: i * 0.4 },
+      { position: [-5.15, 0, z - 0.4] as [number, number, number], scale: s * 0.9, rotationY: -i * 0.35 },
+      { position: [4.85, 0, z + 0.45] as [number, number, number], scale: s, rotationY: -i * 0.4 },
+      { position: [5.15, 0, z - 0.4] as [number, number, number], scale: s * 0.9, rotationY: i * 0.35 },
+    ]
+  })
 
-  const twistedSidesRight = [
-    [15, 0, -12, 0.18, -0.8], [9, 0, -16, 0.2, 0.5],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Wedding gate at carpet entrance (no gazebo) — scale 3.5
+  const weddingGate = [
+    { position: [0, 0, 7.4] as [number, number, number], scale: 3.5, rotationY: 0 },
+  ]
 
-  // Pohon berdaun merah tambahan di sisi
-  const redLeafSidesLeft = [
-    [-11, 0, 1, 0.38, 0.6], [-13, 0, -14, 0.36, -0.9],
-    [-9, 0, -5, 0.4, 0.3], [-12, 0, -9, 0.38, 0.8],
-    [-7, 0, 4, 0.36, -0.4], [-14, 0, -18, 0.34, 0.5],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // white_flower.glb ~223k tris — ≤12 sparse outer-lawn clusters (|x|≥7)
+  const whiteFlowerFill = inst([
+    [-7.6, 0, 6.0, 0.027, 0.4], [7.6, 0, 6.0, 0.027, -0.4],
+    [-9.0, 0, 1.0, 0.025, 0.7], [9.0, 0, 1.0, 0.025, -0.7],
+    [-8.5, 0, -5.5, 0.027, 0.2], [8.5, 0, -5.5, 0.027, -0.2],
+    [-9.2, 0, -11.0, 0.026, 0.5], [9.2, 0, -11.0, 0.026, -0.5],
+  ])
 
-  const redLeafSidesRight = [
-    [11, 0, 1, 0.38, -0.5], [13, 0, -14, 0.36, 0.8],
-    [9, 0, -5, 0.4, -0.3], [12, 0, -9, 0.38, -0.8],
-    [7, 0, 4, 0.36, 0.4], [14, 0, -18, 0.34, -0.5],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  const whiteFlowerAccents = inst([
+    [-11.5, 0, -2.0, 0.024, 0.4], [11.5, 0, -2.0, 0.024, -0.4],
+    [-10.5, 0, -14.0, 0.026, 0.25], [10.5, 0, -14.0, 0.026, -0.25],
+  ])
 
-  // Pine berdaun merah
-  const redPineLeft = [
-    [-15, 0, -10, 0.38, 0.5], [-10, 0, -18, 0.4, -0.7],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // 1jasmine.glb — ≤8 pair accents
+  const jasmineClusters = inst([
+    [-7.8, 0, 4.0, 0.92, 0.3], [7.8, 0, 4.0, 0.92, -0.3],
+    [-8.5, 0, -3.0, 0.95, 0.5], [8.5, 0, -3.0, 0.95, -0.5],
+    [-8.8, 0, -10.0, 0.9, 0.4], [8.8, 0, -10.0, 0.9, -0.4],
+    [-7.2, 0, -16.0, 0.88, 0.25], [7.2, 0, -16.0, 0.88, -0.25],
+  ])
 
-  const redPineRight = [
-    [15, 0, -10, 0.38, -0.5], [10, 0, -18, 0.4, 0.7],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // lavender.glb — ≤12 sparse outer pairs
+  const lavenderFill = inst([
+    [-7.5, 0, 5.5, 0.36, 0.3], [7.5, 0, 5.5, 0.36, -0.3],
+    [-8.0, 0, 1.0, 0.34, 0.5], [8.0, 0, 1.0, 0.34, -0.5],
+    [-7.8, 0, -3.5, 0.38, 0.2], [7.8, 0, -3.5, 0.38, -0.2],
+    [-8.2, 0, -8.0, 0.35, 0.6], [8.2, 0, -8.0, 0.35, -0.6],
+    [-7.6, 0, -12.0, 0.37, 0.4], [7.6, 0, -12.0, 0.37, -0.4],
+    [-8.4, 0, -15.5, 0.34, 0.25], [8.4, 0, -15.5, 0.34, -0.25],
+  ])
 
-  // TwistedTree_3 berdaun merah — BANYAK di kiri & kanan
-  const redTwistedLeft = [
-    [-16, 0, 2, 0.22, 0.4], [-8, 0, -12, 0.2, -0.6],
-    [-12, 0, 6, 0.2, 0.9], [-15, 0, -5, 0.22, 0.3],
-    [-10, 0, -2, 0.18, -0.8], [-17, 0, -14, 0.2, 0.5],
-    [-9, 0, 8, 0.2, 0.2], [-13, 0, -20, 0.22, -0.4],
-    [-7.5, 0, 3, 0.2, 0.6], [-14, 0, 0, 0.18, -0.3],
-    [-11, 0, -16, 0.22, 0.8], [-7, 0, -6, 0.2, -0.5],
-    [-16, 0, -8, 0.2, 0.7], [-9, 0, -16, 0.22, -0.2], [-13, 0, -4, 0.2, 0.5],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Entrance floral gate bases (near spawn / wedding gate)
+  const gateFlowerClusters = inst([
+    [-5.8, 0, 6.2, 0.75, 0.2], [5.8, 0, 6.2, 0.75, -0.2],
+    [-6.8, 0, 5.2, 0.65, 0.5], [6.8, 0, 5.2, 0.65, -0.5],
+    [-7.4, 0, 6.6, 0.6, 0.9], [7.4, 0, 6.6, 0.6, -0.9],
+  ])
 
-  const redTwistedRight = [
-    [16, 0, 2, 0.22, -0.4], [8, 0, -12, 0.2, 0.6],
-    [12, 0, 6, 0.2, -0.9], [15, 0, -5, 0.22, -0.3],
-    [10, 0, -2, 0.18, 0.8], [17, 0, -14, 0.2, -0.5],
-    [9, 0, 8, 0.2, -0.2], [13, 0, -20, 0.22, 0.4],
-    [7.5, 0, 3, 0.2, -0.6], [14, 0, 0, 0.18, 0.3],
-    [11, 0, -16, 0.22, -0.8], [7, 0, -6, 0.2, 0.5],
-    [16, 0, -8, 0.2, -0.7], [9, 0, -16, 0.22, 0.2], [13, 0, -4, 0.2, -0.5],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Floral gate pillars at stage arch posts (z≈-14.9)
+  const archGateFlowers = inst([
+    [-4.9, 0, -14.5, 0.85, 0.15], [4.9, 0, -14.5, 0.85, -0.15],
+    [-5.6, 0, -15.0, 0.7, 0.4], [5.6, 0, -15.0, 0.7, -0.4],
+    [-5.2, 0, -15.5, 0.65, 0.6], [5.2, 0, -15.5, 0.65, -0.6],
+  ])
 
-  // Pohon berdaun merah dekat Kotak Ucapan (mailbox di [-5,0,-10])
-  const mailboxTrees = [
-    [-7.5, 0, -8, 0.2, 0.5], [-8.5, 0, -11, 0.22, -0.3], [-6.5, 0, -13, 0.2, 0.8],
-    [-9, 0, -9, 0.18, -0.6], [-7, 0, -12, 0.2, 0.4],
-    [-7, 0, -7, 0.2, 0.6], [-8.5, 0, -6, 0.22, -0.4], [-6, 0, -5, 0.2, 0.8],
-    [-9.8, 0, -5.2, 0.19, -0.7], [-10.5, 0, -14.5, 0.22, 0.2], [-6.8, 0, -16.5, 0.2, 0.9],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Dense stage flanks (outside STAGE box ±5.25)
+  const stageFlowerLarge = inst([
+    [-6.4, 0, -16.2, 0.95, 0.2], [6.4, 0, -16.2, 0.95, -0.2],
+    [-6.8, 0, -17.8, 1.05, 0.5], [6.8, 0, -17.8, 1.05, -0.5],
+    [-6.5, 0, -19.4, 0.9, 0.35], [6.5, 0, -19.4, 0.9, -0.35],
+    [-7.4, 0, -18.2, 0.85, 0.7], [7.4, 0, -18.2, 0.85, -0.7],
+  ])
 
-  // Pohon tambahan menyebar — KIRI (banyak)
-  const extraTreesLeft = [
-    [-9.5, 0, -7, 0.2, 0.3], [-10.5, 0, -10, 0.22, -0.5], [-8, 0, -14, 0.2, 0.7],
-    [-11, 0, -8, 0.18, 0.9], [-7, 0, -15, 0.22, -0.3], [-9, 0, -12, 0.2, 0.5],
-    [-10, 0, -6, 0.18, -0.7], [-12, 0, -3, 0.2, 0.4], [-8, 0, -2, 0.22, -0.8],
-    [-13, 0, -6, 0.18, 0.6], [-11, 0, -13, 0.2, -0.2], [-6, 0, -8, 0.22, 0.3],
-    [-14, 0, -4, 0.2, 0.7], [-9, 0, 6, 0.18, -0.5], [-15, 0, -2, 0.22, 0.4],
-    [-7, 0, 5, 0.2, 0.8], [-12, 0, 2, 0.18, -0.6], [-16, 0, 0, 0.2, 0.3],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  const stageBushFlowers = inst([
+    [-7.6, 0, -15.6, 0.8, 0.3], [7.6, 0, -15.6, 0.8, -0.3],
+    [-7.8, 0, -17.0, 0.78, 0.5], [7.8, 0, -17.0, 0.78, -0.5],
+    [-7.6, 0, -18.6, 0.82, 0.2], [7.6, 0, -18.6, 0.82, -0.2],
+    [-7.9, 0, -20.2, 0.75, 0.6], [7.9, 0, -20.2, 0.75, -0.6],
+    [-8.4, 0, -16.8, 0.7, 0.4], [8.4, 0, -16.8, 0.7, -0.4],
+  ])
 
-  // Pohon tambahan menyebar — KANAN (banyak)
-  const extraTreesRight = [
-    [9.5, 0, -7, 0.2, -0.3], [10.5, 0, -10, 0.22, 0.5], [8, 0, -14, 0.2, -0.7],
-    [11, 0, -8, 0.18, -0.9], [7, 0, -15, 0.22, 0.3], [9, 0, -12, 0.2, -0.5],
-    [10, 0, -6, 0.18, 0.7], [12, 0, -3, 0.2, -0.4], [8, 0, -2, 0.22, 0.8],
-    [13, 0, -6, 0.18, -0.6], [11, 0, -13, 0.2, 0.2], [6, 0, -8, 0.22, -0.3],
-    [14, 0, -4, 0.2, -0.7], [9, 0, 6, 0.18, 0.5], [15, 0, -2, 0.22, -0.4],
-    [7, 0, 5, 0.2, -0.8], [12, 0, 2, 0.18, 0.6], [16, 0, 0, 0.2, -0.3],
-  ].map((a) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
+  // Reception desk pocket — outer side only
+  const deskFlowers = inst([
+    [5.8, 0, -2.4, 0.48, 0.4], [6.2, 0, -5.4, 0.5, -0.3],
+    [6.6, 0, -3.8, 0.52, 0.7],
+  ])
 
-  // Pohon (dari batu) — BANYAK di kiri & kanan
-  const rockMed2Left = [
-    [-7, 0, 2, 0.35, 0.3], [-12, 0, -3, 0.4, -0.5], [-9, 0, -8, 0.38, 0.8],
-    [-14, 0, -10, 0.32, 0.2], [-7.5, 0, -14, 0.4, -0.6], [-11, 0, 6, 0.36, 0.4],
-    [-15, 0, 4, 0.3, -0.3], [-8, 0, -18, 0.38, 0.7],
-    [-6.5, 0, -5, 0.3, 0.4], [-8, 0, -1, 0.36, -0.8], [-10, 0, -15, 0.32, 0.6],
-    [-13, 0, 2, 0.38, -0.2], [-16, 0, -3, 0.34, 0.9], [-7, 0, -20, 0.3, -0.5],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
+  // Mailbox pocket
+  const mailboxFlowers = inst([
+    [-6.8, 0, -8.2, 0.55, 0.4], [-7.4, 0, -9.6, 0.58, -0.3],
+    [-7.0, 0, -11.4, 0.52, 0.7], [-7.8, 0, -10.4, 0.55, 0.2],
+  ])
 
-  const rockMed2Right = [
-    [7, 0, 2, 0.35, -0.3], [12, 0, -3, 0.4, 0.5], [9, 0, -8, 0.38, -0.8],
-    [14, 0, -10, 0.32, -0.2], [7.5, 0, -14, 0.4, 0.6], [11, 0, 6, 0.36, -0.4],
-    [15, 0, 4, 0.3, 0.3], [8, 0, -18, 0.38, -0.7],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.5 }))
+  // Guide NPC pocket
+  const guideFlowers = inst([
+    [5.8, 0, -8.6, 0.48, 0.3], [6.4, 0, -10.4, 0.5, -0.4],
+    [6.0, 0, -11.6, 0.46, 0.5],
+  ])
 
-  // Rumput pendek di sisi
-  const grassShortLeft = [
-    [-7, 0, 1, 0.45], [-8, 0, -3, 0.5], [-7, 0, -7, 0.42], [-8.5, 0, -10, 0.48],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.6 }))
+  // Foliage fillers — spread outer grass
+  const foliageFill = inst([
+    [-9.2, 0, 3.0, 0.5, 0.4], [9.2, 0, 3.0, 0.5, -0.4],
+    [-9.6, 0, -2.0, 0.48, 0.6], [9.6, 0, -2.0, 0.48, -0.6],
+    [-9.8, 0, -8.0, 0.5, 0.2], [9.8, 0, -8.0, 0.5, -0.2],
+    [-10.0, 0, -14.5, 0.46, 0.8], [10.0, 0, -14.5, 0.46, -0.8],
+    [-9.4, 0, -19.5, 0.48, 0.3], [9.4, 0, -19.5, 0.48, -0.3],
+  ])
 
-  const grassShortRight = [
-    [7, 0, 1, 0.45], [8, 0, -3, 0.5], [7, 0, -7, 0.42], [8.5, 0, -10, 0.48],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.7 }))
+  const cloverFill = inst([
+    [-7.2, 0, 1.5, 0.38, 0.2], [7.2, 0, 1.5, 0.38, -0.2],
+    [-7.5, 0, -5.5, 0.36, 0.5], [7.5, 0, -5.5, 0.36, -0.5],
+    [-7.4, 0, -12.0, 0.4, 0.7], [7.4, 0, -12.0, 0.4, -0.7],
+  ])
 
-  const grassWispyShortLeft = [
-    [-7, 0, -1, 0.4], [-7.5, 0, -8, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.9 }))
+  // Soft green bush base under outer florals
+  const softBushBase = inst([
+    [-9.0, 0, 5.0, 0.5, 0.3], [9.0, 0, 5.0, 0.5, -0.3],
+    [-9.5, 0, -1.0, 0.48, 0.6], [9.5, 0, -1.0, 0.48, -0.6],
+    [-9.8, 0, -7.5, 0.5, 0.2], [9.8, 0, -7.5, 0.5, -0.2],
+    [-10.0, 0, -15.5, 0.52, 0.4], [10.0, 0, -15.5, 0.52, -0.4],
+    [-10.2, 0, -21.0, 0.46, 0.5], [10.2, 0, -21.0, 0.46, -0.5],
+  ])
 
-  const grassWispyShortRight = [
-    [7, 0, -1, 0.4], [7.5, 0, -8, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.8 }))
+  // Sparse far canopy only — garden depth, not forest
+  const farCanopy = inst([
+    [-14, 0, 4, 0.32, 0.4], [14, 0, 4, 0.32, -0.4],
+    [-15, 0, -8, 0.34, 0.7], [15, 0, -8, 0.34, -0.7],
+    [-13, 0, -18, 0.3, 0.3], [13, 0, -18, 0.3, -0.3],
+    [-16, 0, -22, 0.36, 0.5], [16, 0, -22, 0.36, -0.5],
+    [0, 0, -27, 0.4, 0.2], [-8, 0, -26, 0.34, 0.8], [8, 0, -26, 0.34, -0.6],
+  ])
 
-  // Bunga tunggal di sisi
-  const flowerSingleLeft = [
-    [-7, 0, 3, 0.38], [-7.5, 0, -6, 0.4], [-7, 0, -11, 0.36], [-8, 0, 2, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
+  // Tall ornamental plants as outer accents
+  const tallPlants = inst([
+    [-11.0, 0, 1.5, 0.52, 0.3], [11.0, 0, 1.5, 0.52, -0.3],
+    [-11.5, 0, -8.0, 0.48, 0.6], [11.5, 0, -8.0, 0.48, -0.6],
+    [-11.2, 0, -16.0, 0.5, 0.2], [11.2, 0, -16.0, 0.5, -0.2],
+  ])
 
-  const flowerSingleRight = [
-    [7, 0, 3, 0.38], [7.5, 0, -6, 0.4], [7, 0, -11, 0.36], [8, 0, 2, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.6 }))
-
-  // Clover di sisi
-  const cloversLeft = [
-    [-7, 0, 0, 0.4], [-7.5, 0, -4, 0.42], [-7.5, 0, -9, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.7 }))
-
-  const cloversRight = [
-    [7, 0, 0, 0.4], [7.5, 0, -4, 0.42], [7.5, 0, -9, 0.38],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.7 }))
-
-  // Semak berbunga
-  const bushFlowersLeft = [
-    [-8, 0, 4, 0.5], [-9, 0, -7, 0.5], [-10, 0, -13, 0.48],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.5 }))
-
-  const bushFlowersRight = [
-    [8, 0, 4, 0.5], [9, 0, -7, 0.5], [10, 0, -13, 0.48],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.5 }))
-
-  // Tanaman besar (H=3.76, scale 0.3)
-  const plantBigLeft = [
-    [-12, 0, -5, 0.3], [-11, 0, -17, 0.28],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.6 }))
-
-  const plantBigRight = [
-    [12, 0, -5, 0.3], [11, 0, -17, 0.28],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.6 }))
-
-  const rockSidesRight = [
-    [10, 0, 0, 0.35], [14, 0, -10, 0.3], [12, 0, -22, 0.32],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.4 }))
-
-  // Pebble tambahan
-  const pebbleSidesLeft = [
-    [-4.5, 0, -2, 0.5], [-6, 0, -6, 0.55], [-5, 0, -10, 0.48], [-7, 0, -14, 0.5],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 1.1 }))
-
-  const pebbleSidesRight = [
-    [5.5, 0, -2, 0.5], [6, 0, -6, 0.55], [5, 0, -10, 0.48], [7, 0, -14, 0.5],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -1.2 }))
-
-  // Jalur batu tepi jalan
-  // Jamur Laetiporus
-  const mushroomLaetiLeft = [
-    [-9, 0, -1, 0.4], [-10, 0, -9, 0.35], [-9, 0, -13, 0.42],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.8 }))
-
-  const mushroomLaetiRight = [
-    [9, 0, -1, 0.4], [10, 0, -9, 0.35], [9, 0, -13, 0.42],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.8 }))
-
-
-  // === POHON BERJAJAR di perbatasan venue (tepi kiri & kanan jalan) ===
-  // Beri ruang dari tiang lampu di X=±4 agar batang dan kanopi tidak bertabrakan.
-  const liningTreesLeft = [
-    [-7, 0, 5, 0.4], [-7, 0, 1, 0.42], [-7, 0, -3, 0.4],
-    [-7, 0, -7, 0.42], [-7, 0, -11, 0.4], [-7, 0, -15, 0.42],
-    [-7, 0, -19, 0.4],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * 0.3 }))
-
-  const liningTreesRight = [
-    [7, 0, 5, 0.42], [7, 0, 1, 0.4], [7, 0, -3, 0.42],
-    [7, 0, -7, 0.4], [7, 0, -11, 0.42], [7, 0, -15, 0.4],
-    [7, 0, -19, 0.42],
-  ].map((a, i) => ({ position: [a[0], 0, a[2]] as [number, number, number], scale: a[3], rotationY: i * -0.3 }))
+  // Shared white/cream palette for stage arch florals
+  const potBloomColors = ['#ffffff', '#ffffff', '#fff8f0', '#ffffff', '#fff8f0']
+  const archPostBlooms = [
+    { side: -1 as const, y: 1.1, s: 0.9, c: '#ffffff' },
+    { side: -1 as const, y: 1.8, s: 0.75, c: '#fff8f0' },
+    { side: -1 as const, y: 2.5, s: 0.85, c: '#ffffff' },
+    { side: -1 as const, y: 3.2, s: 0.7, c: '#ffffff' },
+    { side: 1 as const, y: 1.1, s: 0.9, c: '#ffffff' },
+    { side: 1 as const, y: 1.8, s: 0.75, c: '#ffffff' },
+    { side: 1 as const, y: 2.5, s: 0.85, c: '#fff8f0' },
+    { side: 1 as const, y: 3.2, s: 0.7, c: '#ffffff' },
+  ]
+  const archCrossBlooms = [-3.2, -1.8, -0.6, 0.6, 1.8, 3.2].map((x, i) => ({
+    x,
+    s: 0.65 + (i % 2) * 0.12,
+    c: potBloomColors[i % potBloomColors.length],
+  }))
 
   // === GUNUNG di belakang panggung — 3 lapis kedalaman ===
-  // Lapisan jauh pucat & berkabut (fog meredupkannya), lapisan tengah sage,
-  // lapisan dekat sedikit lebih gelap dengan silhouette bervariasi. Skala,
-  // rotasi, dan jumlah segmen kerucut dibuat berbeda agar tidak repetitif.
   type Mtn = { x: number; y: number; z: number; r: number; h: number; seg: number }
   const mtnFar: Mtn[] = [
     { x: -20, y: 3.5, z: -31, r: 6, h: 9, seg: 4 }, { x: -8, y: 3, z: -33, r: 5, h: 8, seg: 5 },
@@ -530,17 +460,10 @@
     { x: -2, y: 2, z: -25, r: 3.2, h: 5, seg: 4 }
   ]
 
-  const stageBushes = [
-    [-7.5, 0, -15.5, 0.5, 0.3], [7.5, 0, -15.5, 0.5, -0.3],
-    [-7.5, 0, -20.5, 0.5, 0.5], [7.5, 0, -20.5, 0.5, -0.5],
-    [-7.5, 0, -18, 0.48, 0.2], [7.5, 0, -18, 0.48, -0.2],
-    [-8, 0, -17, 0.45, 0.4], [8, 0, -17, 0.45, -0.4],
-  ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
-
-  // === HEWAN ===
-  const animalBunny = [{ position: [-8, 0, -1] as [number, number, number], rotationY: 0.8, scale: 0.6 }]
-  const animalCat = [{ position: [8, 0, -6] as [number, number, number], rotationY: -1.2, scale: 0.6 }]
-  const animalPanda = [{ position: [-6, 0, -12] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
+  // === HEWAN (desktop only) — tucked at outer garden edges ===
+  const animalBunny = [{ position: [-9.5, 0, 2] as [number, number, number], rotationY: 0.8, scale: 0.6 }]
+  const animalCat = [{ position: [9.5, 0, -6] as [number, number, number], rotationY: -1.2, scale: 0.6 }]
+  const animalPanda = [{ position: [-9, 0, -12] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
 
 </script>
 
@@ -587,7 +510,7 @@
   <T.PlaneGeometry args={[0.06, 43]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<!-- Corak bunga bordir pada jalur krem di kanan-kiri karpet -->
+<!-- Corak bunga bordir pada jalur krem muda di kanan-kiri karpet merah -->
 {#each aisleMotifs as motif}
   <T.Group position={motif.position} rotation.y={motif.rotationY}>
     <T.Mesh geometry={motifStemGeo} material={motifLeafMat} position={[0, 0, 0.18]} />
@@ -648,30 +571,30 @@
   </T.Group>
 {/each}
 
-<!-- VEGETASI deferred — not on critical ready path (pop-in after overlay OK) -->
+<!-- Landmarks first; flowers one frame later (no gazebo) -->
 {#if showDecor}
-  <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={[...sparseTrees(liningTreesLeft), ...sparseTrees(liningTreesRight), ...sparseTrees(redLeafSidesLeft), ...sparseTrees(redLeafSidesRight)]} />
-  <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={[...sparseTrees(pineLayer), ...sparseTrees(redPineLeft), ...sparseTrees(redPineRight), ...sparseTrees(redTwistedLeft), ...sparseTrees(redTwistedRight), ...sparseTrees(mailboxTrees), ...sparseTrees(extraTreesLeft), ...sparseTrees(extraTreesRight), ...sparseTrees(pineSidesLeft), ...sparseTrees(pineSidesRight)]} />
-  <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={[...sparseTrees(redLeafTrees), ...rockMed2Left, ...rockMed2Right, ...mushroomLaetiLeft, ...mushroomLaetiRight]} />
-  <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={[...grassTall, ...bushes, ...grassWispyShortRight, ...grassShortLeft, ...stageBushes]} />
-  <Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={[...grassWispy, ...grassShortRight, ...grassWispyShortLeft, ...bushFlowersLeft, ...bushFlowersRight]} />
-  <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={[...mushrooms, ...rockSidesRight, ...pebbleSidesLeft, ...pebbleSidesRight]} />
-  <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={[...plantBigLeft, ...plantBigRight]} />
-  <Nature url="/nature/gltf/Grass_2_A_Color1.glb" scale={1.1} instances={flower3} />
-  <Nature url="/nature/gltf/Grass_1_C_Color1.glb" scale={1.1} instances={flower4} />
-  <Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
-  <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
-  <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
-  <Nature url="/nature/gltf/Tree_2_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
-  <Nature url="/nature/gltf/Tree_3_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesRight)} />
-  <Nature url="/nature/gltf/Grass_1_A_Color1.glb" scale={1.1} instances={flowerSingleLeft} />
-  <Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
-  <Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
-  <Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
-  {#if !lowPower}
-    <Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
-    <Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
-    <Nature url="/nature/gltf/animal-panda.glb" scale={0.6} instances={animalPanda} />
+  <Nature url="/nature/gltf/wedding_gate.glb" scale={1} instances={weddingGate} />
+  {#if showFlowers}
+    <Nature url="/nature/gltf/white_flower.glb" scale={1} instances={sparseDecor([...whiteFlowerFill, ...whiteFlowerAccents])} />
+    <Nature url="/nature/gltf/1jasmine.glb" scale={1} instances={sparseDecor(jasmineClusters)} />
+    <Nature url="/nature/gltf/lavender.glb" scale={1} instances={sparseDecor(lavenderFill)} />
+    <Nature url="/nature/gltf/Bush_Common_Flowers.glb" scale={1.05} flowerColor="#ffffff" instances={sparseDecor([...creamPathBushes, ...poleBaseBushes])} />
+    <Nature url="/nature/gltf/Bush_Common_Flowers.glb" scale={1.25} flowerColor="#ffffff" instances={sparseDecor([...aisleBushFlowers, ...stageBushFlowers, ...archGateFlowers])} />
+    <Nature url="/nature/gltf/Flower_3_Group.glb" scale={1.1} flowerColor="#ffffff" instances={sparseDecor(aisleBorderLow)} />
+    <Nature url="/nature/gltf/Flower_4_Group.glb" scale={1.15} flowerColor="#ffffff" instances={sparseDecor([...aisleBorderMid, ...gateFlowerClusters, ...stageFlowerLarge])} />
+    <Nature url="/nature/gltf/Flower_3_Single.glb" scale={1.05} flowerColor="#ffffff" instances={sparseDecor([...deskFlowers, ...mailboxFlowers])} />
+    <Nature url="/nature/gltf/Flower_4_Single.glb" scale={1.05} flowerColor="#ffffff" instances={sparseDecor(guideFlowers)} />
+    <Nature url="/nature/gltf/Fern_1.glb" scale={1.1} instances={sparseDecor(foliageFill)} />
+    <Nature url="/nature/gltf/Clover_1.glb" scale={1.0} instances={sparseDecor(cloverFill)} />
+    <Nature url="/nature/gltf/Plant_1.glb" scale={1.05} instances={sparseDecor(softBushBase)} />
+    <Nature url="/nature/gltf/Plant_1_Big.glb" scale={1.15} instances={sparseDecor(tallPlants)} />
+    <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.5} instances={sparseTrees(farCanopy)} />
+    <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.1} instances={sparseDecor(softBushBase.map((b) => ({ ...b, scale: (b.scale ?? 1) * 0.85 })))} />
+    {#if !lowPower}
+      <Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
+      <Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
+      <Nature url="/nature/gltf/animal-panda.glb" scale={0.6} instances={animalPanda} />
+    {/if}
   {/if}
 {/if}
 
@@ -717,7 +640,7 @@
           scale={[0.9, 0.58, 0.36]}
           castShadow
         >
-          <T.MeshToonMaterial color={backdropFlowerColors[(i + 1) % backdropFlowerColors.length]} gradientMap={gradient} />
+          <T.MeshToonMaterial color="#ffffff" gradientMap={gradient} />
         </T.Mesh>
       {/each}
       <T.Mesh geometry={backdropFlowerCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.08]} scale={0.82} />
@@ -1035,20 +958,17 @@
   </T.Group>
 {/each}
 
-<!-- Wedding arch di kaki tangga: dua tiang kokoh + crossbar + bracket -->
+<!-- Floral wedding gate: ivory posts + crossbar wrapped in pastel blooms -->
 <T.Group position={[0, 0, ARCH_Z]}>
   {#each [-ARCH_POST_X, ARCH_POST_X] as px}
-    <!-- Base lebar -->
     <T.Mesh position={[px, 0.12, 0]} castShadow>
       <T.BoxGeometry args={[0.5, 0.24, 0.5]} />
       <T.MeshToonMaterial color="#e8dcc4" gradientMap={gradient} />
     </T.Mesh>
-    <!-- Tiang vertikal ivory -->
     <T.Mesh position={[px, 2.0, 0]} castShadow>
       <T.BoxGeometry args={[0.28, 3.6, 0.28]} />
       <T.MeshToonMaterial color="#fff3dd" gradientMap={gradient} />
     </T.Mesh>
-    <!-- Trim emas pada tiang -->
     <T.Mesh position={[px, 0.28, 0.15]}>
       <T.BoxGeometry args={[0.32, 0.05, 0.05]} />
       <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
@@ -1057,13 +977,11 @@
       <T.BoxGeometry args={[0.32, 0.05, 0.05]} />
       <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
     </T.Mesh>
-    <!-- Bracket titik tambat kabel di puncak -->
     <T.Mesh position={[px, ARCH_TOP_Y, 0]}>
       <T.SphereGeometry args={[0.12, 8, 6]} />
       <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
     </T.Mesh>
   {/each}
-  <!-- Crossbar atas (menghubungkan kedua tiang) -->
   <T.Mesh position={[0, ARCH_TOP_Y + 0.1, 0]} castShadow>
     <T.BoxGeometry args={[ARCH_POST_X * 2 + 0.4, 0.22, 0.28]} />
     <T.MeshToonMaterial color="#fff3dd" gradientMap={gradient} />
@@ -1072,6 +990,50 @@
     <T.BoxGeometry args={[ARCH_POST_X * 2 + 0.4, 0.05, 0.04]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
+  <!-- Climbing florals on posts -->
+  {#each archPostBlooms as bloom}
+    <T.Group position={[bloom.side * ARCH_POST_X, bloom.y, 0.22]} scale={bloom.s * 0.55}>
+      {#each [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2] as angle}
+        <T.Mesh
+          geometry={backdropFlowerPetalGeo}
+          position={[Math.cos(angle) * 0.14, Math.sin(angle) * 0.14, 0]}
+          rotation.z={angle}
+          scale={[0.95, 0.6, 0.4]}
+          castShadow
+        >
+          <T.MeshToonMaterial color={bloom.c} gradientMap={gradient} />
+        </T.Mesh>
+      {/each}
+      <T.Mesh geometry={backdropFlowerCenterGeo} position={[0, 0, 0.04]}>
+        <T.MeshToonMaterial color="#d9a441" gradientMap={gradient} />
+      </T.Mesh>
+      <T.Mesh
+        geometry={backdropLeafGeo}
+        material={bouquetLeafMat}
+        position={[-0.22, -0.12, -0.02]}
+        scale={[0.9, 0.4, 0.3]}
+      />
+    </T.Group>
+  {/each}
+  <!-- Crossbar hanging blooms -->
+  {#each archCrossBlooms as bloom}
+    <T.Group position={[bloom.x, ARCH_TOP_Y - 0.15, 0.18]} scale={bloom.s * 0.5}>
+      {#each [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2] as angle}
+        <T.Mesh
+          geometry={backdropFlowerPetalGeo}
+          position={[Math.cos(angle) * 0.13, Math.sin(angle) * 0.13, 0]}
+          rotation.z={angle}
+          scale={[0.9, 0.55, 0.36]}
+          castShadow
+        >
+          <T.MeshToonMaterial color={bloom.c} gradientMap={gradient} />
+        </T.Mesh>
+      {/each}
+      <T.Mesh geometry={backdropFlowerCenterGeo}>
+        <T.MeshToonMaterial color="#d9a441" gradientMap={gradient} />
+      </T.Mesh>
+    </T.Group>
+  {/each}
 </T.Group>
 
 <!-- Kabel lampu: dua memanjang sisi jalan (5 tiang per sisi, hook Y=3.8m) + satu utama di arch -->

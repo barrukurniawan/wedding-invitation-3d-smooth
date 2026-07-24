@@ -42,11 +42,11 @@
     requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()))
   })
 
-  // Background langit hangat + fog lembut ala Summer Afternoon
+  // Sky + fog same family (was #bfe3f0 bg + #fcd9a0 fog → peach horizon wash)
   // lowPower: slightly closer fog far plane (less fill cost)
   $effect(() => {
     scene.background = new THREE.Color('#bfe3f0')
-    scene.fog = new THREE.Fog('#fcd9a0', lowPower ? 14 : 18, lowPower ? 42 : 54)
+    scene.fog = new THREE.Fog('#d4e8f0', lowPower ? 16 : 22, lowPower ? 48 : 62)
   })
 
   // Render loop utama: gerakan -> deteksi proximity

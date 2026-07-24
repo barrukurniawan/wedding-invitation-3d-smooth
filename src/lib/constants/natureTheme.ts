@@ -51,5 +51,15 @@ export function getNatureTint(url: string): string {
   if (segment.startsWith('grass')) return NATURE_COLORS.grass
   if (segment.startsWith('bush')) return NATURE_COLORS.bush
   if (segment.startsWith('tree')) return NATURE_COLORS.tree
+  // Flower / plant modular assets keep original textures
+  if (
+    segment.startsWith('flower') ||
+    segment.startsWith('plant') ||
+    segment.startsWith('clover') ||
+    segment.startsWith('fern') ||
+    segment.startsWith('petal')
+  ) {
+    return WHITE
+  }
   return WHITE
 }

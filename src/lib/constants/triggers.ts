@@ -115,7 +115,10 @@ export const colliders = [
   // Meja resepsionis (world bounds menyam ukuran meja baru: x~3.58-4.42, z~-5.3-2.7)
   { minX: 3.5, maxX: 4.45, minZ: -5.3, maxZ: -2.7 },
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 },
-  { minX: 3.5, maxX: 4.5, minZ: -10.5, maxZ: -9.5 }
+  { minX: 3.5, maxX: 4.5, minZ: -10.5, maxZ: -9.5 },
+  // Wedding gate posts at entrance (scale~3.5; center aisle |x|<~2 walkable)
+  { minX: -4.1, maxX: -2.0, minZ: 6.1, maxZ: 8.7 },
+  { minX: 2.0, maxX: 4.1, minZ: 6.1, maxZ: 8.7 },
 ]
 
 export const STAGE = {

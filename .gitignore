@@ -11,4 +11,7 @@ server/.env
 server/.env.docker
 !server/.env.example
 !server/.env.docker.example
-.kilo/
+  .kilo/
+# Forbidden heavy prop — never ship or mount (plan_bunga / lag fix)
+static/nature/gltf/decorate_stage_flower.glb
+

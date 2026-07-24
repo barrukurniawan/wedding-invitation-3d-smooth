@@ -52,6 +52,23 @@ export const NATURE_TINTS: Record<string, string> = {
   'grass_2_b_color1.glb': '#39f239',
   'grass_2_c_color1.glb': '#39f239',
 
+  // Floral modular pack (Stylized_Nature → static/nature/gltf) — keep atlas colors
+  'flower_3_group.glb': '#ffffff',
+  'flower_3_single.glb': '#ffffff',
+  'flower_4_group.glb': '#ffffff',
+  'flower_4_single.glb': '#ffffff',
+  'bush_common_flowers.glb': '#ffffff',
+  'plant_1.glb': '#ffffff',
+  'plant_1_big.glb': '#ffffff',
+  'clover_1.glb': '#ffffff',
+  'fern_1.glb': '#ffffff',
+
+  // Custom venue props / florals (keep authored colors)
+  'wedding_gate.glb': '#ffffff',
+  'white_flower.glb': '#ffffff',
+  '1jasmine.glb': '#ffffff',
+  'lavender.glb': '#ffffff',
+
   // === HEWAN ===
   'animal-bunny.glb': '#ffff2c',
   'animal-cat.glb': '#ffff2c',
