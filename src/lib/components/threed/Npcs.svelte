@@ -6,7 +6,7 @@
 
   function markReady() {
     readyCount += 1
-    if (readyCount === 4) onReady?.()
+    if (readyCount === 3) onReady?.()
   }
 
   const S = 0.62
@@ -20,7 +20,6 @@
     shoes: '#7a1f35'
   }
   const receptionist = { ...skinCream, ...staffUniform }
-  const guide = { ...skinCream, ...staffUniform, hat: '#111111' }
   const groom = { ...skinCream, clothes: '#ffffff', darkClothes: '#e8e8e8', band: '#d4af37', hair: '#1a1a1a' }
   const bride = { ...skinCream, clothes: '#ffffff', darkClothes: '#f5efe6', band: '#e8c4c4', hair: '#ffb340' }
 </script>
@@ -28,23 +27,12 @@
 <!-- Resepsionis -->
 <Character
   url="/models/resepsionis.glb"
-  position={[4.9, 0, -4]}
-  rotationY={-Math.PI / 2}
-  scale={S}
-  clip="Idle"
-  appearance={receptionist}
-  onReady={markReady}
-/>
-
-<!-- Pemandu -->
-<Character
-  url="/models/pemandu.glb"
-  position={[4, 0, -10]}
+  position={[4.9, 0, -10]}
   rotationY={-Math.PI / 2}
   scale={S}
   clip="Idle"
   useNod={true}
-  appearance={guide}
+  appearance={receptionist}
   onReady={markReady}
 />
 

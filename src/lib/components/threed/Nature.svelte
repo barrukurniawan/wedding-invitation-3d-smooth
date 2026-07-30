@@ -37,7 +37,11 @@
     })
   }
 
-  // Override warna material berdasarkan nama (mis. { Grey: '#ffffff' }).
+  const generatedTextures = new Set<THREE.Texture>()
+  const colorMaskCache = new WeakMap<THREE.Texture, THREE.Texture>()
+
+  // Override warna material berdasarkan nama. RGB tekstur dan vertex color
+  // dinetralkan, tetapi alpha tekstur tetap dipakai untuk siluet foliage.
   function applyMaterialColors(ref: THREE.Object3D, colors: Record<string, string>) {
     ref.traverse((obj) => {
       const mesh = obj as THREE.Mesh
@@ -45,11 +49,43 @@
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       for (const mat of mats) {
         if (mat instanceof THREE.MeshStandardMaterial && colors[mat.name] !== undefined) {
+          if (mat.map) {
+            const colorMask = toColorMaskTexture(mat.map)
+            if (colorMask) mat.map = colorMask
+          }
+          mat.vertexColors = false
           mat.color = new THREE.Color(colors[mat.name])
           mat.needsUpdate = true
         }
       }
     })
+  }
+
+  function toColorMaskTexture(tex: THREE.Texture): THREE.Texture | null {
+    if (colorMaskCache.has(tex)) return colorMaskCache.get(tex)!
+    const img = tex.image as (HTMLImageElement | HTMLCanvasElement) | undefined
+    if (!img || !img.width || !img.height) return null
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img as CanvasImageSource, 0, 0)
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const pixels = data.data
+      for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i] = 255
+        pixels[i + 1] = 255
+        pixels[i + 2] = 255
+      }
+      ctx.putImageData(data, 0, 0)
+      const out = cloneTextureSettings(tex, canvas)
+      colorMaskCache.set(tex, out)
+      generatedTextures.add(out)
+      return out
+    } catch {
+      return null
+    }
   }
 
   // Cache tekstur luminance agar tidak diproses ulang per instance.
@@ -75,19 +111,26 @@
         d[i] = d[i + 1] = d[i + 2] = lum
       }
       ctx.putImageData(data, 0, 0)
-      const out = new THREE.CanvasTexture(canvas)
-      out.colorSpace = tex.colorSpace
-      out.wrapS = tex.wrapS
-      out.wrapT = tex.wrapT
-      out.minFilter = tex.minFilter
-      out.magFilter = tex.magFilter
-      out.generateMipmaps = tex.generateMipmaps
-      out.needsUpdate = true
+      const out = cloneTextureSettings(tex, canvas)
       luminanceCache.set(tex, out)
+      generatedTextures.add(out)
       return out
     } catch {
       return null
     }
+  }
+
+  function cloneTextureSettings(source: THREE.Texture, canvas: HTMLCanvasElement) {
+    const out = new THREE.CanvasTexture(canvas)
+    out.colorSpace = source.colorSpace
+    out.wrapS = source.wrapS
+    out.wrapT = source.wrapT
+    out.minFilter = source.minFilter
+    out.magFilter = source.magFilter
+    out.generateMipmaps = source.generateMipmaps
+    out.flipY = source.flipY
+    out.needsUpdate = true
+    return out
   }
 
   // Pewarnaan berbasis tinggi vertikal vertex: rendah = batang (bark),
@@ -227,6 +270,8 @@
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
         for (const material of materials) material.dispose()
       }
+      for (const texture of generatedTextures) texture.dispose()
+      generatedTextures.clear()
     }
 
     const result = { meshes, dispose }

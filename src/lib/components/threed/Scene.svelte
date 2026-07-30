@@ -5,6 +5,7 @@
   import { onMount, type Component } from 'svelte'
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
+  import Sky from './Sky.svelte'
   import Player from './Player.svelte'
   import Npcs from './Npcs.svelte'
   import Confetti from './Confetti.svelte'
@@ -42,11 +43,11 @@
     requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()))
   })
 
-  // Background langit hangat + fog lembut ala Summer Afternoon
+  // Fallback background + fog horizon yang menyatu dengan sky dome.
   // lowPower: slightly closer fog far plane (less fill cost)
   $effect(() => {
-    scene.background = new THREE.Color('#bfe3f0')
-    scene.fog = new THREE.Fog('#fcd9a0', lowPower ? 14 : 18, lowPower ? 42 : 54)
+    scene.background = new THREE.Color('#8ed3f7')
+    scene.fog = new THREE.Fog('#dff3fb', lowPower ? 26 : 32, lowPower ? 55 : 68)
   })
 
   // Render loop utama: gerakan -> deteksi proximity
@@ -61,6 +62,7 @@
 {/if}
 
 <CameraRig />
+<Sky {lowPower} />
 <Lighting shadows={!lowPower} />
 {#if Environment}
   <Environment
@@ -84,7 +86,7 @@
   onReady={() => {
     if (npcsReady) return
     npcsReady = true
-    bumpCriticalLoaded(4)
+    bumpCriticalLoaded(3)
   }}
 />
 <Confetti />

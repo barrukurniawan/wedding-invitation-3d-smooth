@@ -30,7 +30,7 @@
         </div>
         <div>
           <h3 class="text-xl font-bold text-[var(--rose)]">{$activeNpcData.name}</h3>
-          <p class="text-xs uppercase tracking-[0.18em] text-[var(--champagne)]/80">Pemandu / Resepsionis</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[var(--champagne)]/80">Resepsionis</p>
         </div>
       </div>
 

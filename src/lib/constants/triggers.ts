@@ -21,16 +21,19 @@ export const triggerZones: TriggerZone[] = [
   {
     id: 'receptionist',
     label: 'Resepsionis',
-    position: [4, 0, -4],
-    radius: 2.5,
+    position: [4, 0, -10],
+    radius: 2.2,
     action: 'npc',
     npcData: {
       name: 'Resepsionis',
       avatar: '🛎',
       messages: [
         'Selamat datang di pernikahan 👰🏻 Kia & 🤵🏻 Toni! Silakan berjalan ke arah pelaminan.',
+        'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
         'Jangan lupa memberikan ucapan 💌 di kotak ucapan ya! 📮'
-      ]
+      ],
+      venueAddress: 'Venue Pernikahan Kia & Toni',
+      mapsUrl: 'https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7'
     }
   },
   {
@@ -46,23 +49,6 @@ export const triggerZones: TriggerZone[] = [
     position: [0, 0, -18],
     radius: 3.5,
     action: 'weddingStage'
-  },
-  {
-    id: 'npcGuide',
-    label: 'Penunjuk Jalan',
-    position: [4, 0, -10],
-    radius: 2.2,
-    action: 'npc',
-    npcData: {
-      name: 'Pemandu',
-      avatar: '🗺️',
-      messages: [
-        'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
-        'Setelah itu, silakan lanjut maju ke pelaminan untuk menyapa Kia & Toni.'
-      ],
-      venueAddress: 'Venue Pernikahan Kia & Toni',
-      mapsUrl: 'https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7'
-    }
   }
 ]
 
@@ -112,10 +98,9 @@ export const lightPoleColliders = lightPoles.map((p) => ({
 export const colliders = [
   // Light poles (prevent walking through 10 poles)
   ...lightPoleColliders,
-  // Meja resepsionis (world bounds menyam ukuran meja baru: x~3.58-4.42, z~-5.3-2.7)
-  { minX: 3.5, maxX: 4.45, minZ: -5.3, maxZ: -2.7 },
-  { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 },
-  { minX: 3.5, maxX: 4.5, minZ: -10.5, maxZ: -9.5 }
+  // Meja resepsionis (world bounds di z≈−10: x~3.58-4.42, z~-11.3–-8.7)
+  { minX: 3.5, maxX: 4.45, minZ: -11.3, maxZ: -8.7 },
+  { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 }
 ]
 
 export const STAGE = {

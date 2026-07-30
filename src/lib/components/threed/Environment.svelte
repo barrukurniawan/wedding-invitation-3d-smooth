@@ -202,6 +202,10 @@
     { position: [-1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? 0 : Math.PI },
     { position: [1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? Math.PI : 0 }
   ])
+  const aisleFlowerBushes = Array.from({ length: 15 }, (_, i) => 7.5 - i * 1.4).flatMap((z, i) => [
+    { position: [-2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 },
+    { position: [2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 }
+  ])
   const motifPetalGeo = new THREE.CircleGeometry(0.17, 12)
   const motifCenterGeo = new THREE.CircleGeometry(0.1, 12)
   const motifLeafGeo = new THREE.CircleGeometry(0.15, 10)
@@ -668,6 +672,13 @@
   <Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
   <Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
   <Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
+  <Nature
+    url="/nature/gltf/Bush_Common_Flowers.gltf"
+    scale={0.55}
+    tint="#ffffff"
+    materialColors={{ Leaves_NormalTree: '#FFFFFF', Flowers: '#FF8DA1' }}
+    instances={aisleFlowerBushes}
+  />
   {#if !lowPower}
     <Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />
     <Nature url="/nature/gltf/animal-cat.glb" scale={0.6} instances={animalCat} />
@@ -676,7 +687,7 @@
 {/if}
 
 <!-- Receptionist desk (lebih kecil & elegan: panel dusty rose, meja ivory, trim emas) -->
-<T.Group position={[4, 0, -4]} rotation.y={Math.PI / 2}>
+<T.Group position={[4, 0, -10]} rotation.y={Math.PI / 2}>
   <!-- Front panel -->
   <T.Mesh position={[0, 0.5, 0]} castShadow>
     <T.BoxGeometry args={[2.6, 1.0, 0.85]} />
@@ -1098,7 +1109,7 @@
     <T.MeshBasicMaterial />
   </T.Mesh>
   <!-- Meja resepsionis (dirotasi 90° → footprint dunia: z lebar, x sempit) -->
-  <T.Mesh position={[4, 0.5, -4]} visible={false}>
+  <T.Mesh position={[4, 0.5, -10]} visible={false}>
     <T.BoxGeometry args={[0.9, 1.0, 2.7]} />
     <T.MeshBasicMaterial />
   </T.Mesh>

@@ -14,7 +14,6 @@
   const CRITICAL_GLB = [
     '/models/tamu.glb',
     '/models/resepsionis.glb',
-    '/models/pemandu.glb',
     '/models/pengantin-pria.glb',
     '/models/pengantin-wanita.glb'
   ]
@@ -60,7 +59,7 @@
   })
 </script>
 
-<div class="relative h-screen w-full overflow-hidden bg-[#bfe3f0]">
+<div class="relative h-screen w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
     <World {lowPower} onReady={() => setLoaded(true)} />
   {/if}
