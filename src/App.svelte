@@ -7,6 +7,7 @@
   import MobileControls from './lib/components/ui/MobileControls.svelte'
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
+  import WeddingHero from './lib/components/ui/WeddingHero.svelte'
   import { setLoaded, setGuestName, setPlayerLabel } from './lib/stores/gameState.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
   import { loadConfig } from './lib/stores/weddingConfig.svelte'
@@ -78,6 +79,7 @@
     {/each}
   </div>
 
+  <WeddingHero />
   <InteractionHint />
   <NpcDialog />
   <GuestbookModal />

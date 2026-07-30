@@ -44,7 +44,7 @@
 <!-- Mobile guidance stays above the scene and clear of both thumb controls. -->
 {#if showApproachHint || showInteractionHint}
   <div
-    class="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+0.75rem)] z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 md:hidden"
+    class="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+8.5rem)] z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 md:hidden"
     role="status"
     aria-live="polite"
     transition:fade={{ duration: 180 }}

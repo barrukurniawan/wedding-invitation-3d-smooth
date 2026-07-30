@@ -11,6 +11,7 @@
     leafColor,
     tint,
     materialColors,
+    materialDuotones,
     tintGradient,
     scale = 1
   }: {
@@ -19,6 +20,7 @@
     leafColor?: string
     tint?: string
     materialColors?: Record<string, string>
+    materialDuotones?: Record<string, { light: string; dark: string }>
     tintGradient?: { leaves: string; bark: string }
     scale?: number
   } = $props()
@@ -39,6 +41,7 @@
 
   const generatedTextures = new Set<THREE.Texture>()
   const colorMaskCache = new WeakMap<THREE.Texture, THREE.Texture>()
+  const duotoneCache = new WeakMap<THREE.Texture, Map<string, THREE.Texture>>()
 
   // Override warna material berdasarkan nama. RGB tekstur dan vertex color
   // dinetralkan, tetapi alpha tekstur tetap dipakai untuk siluet foliage.
@@ -86,6 +89,68 @@
     } catch {
       return null
     }
+  }
+
+  function toDuotoneTexture(
+    tex: THREE.Texture,
+    lightColor: string,
+    darkColor: string
+  ): THREE.Texture | null {
+    const cacheKey = `${lightColor}|${darkColor}`
+    const cachedByColor = duotoneCache.get(tex)
+    if (cachedByColor?.has(cacheKey)) return cachedByColor.get(cacheKey)!
+
+    const img = tex.image as (HTMLImageElement | HTMLCanvasElement) | undefined
+    if (!img || !img.width || !img.height) return null
+
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img as CanvasImageSource, 0, 0)
+
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const pixels = data.data
+      const light = new THREE.Color(lightColor).convertLinearToSRGB()
+      const dark = new THREE.Color(darkColor).convertLinearToSRGB()
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        const luminance = (0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2]) / 255
+        pixels[i] = Math.round((dark.r + (light.r - dark.r) * luminance) * 255)
+        pixels[i + 1] = Math.round((dark.g + (light.g - dark.g) * luminance) * 255)
+        pixels[i + 2] = Math.round((dark.b + (light.b - dark.b) * luminance) * 255)
+      }
+
+      ctx.putImageData(data, 0, 0)
+      const out = cloneTextureSettings(tex, canvas)
+      if (!cachedByColor) duotoneCache.set(tex, new Map([[cacheKey, out]]))
+      else cachedByColor.set(cacheKey, out)
+      generatedTextures.add(out)
+      return out
+    } catch {
+      return null
+    }
+  }
+
+  function applyMaterialDuotones(ref: THREE.Object3D, duotones: Record<string, { light: string; dark: string }>) {
+    ref.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh || !mesh.material) return
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      for (const mat of mats) {
+        if (!(mat instanceof THREE.MeshStandardMaterial)) continue
+        const duotone = duotones[mat.name]
+        if (!duotone) continue
+        if (mat.map) {
+          const map = toDuotoneTexture(mat.map, duotone.light, duotone.dark)
+          if (map) mat.map = map
+        }
+        mat.vertexColors = false
+        mat.color = new THREE.Color('#ffffff')
+        mat.needsUpdate = true
+      }
+    })
   }
 
   // Cache tekstur luminance agar tidak diproses ulang per instance.
@@ -224,6 +289,7 @@
 
     if (leafColor) applyLeafColor(prepared, leafColor)
     if (materialColors) applyMaterialColors(prepared, materialColors)
+    if (materialDuotones) applyMaterialDuotones(prepared, materialDuotones)
     if (tintGradient) {
       applyTintGradientByHeight(prepared, tintGradient.leaves, tintGradient.bark)
     } else {

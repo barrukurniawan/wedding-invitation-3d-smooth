@@ -676,7 +676,8 @@
     url="/nature/gltf/Bush_Common_Flowers.gltf"
     scale={0.55}
     tint="#ffffff"
-    materialColors={{ Leaves_NormalTree: '#FFFFFF', Flowers: '#FF8DA1' }}
+    materialColors={{ Flowers: '#FF8DA1' }}
+    materialDuotones={{ Leaves_NormalTree: { light: '#FFFFFF', dark: '#76956F' } }}
     instances={aisleFlowerBushes}
   />
   {#if !lowPower}
