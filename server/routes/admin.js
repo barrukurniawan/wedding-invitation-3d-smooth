@@ -27,6 +27,7 @@ function invalid(res, error) {
 }
 
 function serializeConfig(config) {
+  config.id = Number(config.id)
   config.gallery_photos = typeof config.gallery_photos === 'string' ? JSON.parse(config.gallery_photos) : config.gallery_photos
   config.wedding_date = config.wedding_date.replace(' ', 'T')
   return config
@@ -63,7 +64,7 @@ router.delete('/session', requireAdmin, async (req, res, next) => {
 
 router.get('/config', requireAdmin, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
+    const [rows] = await pool.query('SELECT invitation_id AS id, wedding_configs.* FROM wedding_configs WHERE invitation_id = 1')
     if (!rows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Konfigurasi belum tersedia.' } })
     res.json(serializeConfig(rows[0]))
   } catch (error) {
@@ -83,8 +84,8 @@ router.put('/config', requireAdmin, async (req, res, next) => {
       if (field === 'wedding_date') return data[field].slice(0, 19).replace('T', ' ')
       return data[field]
     })
-    await pool.query(`UPDATE wedding_config SET ${fields.map((field) => `${field} = ?`).join(', ')} WHERE id = 1`, values)
-    const [rows] = await pool.query('SELECT * FROM wedding_config WHERE id = 1')
+    await pool.query(`UPDATE wedding_configs SET ${fields.map((field) => `${field} = ?`).join(', ')} WHERE invitation_id = 1`, values)
+    const [rows] = await pool.query('SELECT invitation_id AS id, wedding_configs.* FROM wedding_configs WHERE invitation_id = 1')
     res.json(serializeConfig(rows[0]))
   } catch (error) {
     next(error)
@@ -97,8 +98,8 @@ router.get('/guestbook', requireAdmin, async (req, res, next) => {
   const { page, limit } = parsed.data
   try {
     const [[count], [items]] = await Promise.all([
-      pool.query('SELECT COUNT(*) AS total FROM guestbook'),
-      pool.query('SELECT * FROM guestbook ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?', [limit, (page - 1) * limit]),
+      pool.query("SELECT COUNT(*) AS total FROM guestbook_entries WHERE invitation_id = 1 AND status <> 'deleted'"),
+      pool.query("SELECT id, name, attendance, message, created_at FROM guestbook_entries WHERE invitation_id = 1 AND status <> 'deleted' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?", [limit, (page - 1) * limit]),
     ])
     res.json({ items, page, limit, total: count.total })
   } catch (error) {
@@ -113,7 +114,8 @@ router.get('/stats', requireAdmin, async (req, res, next) => {
         COALESCE(SUM(attendance = 'Hadir'), 0) AS hadir,
         COALESCE(SUM(attendance = 'Ragu-ragu'), 0) AS ragu,
         COALESCE(SUM(attendance = 'Tidak Hadir'), 0) AS tidakHadir
-       FROM guestbook`,
+       FROM guestbook_entries
+       WHERE invitation_id = 1 AND status <> 'deleted'`,
     )
     res.json(rows[0])
   } catch (error) {
@@ -124,7 +126,7 @@ router.get('/stats', requireAdmin, async (req, res, next) => {
 router.delete('/guestbook/:id', requireAdmin, async (req, res, next) => {
   if (!z.string().uuid().safeParse(req.params.id).success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID buku tamu tidak valid.' } })
   try {
-    const [result] = await pool.query('DELETE FROM guestbook WHERE id = ?', [req.params.id])
+    const [result] = await pool.query('DELETE FROM guestbook_entries WHERE id = ? AND invitation_id = 1', [req.params.id])
     if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Ucapan tidak ditemukan.' } })
     res.status(204).end()
   } catch (error) {

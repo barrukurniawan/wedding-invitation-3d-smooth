@@ -26,8 +26,8 @@ services:
 
   api:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/Dockerfile
     restart: unless-stopped
     env_file:
       - ./server/.env.docker
@@ -40,6 +40,31 @@ services:
       NODE_ENV: production
       COOKIE_SECURE: "true"
       PORT: "3001"
+      BASE_DOMAIN: marryme.web.id
+      TRUST_PROXY: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - wedding-net
+
+  migrate:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: "no"
+    command: ["node", "scripts/migrate.js"]
+    env_file:
+      - ./server/.env.docker
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: wedding
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: wedding_db
+      MIGRATIONS_DIR: /app/database/migrations
     depends_on:
       db:
         condition: service_healthy

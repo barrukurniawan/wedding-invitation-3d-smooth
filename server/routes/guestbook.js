@@ -15,7 +15,14 @@ const entrySchema = z.object({
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM guestbook ORDER BY created_at DESC')
+    const [rows] = await pool.query(
+      `SELECT id, name, attendance, message, created_at
+       FROM guestbook_entries
+       WHERE invitation_id = ? AND status = 'visible'
+       ORDER BY created_at DESC, id DESC
+       LIMIT 100`,
+      [req.invitation.id],
+    )
     res.json(rows)
   } catch (err) {
     console.error('GET /api/guestbook error:', err.message)
@@ -30,10 +37,15 @@ router.post('/', submitLimit, async (req, res) => {
     const { name, attendance, message } = parsed.data
     const id = randomUUID()
     await pool.query(
-      'INSERT INTO guestbook (id, name, attendance, message) VALUES (?, ?, ?, ?)',
-      [id, name, attendance, message]
+      `INSERT INTO guestbook_entries (id, invitation_id, name, attendance, message, status)
+       VALUES (?, ?, ?, ?, ?, 'visible')`,
+      [id, req.invitation.id, name, attendance, message]
     )
-    const [rows] = await pool.query('SELECT * FROM guestbook WHERE id = ?', [id])
+    const [rows] = await pool.query(
+      `SELECT id, name, attendance, message, created_at
+       FROM guestbook_entries WHERE id = ? AND invitation_id = ?`,
+      [id, req.invitation.id],
+    )
     res.status(201).json(rows[0])
   } catch (err) {
     console.error('POST /api/guestbook error:', err.message)

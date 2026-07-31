@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "node --test",
     "seed-admin": "node scripts/seed-admin.js"
   },
   "dependencies": {
@@ -14,6 +16,7 @@
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.1",
     "helmet": "^8.0.0",
+    "jose": "^6.2.5",
     "mysql2": "^3.11.0",
     "zod": "^3.23.8"
   }

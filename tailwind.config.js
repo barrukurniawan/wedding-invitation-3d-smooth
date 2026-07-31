@@ -6,7 +6,20 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'Times New Roman', 'serif'],
+        sans: ['Outfit', 'Segoe UI', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        marry: {
+          paper: '#fffcfd',
+          ink: '#2a1f24',
+          muted: '#7a6a70',
+          line: '#f0e4e8',
+          pink: '#d96b7a',
+          deep: '#c44565',
+          soft: '#fce8ee'
+        },
         rose: {
           50: '#fff1f2',
           100: '#ffe4e6',

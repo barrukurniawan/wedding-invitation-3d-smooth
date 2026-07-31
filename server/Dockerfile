@@ -4,10 +4,11 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY . .
+COPY server/ .
+COPY database/migrations/ ./database/migrations/
 
 ENV NODE_ENV=production
 EXPOSE 3001

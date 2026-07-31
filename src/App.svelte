@@ -10,7 +10,6 @@
   import WeddingHero from './lib/components/ui/WeddingHero.svelte'
   import { setLoaded, setGuestName, setPlayerLabel } from './lib/stores/gameState.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
-  import { loadConfig } from './lib/stores/weddingConfig.svelte'
 
   const CRITICAL_GLB = [
     '/models/tamu.glb',
@@ -34,7 +33,6 @@
   }
 
   onMount(() => {
-    loadConfig()
     try {
       const params = new URLSearchParams(window.location.search)
       const raw = params.get('send')
@@ -60,7 +58,7 @@
   })
 </script>
 
-<div class="relative h-screen w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
+<div class="invitation-app relative h-screen w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
     <World {lowPower} onReady={() => setLoaded(true)} />
   {/if}
@@ -88,3 +86,10 @@
   <AudioPlayer />
   <LoadingScreen />
 </div>
+
+<style>
+  .invitation-app {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+</style>

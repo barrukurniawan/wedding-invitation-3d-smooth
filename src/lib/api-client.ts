@@ -50,6 +50,48 @@ export interface AdminSession {
   user: { id: number; username: string }
 }
 
+export interface UserAccount {
+  id: number
+  email: string | null
+  displayName: string
+  avatarUrl: string | null
+}
+
+export interface UserSession {
+  authenticated: true
+  user: UserAccount
+  csrfToken: string
+}
+
+export interface OwnerInvitation {
+  id: number
+  slug: string
+  status: string
+  reception_at: string
+  timezone: string
+  expires_at: string
+  retention_until: string
+  activated_at: string | null
+  public_url: string
+  config: {
+    bride_name: string
+    groom_name: string
+    wedding_date: string
+    resepsi_date: string
+    resepsi_location: string
+  } | null
+}
+
+let csrfToken = ''
+
+export function setCsrfToken(token: string) {
+  csrfToken = token || ''
+}
+
+export function getCsrfToken() {
+  return csrfToken
+}
+
 export const defaultConfig: WeddingConfig = {
   id: 1,
   bride_name: 'Kia Anindya',
@@ -76,24 +118,31 @@ export const defaultConfig: WeddingConfig = {
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, public code: string, message: string) {
     super(message)
+    this.name = 'ApiError'
   }
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  const method = (init.method || 'GET').toUpperCase()
+  if (csrfToken && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    headers.set('X-CSRF-Token', csrfToken)
+  }
   const response = await fetch(`/api${path}`, { ...init, headers, credentials: 'same-origin' })
   if (!response.ok) {
     let message = 'Permintaan tidak dapat diproses.'
+    let code = 'REQUEST_FAILED'
     try {
       const body = await response.json()
       message = body.error?.message || message
+      code = body.error?.code || code
     } catch {
       // Use the generic message for non-JSON gateway errors.
     }
-    throw new ApiError(response.status, message)
+    throw new ApiError(response.status, code, message)
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
@@ -146,4 +195,36 @@ export function getAdminStats() {
 
 export function changeAdminPassword(currentPassword: string, newPassword: string) {
   return request<void>('/admin/password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) })
+}
+
+export async function getUserSession() {
+  const session = await request<UserSession>('/auth/me')
+  setCsrfToken(session.csrfToken)
+  return session
+}
+
+export function startGoogleLogin(returnTo = '/dashboard') {
+  const path = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`
+  window.location.assign(path)
+}
+
+export async function logoutUser() {
+  await request<void>('/auth/logout', { method: 'POST' })
+  setCsrfToken('')
+}
+
+export function getMyInvitation() {
+  return request<{ invitation: OwnerInvitation | null }>('/invitations/me')
+}
+
+export function createInvitation(input: {
+  slug: string
+  bride_name?: string
+  groom_name?: string
+  reception_at?: string
+}) {
+  return request<{ invitation: OwnerInvitation }>('/invitations', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
