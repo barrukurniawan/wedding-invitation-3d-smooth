@@ -21,9 +21,12 @@
   onMount(() => {
     let animId: number
     const checkPosition = () => {
-      // Resepsionis berada di Z = -10, panggung di Z = -18.
-      // Sembunyikan banner melayang setelah melewati area tengah / dekat resepsionis
-      const shouldShow = playerPos.z > -8
+      // Sembunyikan banner melayang jika:
+      // 1. Melewati area tengah / dekat resepsionis (Z < -8)
+      // 2. Masuk ke area pepohonan sisi kiri (X < -6) atau kanan (X > 6)
+      const inTreeArea = playerPos.x < -6 || playerPos.x > 6
+      const pastReceptionist = playerPos.z < -8
+      const shouldShow = !pastReceptionist && !inTreeArea
       if (visible !== shouldShow) {
         visible = shouldShow
       }
@@ -43,7 +46,7 @@
     aria-live="polite"
   >
     <div class="hero-panel rounded-2xl border border-white/45 bg-[rgba(142,211,247,0.22)] px-3.5 py-2.5 shadow-[0_12px_36px_-16px_rgba(51,38,43,0.42)] backdrop-blur-md md:rounded-3xl md:px-7 md:py-4">
-      <p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-[var(--deep-rose)]/90 sm:text-sm">
+      <p class="truncate text-sm font-bold leading-tight text-[var(--ink)] sm:text-base md:text-lg">
         Hai {guestFirstName}
       </p>
       <p class="mt-1 text-sm font-bold leading-tight text-[var(--ink)] sm:text-base md:mt-1.5 md:text-lg">
