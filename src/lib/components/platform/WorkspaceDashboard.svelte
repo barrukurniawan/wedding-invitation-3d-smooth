@@ -581,7 +581,7 @@
 
             <div class="preview-link-box" style="margin-bottom: 20px;">
               <a class="primary-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
-                ↗ Buka {invitation.slug}.marryme.web.id Di Tab Baru
+                ↗ Buka {invitation.slug}.marryme.web.id
               </a>
             </div>
 

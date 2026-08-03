@@ -618,9 +618,9 @@
         <div class="workspace-control-grid">
           <!-- Subdomain & Copy Link Card -->
           <div class="control-card link-card">
-            <p class="control-label">Link Undangan Kamu</p>
+            <p class="control-label">Link Undangan Eksklusif Untuk Kamu</p>
             <h2 class="subdomain-url"><code>{invitation.public_url.replace(/^https?:\/\//, '')}</code></h2>
-            <p class="subdomain-note">Alamat link ini sudah dipesan eksklusif untuk pernikahan kalian.</p>
+            <p class="subdomain-note"></p>
 
             <div class="link-actions-row">
               <button type="button" class="primary-btn-sm" onclick={copyLink}>
@@ -823,7 +823,7 @@
 
             <div class="preview-link-box">
               <a class="primary-btn-lg" href={invitation.public_url} target="_blank" rel="noreferrer">
-                ↗ Buka {invitation.slug}.marryme.web.id Di Tab Baru
+                ↗ Buka {invitation.slug}.marryme.web.id
               </a>
             </div>
 
