@@ -562,7 +562,7 @@
             {invitation} 
             {myConfig} 
             {fmtDate} 
-            onPaymentSuccess={(inv) => { invitation = inv }}
+            onStatusChange={(newStatus) => { invitation = { ...invitation, status: newStatus } as typeof invitation }}
           />
 
         <!-- Tab 4: Preview -->

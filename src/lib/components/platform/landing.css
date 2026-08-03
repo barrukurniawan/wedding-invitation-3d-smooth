@@ -192,14 +192,15 @@ a {
 }
 
 .onboarding h1 .title-lead {
-  font-size: 0.85em;
+  display: block;
+  font-size: calc(1em - 1.5px);
 }
 
 h1 em {
   color: var(--gold);
   font-style: italic;
   font-weight: inherit;
-  font-size: 1.15em;
+  font-size: 1em;
 }
 
 .onboarding h2 {

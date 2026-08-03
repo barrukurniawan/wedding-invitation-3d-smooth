@@ -354,7 +354,7 @@
     <section class="journey" aria-labelledby="journey-title">
       <div class="story-column">
         <p class="eyebrow">Mulai perjalanan kalian</p>
-        <h1 id="journey-title"><span class="title-lead">Buat undangan yang terasa seperti</span> <em>dunia kalian sendiri.</em></h1>
+        <h1 id="journey-title"><span class="title-lead">Buat undangan yang terasa seperti</span> <em>dunia kalian sendiri</em></h1>
         <p class="lead">
           Buat pengalaman pernikahanmu indah dan berkesan dengan dunia 3D
         </p>
@@ -632,6 +632,14 @@
               <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
                 📱 QR Code
               </button>
+              <a
+                class="wa-btn-sm"
+                href={`https://wa.me/?text=${encodeURIComponent(`Hai! Kami mengundang kamu ke pernikahan${myConfig?.bride_name && myConfig?.groom_name ? ` ${myConfig.bride_name} & ${myConfig.groom_name}` : ''}. 💍\n\nBuka undangan 3D kami di sini:\n${invitation.public_url}\n\nKami tunggu kehadiranmu! 🎊`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                📲 Bagikan via WhatsApp
+              </a>
             </div>
           </div>
 
@@ -804,7 +812,7 @@
             {invitation} 
             {myConfig} 
             {fmtDate} 
-            onPaymentSuccess={(inv) => { invitation = inv }}
+            onStatusChange={(newStatus) => { invitation = { ...invitation, status: newStatus } as typeof invitation }}
           />
 
         <!-- Tab 4: Preview -->

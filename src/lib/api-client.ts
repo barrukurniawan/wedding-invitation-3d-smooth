@@ -280,4 +280,101 @@ export function getMyGuestbook() {
   return request<{ items: GuestbookEntry[]; stats: GuestbookStats }>('/my/guestbook')
 }
 
+export function uploadPaymentProof(
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<{ proof_url: string; status: string }> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData()
+    formData.append('file', file)
 
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/my/upload/proof')
+    xhr.withCredentials = true
+
+    // CSRF token
+    if (csrfToken) {
+      xhr.setRequestHeader('X-CSRF-Token', csrfToken)
+    }
+
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100))
+        }
+      })
+    }
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText))
+        } catch {
+          reject(new ApiError(xhr.status, 'PARSE_ERROR', 'Respons tidak valid dari server.'))
+        }
+      } else {
+        let message = 'Upload gagal.'
+        let code = 'UPLOAD_FAILED'
+        try {
+          const body = JSON.parse(xhr.responseText)
+          message = body.error?.message || message
+          code = body.error?.code || code
+        } catch { /* empty */ }
+        reject(new ApiError(xhr.status, code, message))
+      }
+    })
+
+    xhr.addEventListener('error', () => {
+      reject(new ApiError(0, 'NETWORK_ERROR', 'Koneksi terputus saat mengunggah file.'))
+    })
+
+    xhr.send(formData)
+  })
+}
+
+function xhrUpload(
+  url: string,
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<{ photo_url: string; type: string }> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    xhr.withCredentials = true
+    if (csrfToken) xhr.setRequestHeader('X-CSRF-Token', csrfToken)
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+      })
+    }
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)) }
+        catch { reject(new ApiError(xhr.status, 'PARSE_ERROR', 'Respons tidak valid.')) }
+      } else {
+        let message = 'Upload gagal.', code = 'UPLOAD_FAILED'
+        try { const b = JSON.parse(xhr.responseText); message = b.error?.message || message; code = b.error?.code || code } catch { /* empty */ }
+        reject(new ApiError(xhr.status, code, message))
+      }
+    })
+    xhr.addEventListener('error', () => reject(new ApiError(0, 'NETWORK_ERROR', 'Koneksi terputus.')))
+    xhr.send(formData)
+  })
+}
+
+export function uploadPhoto(
+  file: File,
+  type: 'cover' | 'gallery' = 'gallery',
+  onProgress?: (pct: number) => void,
+) {
+  return xhrUpload(`/api/my/upload/photo?type=${type}`, file, onProgress)
+}
+
+export function deletePhoto(photo_url: string) {
+  return request<void>('/my/upload/photo', {
+    method: 'DELETE',
+    body: JSON.stringify({ photo_url }),
+  })
+}

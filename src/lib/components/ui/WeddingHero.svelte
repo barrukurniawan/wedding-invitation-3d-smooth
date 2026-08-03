@@ -22,8 +22,8 @@
     let animId: number
     const checkPosition = () => {
       // Resepsionis berada di Z = -10, panggung di Z = -18.
-      // Ketika player berjalan mendekati resepsionis / panggung (Z <= -4), sembunyikan banner melayang.
-      const shouldShow = playerPos.z > -4
+      // Sembunyikan banner melayang setelah melewati area tengah / dekat resepsionis
+      const shouldShow = playerPos.z > -8
       if (visible !== shouldShow) {
         visible = shouldShow
       }

@@ -12,7 +12,6 @@
     --ok: #2f6b4f;
     position: relative;
     isolation: isolate;
-    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow-x: clip;
@@ -185,13 +184,14 @@
     text-wrap: balance;
   }
   .onboarding h1 .title-lead {
-    font-size: 0.85em;
+    display: block;
+    font-size: calc(1em - 1.5px);
   }
   h1 em {
     color: var(--gold);
     font-style: italic;
     font-weight: inherit;
-    font-size: 1.15em;
+    font-size: 1em;
   }
 
   .onboarding h2 {
@@ -1387,6 +1387,30 @@
   border-color: var(--accent);
 }
 
+.wa-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: #25d366;
+  color: #fff;
+  border: 1px solid #1ebe5b;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.wa-btn-sm:hover {
+  background: #1aad52;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.38);
+}
+
 /* Checklist Task Chips Grid */
 .checklist-grid {
   display: flex;
@@ -1608,11 +1632,8 @@
 
 /* Footer Styling */
 .site-footer {
-  max-width: 1120px;
-  margin: auto auto 0 auto;
   width: 100%;
   box-sizing: border-box;
-  padding: 48px 24px 32px;
 }
 
 .footer-inner {
@@ -1620,7 +1641,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding-top: 22px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 24px 28px;
   border-top: 1px solid rgba(169, 118, 37, 0.24);
   color: var(--muted);
   font-size: 0.85rem;

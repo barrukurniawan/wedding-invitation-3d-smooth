@@ -218,10 +218,22 @@ router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
   }
 })
 
+import { sendActivationEmail } from '../services/email.js'
+
 router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) => {
   const invId = Number(req.params.id)
   if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
   try {
+    const [invRows] = await pool.query(
+      `SELECT i.slug, u.email, c.bride_name, c.groom_name
+       FROM invitations i
+       LEFT JOIN users u ON u.id = i.owner_user_id
+       LEFT JOIN wedding_configs c ON c.invitation_id = i.id
+       WHERE i.id = ? AND i.deleted_at IS NULL`,
+      [invId]
+    )
+    if (!invRows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+
     const [result] = await pool.query(
       `UPDATE invitations
        SET status = 'active',
@@ -232,6 +244,22 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
       [req.admin.id, invId],
     )
     if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+
+    const r = invRows[0]
+    if (r.email) {
+      const isDev = process.env.NODE_ENV === 'development'
+      const public_url = isDev 
+        ? `http://${r.slug}.localhost:5173` 
+        : `https://${r.slug}.${process.env.BASE_DOMAIN || 'marryme.web.id'}`
+        
+      sendActivationEmail(r.email, {
+        bride_name: r.bride_name,
+        groom_name: r.groom_name,
+        public_url,
+        slug: r.slug
+      }).catch(e => console.error('[EmailService] Error in background send:', e))
+    }
+
     res.status(204).end()
   } catch (error) {
     next(error)

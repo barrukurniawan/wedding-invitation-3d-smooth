@@ -13,6 +13,7 @@ import invitationRoutes from './routes/invitations.js'
 import tenantConfigRoutes from './routes/tenant-config.js'
 import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
+import uploadRoutes from './routes/upload.js'
 import pool from './db.js'
 import { attachHostContext, requirePublicInvitation, requireRootHost } from './middleware/tenant.js'
 
@@ -34,7 +35,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-app.use('/api/my/proof', express.static(path.join(process.cwd(), 'uploads/proofs')))
+
 
 app.use('/api', attachHostContext)
 app.use('/api/guestbook', requirePublicInvitation, guestbookRoutes)
@@ -43,6 +44,7 @@ app.use('/api/auth', requireRootHost, authRoutes)
 app.use('/api/invitations', requireRootHost, invitationRoutes)
 app.use('/api/my', requireRootHost, tenantConfigRoutes)
 app.use('/api/my', requireRootHost, tenantPaymentRoutes)
+app.use('/api/my', requireRootHost, uploadRoutes)
 app.use('/api/payment', midtransWebhookRoutes)
 app.use('/api/admin', requireRootHost, adminRoutes)
 
