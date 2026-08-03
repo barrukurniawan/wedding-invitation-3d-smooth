@@ -53,9 +53,7 @@ export const NATURE_TINTS: Record<string, string> = {
   'grass_2_c_color1.glb': '#39f239',
 
   // === HEWAN ===
-  'animal-bunny.glb': '#ffff2c',
-  'animal-cat.glb': '#ffff2c',
-  'animal-panda.glb': '#ffff2c',
+  // (Hewan mengikuti VITE_COLOR_ANIMAL dari .env)
 
   // === LAMPU ===
   // Tiang putih via materialColors di Environment.svelte; tint putih = identity.

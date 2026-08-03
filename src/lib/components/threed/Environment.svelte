@@ -206,6 +206,10 @@
     { position: [-2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 },
     { position: [2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 }
   ])
+  const aisleCommonBushes = Array.from({ length: 14 }, (_, i) => 7.5 - i * 1.4 - 0.7).flatMap((z, i) => [
+    { position: [-2.55, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? -0.2 : 0.2, scale: 0.85 },
+    { position: [2.55, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? -0.2 : 0.2, scale: 0.85 }
+  ])
   const motifPetalGeo = new THREE.CircleGeometry(0.17, 12)
   const motifCenterGeo = new THREE.CircleGeometry(0.1, 12)
   const motifLeafGeo = new THREE.CircleGeometry(0.15, 10)
@@ -542,53 +546,53 @@
   ].map((a) => ({ position: [a[0], a[1], a[2]] as [number, number, number], scale: a[3], rotationY: a[4] }))
 
   // === HEWAN ===
-  const animalBunny = [{ position: [-8, 0, -1] as [number, number, number], rotationY: 0.8, scale: 0.6 }]
-  const animalCat = [{ position: [8, 0, -6] as [number, number, number], rotationY: -1.2, scale: 0.6 }]
-  const animalPanda = [{ position: [-6, 0, -12] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
+  const animalBunny = [{ position: [-5.5, 0, -3.5] as [number, number, number], rotationY: 0.8, scale: 0.6 }]
+  const animalCat = [{ position: [5.5, 0, -8.5] as [number, number, number], rotationY: -1.2, scale: 0.6 }]
+  const animalPanda = [{ position: [-5.5, 0, -12.5] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
 
 </script>
 
 <!-- Ground: rumput kiri -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -7]} receiveShadow>
-  <T.PlaneGeometry args={[23.4, 54]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -12]} receiveShadow>
+  <T.PlaneGeometry args={[23.4, 44]} />
   <T.MeshToonMaterial color="#ffffff" map={pinkGradientLeft} gradientMap={gradient} />
 </T.Mesh>
 <!-- Ground: rumput tengah (hijau muda, di bawah jalan) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -7]} receiveShadow>
-  <T.PlaneGeometry args={[7.2, 54]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -12]} receiveShadow>
+  <T.PlaneGeometry args={[7.2, 44]} />
   <T.MeshToonMaterial color="#a3c98f" gradientMap={gradient} />
 </T.Mesh>
 <!-- Ground: rumput kanan -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -7]} receiveShadow>
-  <T.PlaneGeometry args={[23.4, 54]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -12]} receiveShadow>
+  <T.PlaneGeometry args={[23.4, 44]} />
   <T.MeshToonMaterial color="#ffffff" map={pinkGradientRight} gradientMap={gradient} />
 </T.Mesh>
 <!-- Jalur batu pucat di tengah (lebih terang dari rumput, di bawah karpet) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.02, -7]} receiveShadow>
-  <T.PlaneGeometry args={[7.2, 44]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.02, -10]} receiveShadow>
+  <T.PlaneGeometry args={[7.2, 40]} />
   <T.MeshToonMaterial color="#e6d2a2" gradientMap={gradient} />
 </T.Mesh>
 <!-- Side walk kiri-kanan (batu pucat sedikit lebih gelap dari jalur tengah) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-2.55, -0.015, -7]} receiveShadow>
-  <T.PlaneGeometry args={[1.3, 43]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[-2.55, -0.015, -10]} receiveShadow>
+  <T.PlaneGeometry args={[1.3, 40]} />
   <T.MeshToonMaterial color="#d8c290" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[2.55, -0.015, -7]} receiveShadow>
-  <T.PlaneGeometry args={[1.3, 43]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[2.55, -0.015, -10]} receiveShadow>
+  <T.PlaneGeometry args={[1.3, 40]} />
   <T.MeshToonMaterial color="#d8c290" gradientMap={gradient} />
 </T.Mesh>
 <!-- Karpet merah menuju pelaminan (lebih sempit & elegan) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.005, -7]} receiveShadow>
-  <T.PlaneGeometry args={[2.0, 43]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.005, -8]} receiveShadow>
+  <T.PlaneGeometry args={[2.0, 36]} />
   <T.MeshToonMaterial color="#b91c3c" gradientMap={gradient} />
 </T.Mesh>
 <!-- Garis tepi karpet (emas champagne) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-1.03, 0.01, -7]} receiveShadow>
-  <T.PlaneGeometry args={[0.06, 43]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[-1.03, 0.01, -8]} receiveShadow>
+  <T.PlaneGeometry args={[0.06, 36]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[1.03, 0.01, -7]} receiveShadow>
-  <T.PlaneGeometry args={[0.06, 43]} />
+<T.Mesh rotation.x={-Math.PI / 2} position={[1.03, 0.01, -8]} receiveShadow>
+  <T.PlaneGeometry args={[0.06, 36]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
 <!-- Corak bunga bordir pada jalur krem di kanan-kiri karpet -->
@@ -679,6 +683,12 @@
     materialColors={{ Flowers: '#FF8DA1' }}
     materialDuotones={{ Leaves_NormalTree: { light: '#FFFFFF', dark: '#76956F' } }}
     instances={aisleFlowerBushes}
+  />
+  <Nature
+    url="/nature/gltf/Bush_Common.gltf"
+    scale={0.55}
+    tint="#ffffff"
+    instances={aisleCommonBushes}
   />
   {#if !lowPower}
     <Nature url="/nature/gltf/animal-bunny.glb" scale={0.6} instances={animalBunny} />

@@ -85,7 +85,9 @@ export function tick(delta: number) {
   const dx = vel.x * dt
   const dz = vel.z * dt
   const nextX = Math.max(-HALF_WORLD, Math.min(HALF_WORLD, playerPos.x + dx))
-  const nextZ = Math.max(-HALF_WORLD, Math.min(HALF_WORLD, playerPos.z + dz))
+  // Restrict positive Z (backward) to 9 so they don't fall off the shortened ground.
+  // Stage is at Z=-18 and beyond, so let negative Z go up to -22 safely.
+  const nextZ = Math.max(-22, Math.min(9, playerPos.z + dz))
 
   if (canMoveTo(nextX, nextZ)) {
     playerPos.x = nextX
