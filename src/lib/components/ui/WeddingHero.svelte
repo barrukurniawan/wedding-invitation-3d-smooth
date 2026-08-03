@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { guestName } from '../../stores/gameState.svelte'
   import { configLoaded, weddingConfig } from '../../stores/weddingConfig.svelte'
+  import { playerPos } from '../../stores/playerMovement.svelte'
+
+  let visible = $state(true)
 
   const guestFirstName = $derived(firstName($guestName, 'Tamu'))
   const brideFirstName = $derived(firstName($weddingConfig.bride_name, 'Mempelai'))
@@ -13,11 +17,28 @@
   function firstName(name: string | null | undefined, fallback: string) {
     return name?.trim().split(/\s+/)[0] || fallback
   }
+
+  onMount(() => {
+    let animId: number
+    const checkPosition = () => {
+      // Resepsionis berada di Z = -10, panggung di Z = -18.
+      // Ketika player berjalan mendekati resepsionis / panggung (Z <= -4), sembunyikan banner melayang.
+      const shouldShow = playerPos.z > -4
+      if (visible !== shouldShow) {
+        visible = shouldShow
+      }
+      animId = requestAnimationFrame(checkPosition)
+    }
+    animId = requestAnimationFrame(checkPosition)
+    return () => cancelAnimationFrame(animId)
+  })
 </script>
 
 {#if $configLoaded}
   <section
-    class="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 w-[min(calc(100%-8rem),22rem)] -translate-x-1/2 text-center sm:w-[min(calc(100%-9rem),30rem)] md:top-[calc(env(safe-area-inset-top)+1rem)] md:w-[min(calc(100%-10rem),36rem)]"
+    class="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 w-[min(calc(100%-8rem),22rem)] -translate-x-1/2 text-center transition-all duration-500 ease-out sm:w-[min(calc(100%-9rem),30rem)] md:top-[calc(env(safe-area-inset-top)+1rem)] md:w-[min(calc(100%-10rem),36rem)]"
+    class:opacity-0={!visible}
+    class:-translate-y-6={!visible}
     aria-label={`Hai ${guestFirstName}. ${receptionDate}. ${coupleTitle}`}
     aria-live="polite"
   >
