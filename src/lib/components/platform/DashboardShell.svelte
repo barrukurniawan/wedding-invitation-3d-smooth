@@ -23,6 +23,7 @@
   import LocationEditor from './editor/LocationEditor.svelte'
   import GalleryEditor from './editor/GalleryEditor.svelte'
   import QuoteEditor from './editor/QuoteEditor.svelte'
+  import MusicEditor from './editor/MusicEditor.svelte'
   import GuestbookManager from './dashboard/GuestbookManager.svelte'
   import PaymentManager from './dashboard/PaymentManager.svelte'
   import OnboardingWizard from './OnboardingWizard.svelte'
@@ -41,8 +42,8 @@
     'https://kia-toni.marryme.web.id'
 
   // Workspace Navigation & Sub-tabs
-  let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('edit')
-  let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'>('mempelai')
+  let activeTab = $state<'dashboard' | 'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('dashboard')
+  let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
 
   // Config & Payment & Guestbook State
   let myConfig = $state<WeddingConfig | null>(null)
@@ -223,7 +224,7 @@
     category: string
     done: boolean
     targetTab: 'edit' | 'pembayaran' | 'preview' | 'pengaturan'
-    targetSubTab?: 'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'
+    targetSubTab?: 'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'
   }
 
   function calculateProgress() {
@@ -765,7 +766,15 @@
                 class:active={editSubTab === 'quote'}
                 onclick={() => (editSubTab = 'quote')}
               >
-                Quote &amp; Pesan
+                💬 Quote &amp; Pesan
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'musik'}
+                onclick={() => (editSubTab = 'musik')}
+              >
+                🎶 Musik
               </button>
             </div>
 
@@ -785,6 +794,8 @@
                   <GalleryEditor bind:config={myConfig} />
                 {:else if editSubTab === 'quote'}
                   <QuoteEditor bind:config={myConfig} />
+                {:else if editSubTab === 'musik'}
+                  <MusicEditor bind:config={myConfig} />
                 {/if}
 
                 <!-- Save Action Footer Bar -->

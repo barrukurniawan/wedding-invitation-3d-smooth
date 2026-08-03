@@ -43,9 +43,30 @@ function makeUploader(dir, prefix) {
 // Directories
 const PROOFS_DIR  = path.join(process.cwd(), 'uploads', 'proofs')
 const PHOTOS_DIR  = path.join(process.cwd(), 'uploads', 'photos')
+const MUSIC_DIR   = path.join(process.cwd(), 'uploads', 'music')
 
 const uploadProof = makeUploader(PROOFS_DIR, 'proof')
 const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo')
+
+function makeMusicUploader(dir, prefix) {
+  fs.mkdirSync(dir, { recursive: true })
+  const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, dir),
+    filename: (_req, _file, cb) => {
+      cb(null, `${prefix}_${Date.now()}_${randomBytes(6).toString('hex')}.mp3`)
+    },
+  })
+  return multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for MP3
+    fileFilter(_req, file, cb) {
+      if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') return cb(null, true)
+      cb(new Error('Format file tidak didukung. Gunakan file MP3.'))
+    },
+  })
+}
+
+const uploadMusic = makeMusicUploader(MUSIC_DIR, 'music')
 
 // ── Middleware: verify user has an invitation ─────────────────────────────────
 async function requireInvitation(req, res, next) {
@@ -249,6 +270,55 @@ router.get('/photos/:filename', requireUser, requireInvitation, async (req, res,
     const allowed = config?.wedding_photo === photoUrl || gallery.includes(photoUrl)
     if (!allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Akses ditolak.' } })
     res.sendFile(path.join(PHOTOS_DIR, req.params.filename))
+  } catch (err) { next(err) }
+})
+
+// ── POST /api/my/upload/music ───────────────────────────────────────────────
+router.post(
+  '/upload/music',
+  requireUser, requireCsrf,
+  (req, res, next) => { uploadMusic.single('file')(req, res, (err) => { if (err) return multerErrorHandler(err, req, res, next); next() }) },
+  requireInvitation,
+  async (req, res, next) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: { code: 'NO_FILE', message: 'File tidak ditemukan.' } })
+
+      const musicUrl = `/api/my/music/${req.file.filename}`
+
+      const [old] = await pool.query(
+        `SELECT bgm_url FROM wedding_configs WHERE invitation_id = ?`,
+        [req.invitation.id],
+      )
+      const oldBgm = old[0]?.bgm_url
+      if (oldBgm?.startsWith('/api/my/music/')) {
+        fs.unlink(path.join(MUSIC_DIR, path.basename(oldBgm)), () => {})
+      }
+
+      await pool.query(
+        `UPDATE wedding_configs SET bgm_url = ? WHERE invitation_id = ?`,
+        [musicUrl, req.invitation.id],
+      )
+
+      res.json({ bgm_url: musicUrl })
+    } catch (err) {
+      if (req.file) fs.unlink(req.file.path, () => {})
+      next(err)
+    }
+  },
+)
+
+// Serve music files (auth protected for owner dashboard)
+router.get('/music/:filename', requireUser, requireInvitation, async (req, res, next) => {
+  try {
+    const [configRows] = await pool.query(
+      `SELECT bgm_url FROM wedding_configs WHERE invitation_id = ?`,
+      [req.invitation.id],
+    )
+    const config = configRows[0]
+    const musicUrl = `/api/my/music/${req.params.filename}`
+    const allowed = config?.bgm_url === musicUrl
+    if (!allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Akses ditolak.' } })
+    res.sendFile(path.join(MUSIC_DIR, req.params.filename))
   } catch (err) { next(err) }
 })
 

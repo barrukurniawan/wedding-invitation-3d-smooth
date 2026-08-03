@@ -1,16 +1,41 @@
 <script lang="ts">
   import { browser } from '$app/environment'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   let audio: HTMLAudioElement | null = $state(null)
   let playing = $state(false)
+  let currentUrl = $state('')
 
   function ensureAudio() {
-    if (!audio && browser) {
-      audio = new Audio('/audio/ambient.mp3')
+    if (!browser) return
+    const targetUrl = $weddingConfig?.bgm_url || '/audio/ambient.mp3'
+    
+    // If audio is already initialized and the URL changed
+    if (audio && currentUrl !== targetUrl) {
+      const wasPlaying = playing
+      audio.pause()
+      audio.src = targetUrl
+      audio.load()
+      currentUrl = targetUrl
+      if (wasPlaying) {
+        audio.play().catch(() => { playing = false })
+      }
+    }
+    // Initial creation
+    else if (!audio) {
+      audio = new Audio(targetUrl)
       audio.loop = true
       audio.volume = 0.4
+      currentUrl = targetUrl
     }
   }
+
+  // Reactive effect to automatically update track if changed in config while playing
+  $effect(() => {
+    if ($weddingConfig?.bgm_url && audio) {
+      ensureAudio()
+    }
+  })
 
   function toggle() {
     ensureAudio()

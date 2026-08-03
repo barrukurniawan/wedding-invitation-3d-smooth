@@ -681,7 +681,7 @@
     scale={0.55}
     tint="#ffffff"
     materialColors={{ Flowers: '#FF8DA1' }}
-    materialDuotones={{ Leaves_NormalTree: { light: '#FFFFFF', dark: '#76956F' } }}
+    materialDuotones={{ Leaves_NormalTree: { light: '#F5EDD8', dark: '#D4BA8A' } }}
     instances={aisleFlowerBushes}
   />
   <Nature

@@ -32,6 +32,7 @@ const configSchema = z.object({
   venue_address: text(2000),
   quote: text(2000),
   gallery_photos: z.array(text(2048)).max(30),
+  bgm_url: text(2048),
 }).partial().strict()
 
 function invalid(res, error) {

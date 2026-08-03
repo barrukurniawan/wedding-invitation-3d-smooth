@@ -20,6 +20,7 @@ export interface WeddingConfig {
   venue_address: string
   gallery_photos: string[]
   quote: string
+  bgm_url?: string
   updated_at: string
 }
 
@@ -130,6 +131,7 @@ export const defaultConfig: WeddingConfig = {
   venue_address: '',
   gallery_photos: [],
   quote: '',
+  bgm_url: '',
   updated_at: '',
 }
 
@@ -251,8 +253,8 @@ export function getMyConfig() {
   return request<WeddingConfig>('/my/config')
 }
 
-export function updateMyConfig(config: Partial<WeddingConfig>) {
-  const { id, updated_at, ...editableConfig } = config
+export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?: number }) {
+  const { id, updated_at, invitation_id, ...editableConfig } = config
   return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(editableConfig) })
 }
 
@@ -367,14 +369,21 @@ function xhrUpload(
 export function uploadPhoto(
   file: File,
   type: 'cover' | 'gallery' = 'gallery',
-  onProgress?: (pct: number) => void,
-) {
-  return xhrUpload(`/api/my/upload/photo?type=${type}`, file, onProgress)
+  onProgress?: (pct: number) => void
+): Promise<{ photo_url: string; type: string }> {
+  return xhrUpload(`/api/my/upload/photo?type=${type}`, file, onProgress) as Promise<{ photo_url: string; type: string }>
 }
 
-export function deletePhoto(photo_url: string) {
+export function uploadMusic(
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<{ bgm_url: string }> {
+  return xhrUpload('/api/my/upload/music', file, onProgress) as Promise<{ bgm_url: string }>
+}
+
+export function deletePhoto(photoUrl: string): Promise<void> {
   return request<void>('/my/upload/photo', {
     method: 'DELETE',
-    body: JSON.stringify({ photo_url }),
+    body: JSON.stringify({ photo_url: photoUrl }),
   })
 }
