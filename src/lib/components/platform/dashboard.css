@@ -14,13 +14,20 @@
     isolation: isolate;
     display: flex;
     flex-direction: column;
-    overflow-x: clip;
+    /* allow horizontal scroll on mobile instead of clipping content */
+    overflow-x: hidden;
+    box-sizing: border-box;
+    width: 100%;
     background:
       radial-gradient(circle at 76% 15%, rgba(246, 232, 234, 0.72), transparent 30rem),
       linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
     background-attachment: fixed;
     color: var(--ink);
     font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  .onboarding *, .onboarding *::before, .onboarding *::after {
+    box-sizing: border-box;
   }
 
   .onboarding::before {
@@ -137,6 +144,7 @@
   .journey,
   .workspace {
     max-width: 1120px;
+    width: 100%;
     margin: 0 auto;
     padding: clamp(42px, 6vw, 76px) 24px 72px;
   }
@@ -1007,6 +1015,8 @@
   @media (max-width: 560px) {
     .topbar {
       padding-inline: 14px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .topbar-right {
       gap: 8px;
@@ -1016,8 +1026,10 @@
     }
     .journey,
     .workspace {
-      padding-inline: 18px;
+      padding-inline: 14px;
       padding-bottom: 48px;
+      width: 100%;
+      min-width: 0;
     }
     h1 {
       font-size: clamp(2.7rem, 13.5vw, 4rem);
@@ -1174,6 +1186,10 @@
   border: 1px solid rgba(143, 29, 69, 0.12);
   box-shadow: 0 12px 36px -12px rgba(143, 29, 69, 0.09);
   margin-bottom: 28px;
+  /* Prevent overflow on mobile */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .hero-header-row {
@@ -1194,11 +1210,13 @@
 
 .hero-progress-card h1 {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  /* Scales from 1rem (mobile) up to 1.85rem (desktop) */
+  font-size: clamp(1rem, 3.2vw, 1.85rem);
   font-weight: 700;
   color: var(--accent-deep);
   margin: 0 0 8px 0;
-  line-height: 1.15;
+  line-height: 1.2;
+  min-width: 0;
 }
 
 .hero-subtitle {
@@ -1313,9 +1331,10 @@
 /* 3. Workspace Control Grid */
 .workspace-control-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  min-width: 0;
 }
 
 .control-card {
@@ -1501,7 +1520,15 @@
   border-bottom: 2px solid #eee4e6;
   margin-bottom: 24px;
   overflow-x: auto;
+  overflow-y: visible;
   padding-bottom: 2px;
+  /* Prevent page-level overflow from tab scroll */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.owner-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
@@ -2206,5 +2233,257 @@
 @media (max-width: 768px) {
   .preview-iframe-wrapper {
     aspect-ratio: 9 / 16;
+  }
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVE — LOGGED-IN WORKSPACE (/account)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+
+  /* ─── Topbar ─── */
+  .topbar {
+    padding: 10px 16px;
+    gap: 8px;
+  }
+
+  .topbar-right {
+    gap: 8px;
+  }
+
+  /* Collapse profile chip: hide email + name, only show avatar */
+  .profile-chip-wrapper {
+    padding: 4px;
+    border-radius: 50%;
+    gap: 0;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .user-avatar,
+  .avatar-fallback {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  .logout-btn {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+  }
+
+  /* ─── Workspace Section Padding ─── */
+  .workspace {
+    padding: 16px;
+  }
+
+  /* ─── Hero Progress Card ─── */
+  .hero-progress-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+
+  .hero-header-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .hero-progress-card h1 {
+    /* At ~390px: 5vw = ~19.5px — keeps name on one line if possible */
+    font-size: clamp(0.95rem, 5vw, 1.3rem);
+  }
+
+  .hero-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .status-badge-box .badge {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+  }
+
+  .status-alert-box {
+    padding: 12px 14px;
+    font-size: 0.83rem;
+  }
+
+  .alert-icon {
+    font-size: 1.1rem;
+  }
+
+  /* ─── Control Grid (Link + Checklist Cards) ─── */
+  .workspace-control-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .control-card {
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  .subdomain-url code {
+    font-size: 0.82rem;
+    word-break: break-all;
+  }
+
+  /* ─── Main Tabs ─── */
+  .owner-tabs {
+    gap: 0;
+    margin-bottom: 16px;
+    padding-bottom: 0;
+    border-bottom-width: 1.5px;
+  }
+
+  .tab-btn {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+    flex: 1;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+    min-width: 0;
+  }
+
+  /* ─── Workspace Panel ─── */
+  .workspace-panel {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .workspace-panel h3 {
+    font-size: 1.2rem;
+  }
+
+  /* ─── Sub-tabs ─── */
+  .sub-tab-bar {
+    gap: 8px;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  .sub-tab-btn {
+    font-size: 0.75rem;
+    padding: 7px 12px;
+  }
+
+  /* ─── Form Sections ─── */
+  .form-section {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .form-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .col-span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .card-subGroup {
+    padding: 16px;
+  }
+
+  /* ─── Guestbook & RSVP ─── */
+  .panel-head-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .panel-head-row h3 {
+    font-size: 1.15rem;
+  }
+
+  .rsvp-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px 10px;
+  }
+
+  .stat-num {
+    font-size: 1.75rem;
+  }
+
+  .guestbook-card {
+    padding: 14px;
+  }
+
+  .guestbook-card-head {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .guest-time {
+    font-size: 0.7rem;
+  }
+
+  /* ─── Guest Link Generator ─── */
+  .guest-link-generator {
+    padding: 16px;
+  }
+
+  /* ─── Settings Cards ─── */
+  .settings-card {
+    padding: 16px;
+  }
+
+  /* ─── Save Config Bar ─── */
+  .config-save-bar {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  /* ─── QR Modal ─── */
+  .modal-card {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .modal-head h3 {
+    font-size: 1.2rem;
+  }
+
+  .qr-image-wrapper img {
+    width: 180px;
+    height: 180px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  /* ─── Preview Tab ─── */
+  .preview-iframe-wrapper {
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+  }
+
+  /* ─── Toast ─── */
+  .toast-notification {
+    bottom: 20px;
+    font-size: 0.82rem;
+    padding: 10px 20px;
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
