@@ -356,7 +356,7 @@
         <p class="eyebrow">Mulai perjalanan kalian</p>
         <h1 id="journey-title"><span class="title-lead">Buat undangan yang terasa seperti</span> <em>dunia kalian sendiri</em></h1>
         <p class="lead">
-          Buat pengalaman pernikahanmu indah dan berkesan dengan dunia 3D
+          Pengalaman berkesan & tak terlupakan dengan dunia 3 dimensi
         </p>
 
         <figure class="preview">

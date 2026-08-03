@@ -100,15 +100,27 @@ router.post(
 )
 
 // Serve proof files
-router.get('/proof/:filename', requireUser, async (req, res, next) => {
+import { COOKIE_NAME as ADMIN_COOKIE, requireAdmin } from '../auth.js'
+
+router.get('/proof/:filename', async (req, res, next) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT payment_proof_url FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1`,
-      [req.user.id],
-    )
-    const allowed = rows[0]?.payment_proof_url?.endsWith(req.params.filename)
-    if (!allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Akses ditolak.' } })
-    res.sendFile(path.join(PROOFS_DIR, req.params.filename))
+    if (req.cookies[ADMIN_COOKIE]) {
+      return requireAdmin(req, res, () => {
+        if (req.admin) res.sendFile(path.join(PROOFS_DIR, req.params.filename))
+      })
+    }
+
+    requireUser(req, res, async () => {
+      try {
+        const [rows] = await pool.query(
+          `SELECT payment_proof_url FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1`,
+          [req.user.id],
+        )
+        const allowed = rows[0]?.payment_proof_url?.endsWith(req.params.filename)
+        if (!allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Akses ditolak.' } })
+        res.sendFile(path.join(PROOFS_DIR, req.params.filename))
+      } catch (err) { next(err) }
+    })
   } catch (err) { next(err) }
 })
 
