@@ -184,10 +184,14 @@
     overflow-wrap: anywhere;
     text-wrap: balance;
   }
+  .onboarding h1 .title-lead {
+    font-size: 0.85em;
+  }
   h1 em {
     color: var(--gold);
     font-style: italic;
     font-weight: inherit;
+    font-size: 1.15em;
   }
 
   .onboarding h2 {
@@ -230,7 +234,8 @@
     background: var(--blush);
     box-shadow: 0 30px 70px -36px rgba(80, 44, 53, 0.5);
   }
-  .preview-window img {
+  .preview-window img,
+  .preview-window video {
     display: block;
     width: 100%;
     height: 100%;

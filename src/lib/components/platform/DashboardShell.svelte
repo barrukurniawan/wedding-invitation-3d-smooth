@@ -354,21 +354,20 @@
     <section class="journey" aria-labelledby="journey-title">
       <div class="story-column">
         <p class="eyebrow">Mulai perjalanan kalian</p>
-        <h1 id="journey-title">Buat undangan yang terasa seperti <em>dunia kalian sendiri.</em></h1>
+        <h1 id="journey-title"><span class="title-lead">Buat undangan yang terasa seperti</span> <em>dunia kalian sendiri.</em></h1>
         <p class="lead">
-          Dalam beberapa langkah, kalian bisa membuat undangan 3D yang berisi cerita, galeri, detail acara,
-          lokasi, dan buku tamu.
+          Buat pengalaman pernikahanmu indah dan berkesan dengan dunia 3D
         </p>
 
         <figure class="preview">
           <div class="preview-window">
             <img
-              src="/documentation/example_widescreen.png"
+              src="/documentation/example_show.png"
               alt="Contoh dunia undangan pernikahan 3D MarryMe"
             />
             <div class="preview-shine" aria-hidden="true"></div>
           </div>
-          <figcaption><span aria-hidden="true"></span> Contoh dunia undangan MarryMe</figcaption>
+          <figcaption><span aria-hidden="true"></span> Dunia undangan MarryMe</figcaption>
         </figure>
 
         <nav class="stepper" aria-label="Empat langkah membuat undangan">
@@ -404,8 +403,8 @@
           </div>
         {:else}
           <p class="card-label">Langkah 01 dari 04</p>
-          <h2 id="login-title">Mulai membuat undangan</h2>
-          <p class="card-copy">Masuk dengan Google untuk menyimpan progres dan mengelola undangan kalian.</p>
+          <h2 id="login-title">Sekali klik</h2>
+          <p class="card-copy">untuk menyimpan progres dan mengelola undangan kalian.</p>
 
           <button class="google-button" type="button" disabled={busy} aria-busy={busy} onclick={handleGoogleLogin}>
             {#if busy}
@@ -451,19 +450,22 @@
               <span></span><span></span><span></span>
               <div class="browser-url">kia-toni.marryme.web.id</div>
             </div>
-            <img
-              src="/documentation/example_widescreen.png"
-              alt="Preview undangan 3D di desktop"
+            <video
+              src="/media/preview.mp4"
+              poster="/media/preview-poster.jpg"
+              aria-label="Preview undangan 3D di desktop"
               class="browser-shot"
-              loading="lazy"
-              decoding="async"
-            />
+              autoplay
+              loop
+              muted
+              playsinline
+            ></video>
           </figure>
 
           <figure class="phone-frame">
             <div class="phone-notch" aria-hidden="true"></div>
             <img
-              src="/documentation/example1.png"
+              src="/documentation/resepsionis.png"
               alt="Preview undangan 3D di ponsel"
               class="phone-shot"
               loading="lazy"
