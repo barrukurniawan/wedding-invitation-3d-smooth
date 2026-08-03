@@ -151,4 +151,109 @@ router.post('/password', requireAdmin, async (req, res, next) => {
   }
 })
 
+router.get('/invitations', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at,
+              i.created_at, i.activated_at,
+              c.bride_name, c.groom_name,
+              u.email AS user_email, u.display_name AS user_display_name
+       FROM invitations i
+       LEFT JOIN wedding_configs c ON c.invitation_id = i.id
+       LEFT JOIN users u ON u.id = i.owner_user_id
+       WHERE i.deleted_at IS NULL
+       ORDER BY (i.status = 'pending_verification') DESC, i.payment_submitted_at DESC, i.id DESC`,
+    )
+    const items = rows.map((r) => ({
+      id: Number(r.id),
+      slug: r.slug,
+      status: r.status,
+      payment_proof_url: r.payment_proof_url || null,
+      payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
+      created_at: String(r.created_at).replace(' ', 'T'),
+      activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+      bride_name: r.bride_name || null,
+      groom_name: r.groom_name || null,
+      user_email: r.user_email || null,
+      user_display_name: r.user_display_name || null,
+    }))
+    res.json(items)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
+  const invId = Number(req.params.id)
+  if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  try {
+    const [rows] = await pool.query(
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at,
+              i.created_at, i.activated_at,
+              c.bride_name, c.groom_name,
+              u.email AS user_email, u.display_name AS user_display_name
+       FROM invitations i
+       LEFT JOIN wedding_configs c ON c.invitation_id = i.id
+       LEFT JOIN users u ON u.id = i.owner_user_id
+       WHERE i.id = ? AND i.deleted_at IS NULL`,
+      [invId],
+    )
+    if (!rows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    const r = rows[0]
+    res.json({
+      id: Number(r.id),
+      slug: r.slug,
+      status: r.status,
+      payment_proof_url: r.payment_proof_url || null,
+      payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
+      created_at: String(r.created_at).replace(' ', 'T'),
+      activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+      bride_name: r.bride_name || null,
+      groom_name: r.groom_name || null,
+      user_email: r.user_email || null,
+      user_display_name: r.user_display_name || null,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) => {
+  const invId = Number(req.params.id)
+  if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  try {
+    const [result] = await pool.query(
+      `UPDATE invitations
+       SET status = 'active',
+           activated_at = UTC_TIMESTAMP(),
+           verified_by = ?,
+           verified_at = UTC_TIMESTAMP()
+       WHERE id = ? AND deleted_at IS NULL`,
+      [req.admin.id, invId],
+    )
+    if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/invitations/:id/reject', requireAdmin, async (req, res, next) => {
+  const invId = Number(req.params.id)
+  if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  try {
+    const [result] = await pool.query(
+      `UPDATE invitations
+       SET status = 'draft'
+       WHERE id = ? AND deleted_at IS NULL`,
+      [invId],
+    )
+    if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
 export default router
+

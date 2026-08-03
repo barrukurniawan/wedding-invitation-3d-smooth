@@ -39,8 +39,8 @@ test('rejects reserved, nested, malformed, and suffix-confusion hosts', () => {
 test('normalizes OAuth return paths to allowlisted root paths only', () => {
   assert.equal(normalizeReturnPath('/dashboard'), '/dashboard')
   assert.equal(normalizeReturnPath('/dashboard?tab=invite'), '/dashboard?tab=invite')
-  assert.equal(normalizeReturnPath('https://evil.test'), '/dashboard')
-  assert.equal(normalizeReturnPath('//evil.test'), '/dashboard')
-  assert.equal(normalizeReturnPath('../admin'), '/dashboard')
-  assert.equal(normalizeReturnPath('dashboard'), '/dashboard')
+  assert.equal(normalizeReturnPath('https://evil.test'), '/')
+  assert.equal(normalizeReturnPath('//evil.test'), '/')
+  assert.equal(normalizeReturnPath('../admin'), '/')
+  assert.equal(normalizeReturnPath('dashboard'), '/')
 })

@@ -27,6 +27,8 @@ function serializeInvitation(row) {
     id: Number(row.id),
     slug: row.slug,
     status: row.status,
+    payment_proof_url: row.payment_proof_url || null,
+    payment_submitted_at: row.payment_submitted_at ? String(row.payment_submitted_at).replace(' ', 'T') : null,
     reception_at: String(row.reception_at).replace(' ', 'T'),
     timezone: row.timezone,
     expires_at: String(row.expires_at).replace(' ', 'T'),
@@ -57,7 +59,7 @@ function defaultReceptionAt() {
 router.get('/me', requireUser, async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at,
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        LEFT JOIN wedding_configs c ON c.invitation_id = i.id

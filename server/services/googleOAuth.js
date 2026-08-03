@@ -30,7 +30,7 @@ export function createPkcePair() {
 
 export { normalizeReturnPath } from './oauthPaths.js'
 
-export async function createOAuthState(returnPath = '/dashboard') {
+export async function createOAuthState(returnPath = '/') {
   const state = base64url(randomBytes(24))
   const nonce = base64url(randomBytes(24))
   const { codeVerifier, codeChallenge } = createPkcePair()

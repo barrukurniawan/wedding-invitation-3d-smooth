@@ -1,15 +1,31 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import './dashboard.css'
   import {
     ApiError,
     createInvitation,
+    getMyConfig,
+    getMyGuestbook,
     getMyInvitation,
     getUserSession,
     logoutUser,
     startGoogleLogin,
+    updateMyConfig,
+    type GuestbookEntry,
+    type GuestbookStats,
     type OwnerInvitation,
     type UserAccount,
+    type WeddingConfig,
   } from '$lib/api-client'
+  import BrideGroomEditor from './editor/BrideGroomEditor.svelte'
+  import EventDetailsEditor from './editor/EventDetailsEditor.svelte'
+  import EnvelopeEditor from './editor/EnvelopeEditor.svelte'
+  import LocationEditor from './editor/LocationEditor.svelte'
+  import GalleryEditor from './editor/GalleryEditor.svelte'
+  import QuoteEditor from './editor/QuoteEditor.svelte'
+  import GuestbookManager from './dashboard/GuestbookManager.svelte'
+  import PaymentManager from './dashboard/PaymentManager.svelte'
+  import OnboardingWizard from './OnboardingWizard.svelte'
 
   let loading = $state(true)
   let busy = $state(false)
@@ -23,6 +39,22 @@
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
     'https://kia-toni.marryme.web.id'
+
+  // Workspace Navigation & Sub-tabs
+  let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('edit')
+  let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'>('mempelai')
+
+  // Config & Payment & Guestbook State
+  let myConfig = $state<WeddingConfig | null>(null)
+  let myGuestbook = $state<{ items: GuestbookEntry[]; stats: GuestbookStats } | null>(null)
+  let loadingConfig = $state(false)
+  let loadingGuestbook = $state(false)
+  let savingConfig = $state(false)
+  let configSavedMsg = $state('')
+        
+  // UI Interactive Modals & Toasts
+  let showQrModal = $state(false)
+  let copiedToast = $state(false)
 
   onMount(() => {
     document.getElementById('startup-shell')?.remove()
@@ -46,7 +78,8 @@
 
   function statusLabel(status: string) {
     if (status === 'active') return 'Aktif'
-    if (status === 'draft') return 'Dalam persiapan'
+    if (status === 'draft') return 'Draft'
+    if (status === 'pending_verification') return 'Menunggu Verifikasi Admin'
     if (status === 'suspended') return 'Ditangguhkan'
     if (status === 'expired') return 'Berakhir'
     return status
@@ -58,12 +91,36 @@
     error = ''
     requestAnimationFrame(() => {
       try {
-        startGoogleLogin('/dashboard')
+        startGoogleLogin('/')
       } catch {
         busy = false
         error = 'Login Google belum berhasil.'
       }
     })
+  }
+
+  async function loadConfig() {
+    if (!invitation) return
+    loadingConfig = true
+    try {
+      myConfig = await getMyConfig()
+    } catch {
+      myConfig = null
+    } finally {
+      loadingConfig = false
+    }
+  }
+
+  async function loadGuestbook() {
+    if (!invitation) return
+    loadingGuestbook = true
+    try {
+      myGuestbook = await getMyGuestbook()
+    } catch {
+      myGuestbook = null
+    } finally {
+      loadingGuestbook = false
+    }
   }
 
   async function bootstrap() {
@@ -73,6 +130,9 @@
       user = session.user
       const mine = await getMyInvitation()
       invitation = mine.invitation
+      if (invitation) {
+        await Promise.all([loadConfig(), loadGuestbook()])
+      }
       error = ''
     } catch (err) {
       user = null
@@ -92,6 +152,8 @@
       await logoutUser()
       user = null
       invitation = null
+      myConfig = null
+      myGuestbook = null
     } catch (err) {
       error = err instanceof ApiError ? err.message : 'Belum dapat keluar dari akun.'
     } finally {
@@ -112,12 +174,128 @@
       slugInput = ''
       brideInput = ''
       groomInput = ''
+      await Promise.all([loadConfig(), loadGuestbook()])
     } catch (err) {
       error = err instanceof ApiError ? err.message : 'Undangan gagal dibuat.'
     } finally {
       busy = false
     }
   }
+
+  async function saveConfig() {
+    if (!myConfig) return
+    savingConfig = true
+    configSavedMsg = ''
+    try {
+      myConfig = await updateMyConfig(myConfig)
+      configSavedMsg = 'Perubahan berhasil disimpan!'
+      setTimeout(() => (configSavedMsg = ''), 3500)
+    } catch (err) {
+      configSavedMsg = err instanceof ApiError ? `Gagal: ${err.message}` : 'Gagal menyimpan perubahan.'
+    } finally {
+      savingConfig = false
+    }
+  }
+
+      function copyLink() {
+    if (!invitation) return
+    void navigator.clipboard.writeText(invitation.public_url)
+    copiedToast = true
+    setTimeout(() => (copiedToast = false), 2500)
+  }
+
+  // Progress Engine Calculation
+  interface TaskItem {
+    id: string
+    label: string
+    category: string
+    done: boolean
+    targetTab: 'edit' | 'pembayaran' | 'preview' | 'pengaturan'
+    targetSubTab?: 'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'
+  }
+
+  function calculateProgress() {
+    if (!myConfig || !invitation) {
+      return { percent: 0, completedCount: 0, totalCount: 6, tasks: [] as TaskItem[] }
+    }
+
+    const isCustom = (val?: string, defaultVal = '') =>
+      Boolean(val && val.trim() && val.trim() !== defaultVal)
+
+    const tasks: TaskItem[] = [
+      {
+        id: 'mempelai',
+        label: 'Data Mempelai Pria & Wanita',
+        category: 'Mempelai',
+        done: isCustom(myConfig.bride_name, 'Mempelai Wanita') && isCustom(myConfig.groom_name, 'Mempelai Pria'),
+        targetTab: 'edit',
+        targetSubTab: 'mempelai',
+      },
+      {
+        id: 'acara',
+        label: 'Detail Acara Akad & Resepsi',
+        category: 'Acara',
+        done: isCustom(myConfig.wedding_date) && isCustom(myConfig.akad_date) && isCustom(myConfig.resepsi_date),
+        targetTab: 'edit',
+        targetSubTab: 'acara',
+      },
+      {
+        id: 'galeri',
+        label: 'Foto Utama & Galeri 3D Scene',
+        category: 'Galeri',
+        done: Boolean((myConfig.gallery_photos && myConfig.gallery_photos.length > 0) || isCustom(myConfig.wedding_photo)),
+        targetTab: 'edit',
+        targetSubTab: 'galeri',
+      },
+      {
+        id: 'amplop',
+        label: 'Amplop Digital & Rekening Transfer',
+        category: 'Amplop',
+        done: isCustom(myConfig.bank_account) || isCustom(myConfig.qris_image),
+        targetTab: 'edit',
+        targetSubTab: 'amplop',
+      },
+      {
+        id: 'lokasi',
+        label: 'Alamat Venue & Google Maps',
+        category: 'Lokasi',
+        done: isCustom(myConfig.venue_address) || isCustom(myConfig.maps_url),
+        targetTab: 'edit',
+        targetSubTab: 'lokasi',
+      },
+      {
+        id: 'pembayaran',
+        label: 'Pembayaran & Verifikasi Admin',
+        category: 'Status',
+        done: invitation.status === 'active' || invitation.status === 'pending_verification',
+        targetTab: 'pembayaran',
+      },
+    ]
+
+    const completedCount = tasks.filter((t) => t.done).length
+    const percent = Math.round((completedCount / tasks.length) * 100)
+    return { percent, completedCount, totalCount: tasks.length, tasks }
+  }
+
+  function navigateToTask(task: TaskItem) {
+    activeTab = task.targetTab
+    if (task.targetSubTab) {
+      editSubTab = task.targetSubTab
+    }
+  }
+
+  function fmtDate(ts: string): string {
+    if (!ts) return '-'
+    return new Date(ts).toLocaleString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  let progress = $derived(calculateProgress())
 </script>
 
 <svelte:head>
@@ -131,17 +309,36 @@
   <div class="blob blob-blush" aria-hidden="true"></div>
   <div class="blob blob-gold" aria-hidden="true"></div>
 
+  <!-- Topbar Header -->
   <header class="topbar">
     <a class="wordmark" href="/" aria-label="MarryMe, kembali ke beranda">Marry<span>Me</span></a>
     <div class="topbar-right">
       {#if user}
-        <span class="session-chip" title={user.email || user.displayName}>{user.displayName}</span>
-        <button type="button" class="ghost" disabled={busy} onclick={() => void handleLogout()}>Keluar</button>
+        <div class="profile-chip-wrapper" title={user.email || user.displayName}>
+          {#if user.avatarUrl}
+            <img src={user.avatarUrl} alt={user.displayName} class="user-avatar" />
+          {:else}
+            <div class="avatar-fallback">{user.displayName.charAt(0).toUpperCase()}</div>
+          {/if}
+          <div class="user-info">
+            <span class="user-name">{user.displayName}</span>
+            {#if user.email}<span class="user-email">{user.email}</span>{/if}
+          </div>
+        </div>
+        <button type="button" class="ghost logout-btn" disabled={busy} onclick={() => void handleLogout()}>Keluar</button>
       {/if}
     </div>
   </header>
 
+  <!-- Toast Notification -->
+  {#if copiedToast}
+    <div class="toast-notification" role="status">
+      ✓ Link undangan berhasil disalin ke clipboard!
+    </div>
+  {/if}
+
   {#if !user}
+    <!-- Logged Out Onboarding Section -->
     <section class="journey" aria-labelledby="journey-title">
       <div class="story-column">
         <p class="eyebrow">Mulai perjalanan kalian</p>
@@ -331,1210 +528,368 @@
           <h2>Siap membuat undangan yang dikenang?</h2>
           <p>Mulai gratis, atau coba dulu demo publik untuk merasakan dunia 3D-nya.</p>
           <div class="closing-actions">
-            <a class="primary-btn large" href="/dashboard">Buat undangan gratis</a>
+            <button type="button" class="primary-btn large" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Buat undangan gratis</button>
             <a class="ghost-btn large" href={DEMO_URL} target="_blank" rel="noreferrer">Lihat demo</a>
           </div>
         </div>
       </div>
     </section>
-  {:else}
-    <section class="workspace" aria-labelledby="owner-title">
-      <div class="page-head">
-        <div>
-          <p class="eyebrow">Ruang undangan kalian</p>
-          <h1 id="owner-title">Selamat datang, {user.displayName}.</h1>
-          <p class="lead">Lanjutkan menyiapkan setiap detail sebelum undangan kalian dibagikan.</p>
-        </div>
-      </div>
 
+  {:else}
+    <!-- Logged In Workspace Section -->
+    <section class="workspace" aria-labelledby="owner-title">
       {#if error}<p class="owner-error" role="alert">{error}</p>{/if}
 
-      <div class="layout-split">
-        <div class="panel account-panel">
-          <p class="label">Akun</p>
-          <h2 class="account-name">{user.displayName}</h2>
-          {#if user.email}
-            <p class="muted mono">{user.email}</p>
-          {/if}
+      {#if invitation}
+        <!-- Logged In Hero & Progress Header -->
+        <div class="hero-progress-card">
+          <div class="hero-header-row">
+            <div>
+              <p class="workspace-eyebrow">Pusat Pengelola Undangan</p>
+              <h1 id="owner-title">
+                {#if myConfig?.bride_name && myConfig?.groom_name}
+                  {myConfig.bride_name} &amp; {myConfig.groom_name}
+                {:else}
+                  Undangan {user.displayName}
+                {/if}
+              </h1>
+              <p class="hero-subtitle">
+                Progress Kelengkapan: <strong>{progress.percent}%</strong> ({progress.completedCount} dari {progress.totalCount} komponen selesai)
+              </p>
+            </div>
+            <div class="status-badge-box">
+              <span class="badge large" data-status={invitation.status}>
+                {statusLabel(invitation.status)}
+              </span>
+            </div>
+          </div>
+
+          <!-- Progress Bar Visual -->
+          <div class="progress-bar-container">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width: {progress.percent}%;"></div>
+            </div>
+          </div>
+
+          <!-- Status Consequence Alert Banner -->
+          <div class="status-alert-box" data-status={invitation.status}>
+            {#if invitation.status === 'draft'}
+              <div class="status-alert-content">
+                <span class="alert-icon">💡</span>
+                <div>
+                  <strong>Status: Draft (Belum Dipublikasikan)</strong>
+                  <p>Lengkapi detail acara dan unggah bukti pada tab <em>Pembayaran</em> agar tim admin dapat memverifikasi &amp; mengaktifkan undangan kalian.</p>
+                </div>
+              </div>
+            {:else if invitation.status === 'pending_verification'}
+              <div class="status-alert-content">
+                <span class="alert-icon">⏳</span>
+                <div>
+                  <strong>Status: Menunggu Verifikasi Admin</strong>
+                  <p>Bukti transfer telah diterima. Tim admin sedang memproses verifikasi. Undangan akan otomatis aktif setelah disetujui.</p>
+                </div>
+              </div>
+            {:else if invitation.status === 'active'}
+              <div class="status-alert-content">
+                <span class="alert-icon">🎉</span>
+                <div>
+                  <strong>Status: Aktif! (Dunia 3D Sudah Terbit)</strong>
+                  <p>Undangan pernikahan kalian sudah aktif dan dapat diakses publik oleh seluruh keluarga serta para tamu.</p>
+                </div>
+              </div>
+            {/if}
+          </div>
         </div>
 
-        {#if invitation}
-          <div class="panel invite-panel">
-            <div class="invite-head">
-              <div>
-                <p class="label">Undangan</p>
-                <h2 class="slug-title">{invitation.slug}</h2>
-              </div>
-              <span class="badge" data-status={invitation.status}>{statusLabel(invitation.status)}</span>
+        <!-- Dashboard Control Grid -->
+        <div class="workspace-control-grid">
+          <!-- Subdomain & Copy Link Card -->
+          <div class="control-card link-card">
+            <p class="control-label">Link Undangan Kamu</p>
+            <h2 class="subdomain-url"><code>{invitation.slug}.marryme.web.id</code></h2>
+            <p class="subdomain-note">Alamat link ini sudah dipesan eksklusif untuk pernikahan kalian.</p>
+
+            <div class="link-actions-row">
+              <button type="button" class="primary-btn-sm" onclick={copyLink}>
+                📋 Salin Link
+              </button>
+              <a class="ghost-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
+                ↗ Buka Undangan
+              </a>
+              <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
+                📱 QR Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Interactive Task Checklist -->
+          <div class="control-card checklist-card">
+            <p class="control-label">Checklist Langkah Pengerjaan</p>
+            <div class="checklist-grid">
+              {#each progress.tasks as task}
+                <button
+                  type="button"
+                  class="task-chip"
+                  class:task-done={task.done}
+                  onclick={() => navigateToTask(task)}
+                >
+                  <span class="task-icon">{task.done ? '✓' : '!'}</span>
+                  <span class="task-label">{task.label}</span>
+                  <span class="task-arrow">→</span>
+                </button>
+              {/each}
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Workspace Tabs -->
+        <nav class="owner-tabs" aria-label="Navigasi Utama Workspace">
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'edit'}
+            onclick={() => (activeTab = 'edit')}
+          >
+            ✏️ Detail Undangan
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'tamu'}
+            onclick={() => {
+              activeTab = 'tamu'
+              void loadGuestbook()
+            }}
+          >
+            💌 Buku Tamu &amp; RSVP {#if myGuestbook?.stats.total}<span class="tab-badge">{myGuestbook.stats.total}</span>{/if}
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'pembayaran'}
+            onclick={() => (activeTab = 'pembayaran')}
+          >
+            💳 Pembayaran &amp; Paket
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'preview'}
+            onclick={() => (activeTab = 'preview')}
+          >
+            🌐 Preview Dunia 3D
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'pengaturan'}
+            onclick={() => (activeTab = 'pengaturan')}
+          >
+            ⚙️ Pengaturan
+          </button>
+        </nav>
+
+        <!-- Tab 1: Detail Undangan Editor -->
+        {#if activeTab === 'edit'}
+          <div class="workspace-panel">
+            <!-- Sub-tab Bar -->
+            <div class="sub-tab-bar">
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'mempelai'}
+                onclick={() => (editSubTab = 'mempelai')}
+              >
+                Data Mempelai
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'acara'}
+                onclick={() => (editSubTab = 'acara')}
+              >
+                Detail Acara
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'amplop'}
+                onclick={() => (editSubTab = 'amplop')}
+              >
+                Amplop Digital &amp; Bank
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'lokasi'}
+                onclick={() => (editSubTab = 'lokasi')}
+              >
+                Lokasi Venue
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'galeri'}
+                onclick={() => (editSubTab = 'galeri')}
+              >
+                Galeri Foto 3D
+              </button>
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'quote'}
+                onclick={() => (editSubTab = 'quote')}
+              >
+                Quote &amp; Pesan
+              </button>
             </div>
 
-            {#if invitation.config}
-              <p class="couple">{invitation.config.bride_name} &amp; {invitation.config.groom_name}</p>
-            {/if}
+            {#if loadingConfig}
+              <p class="muted-loading">Memuat data konfigurasi...</p>
+            {:else if myConfig}
+              <form class="config-editor-form" onsubmit={(e) => { e.preventDefault(); void saveConfig() }}>
+                {#if editSubTab === 'mempelai'}
+                  <BrideGroomEditor bind:config={myConfig} />
+                {:else if editSubTab === 'acara'}
+                  <EventDetailsEditor bind:config={myConfig} />
+                {:else if editSubTab === 'amplop'}
+                  <EnvelopeEditor bind:config={myConfig} />
+                {:else if editSubTab === 'lokasi'}
+                  <LocationEditor bind:config={myConfig} />
+                {:else if editSubTab === 'galeri'}
+                  <GalleryEditor bind:config={myConfig} />
+                {:else if editSubTab === 'quote'}
+                  <QuoteEditor bind:config={myConfig} />
+                {/if}
 
-            <dl class="meta-grid">
-              <div>
-                <dt>Zona waktu</dt>
-                <dd class="mono">{invitation.timezone}</dd>
-              </div>
-              <div>
-                <dt>Resepsi</dt>
-                <dd class="mono">{invitation.reception_at}</dd>
-              </div>
-              <div>
-                <dt>Berakhir</dt>
-                <dd class="mono">{invitation.expires_at}</dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{statusLabel(invitation.status)}</dd>
-              </div>
-            </dl>
-
-            {#if invitation.status === 'active'}
-              <a class="primary link large" href={invitation.public_url} target="_blank" rel="noreferrer">
-                Buka undangan publik
-              </a>
-            {:else}
-              <p class="draft-note">
-                Undangan kalian masih dalam persiapan dan belum dapat dilihat tamu. Selesaikan detailnya sebelum dibagikan.
-              </p>
+                <!-- Save Action Footer Bar -->
+                <div class="form-save-footer">
+                  <button type="submit" class="primary-btn-lg" disabled={savingConfig}>
+                    {savingConfig ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                  </button>
+                  {#if configSavedMsg}
+                    <span class="save-msg" class:error-msg={configSavedMsg.startsWith('Gagal')}>
+                      {configSavedMsg}
+                    </span>
+                  {/if}
+                </div>
+              </form>
             {/if}
           </div>
-        {:else}
-          <div class="panel create-panel">
-            <p class="label">Buat undangan</p>
-            <h2>Pilih link undangan</h2>
-            <p class="muted">
-              Tentukan alamat yang singkat dan mudah diingat oleh keluarga serta para tamu.
-            </p>
-            <form
-              class="form"
-              onsubmit={(event) => {
-                event.preventDefault()
-                void handleCreate()
-              }}
-            >
-              <label>
-                Alamat undangan
-                <div class="slug-row">
-                  <input
-                    bind:value={slugInput}
-                    maxlength="63"
-                    pattern={slugPattern}
-                    placeholder="nama-pasangan"
-                    required
-                    autocomplete="off"
-                    spellcheck="false"
-                  />
-                  <span class="slug-suffix">.marryme.web.id</span>
-                </div>
-              </label>
-              <div class="name-row">
-                <label>
-                  Nama mempelai wanita
-                  <input bind:value={brideInput} maxlength="255" placeholder="Opsional" />
-                </label>
-                <label>
-                  Nama mempelai pria
-                  <input bind:value={groomInput} maxlength="255" placeholder="Opsional" />
-                </label>
+
+        <!-- Tab 2: Tamu & Buku Tamu -->
+        {:else if activeTab === 'tamu'}
+          <GuestbookManager {invitation} {myGuestbook} {loadingGuestbook} {loadGuestbook} {fmtDate} />
+
+        <!-- Tab 3: Pembayaran & Paket -->
+        {:else if activeTab === 'pembayaran'}
+          <PaymentManager 
+            {invitation} 
+            {myConfig} 
+            {fmtDate} 
+            onPaymentSuccess={(inv) => { invitation = inv }}
+          />
+
+        <!-- Tab 4: Preview -->
+        {:else if activeTab === 'preview'}
+          <div class="workspace-panel">
+            <h3>Pratinjau Dunia 3D Undangan</h3>
+            <p class="section-desc">Lihat secara langsung bagaimana dunia 3D pernikahan kalian ditampilkan kepada tamu.</p>
+
+            <div class="preview-link-box">
+              <a class="primary-btn-lg" href={invitation.public_url} target="_blank" rel="noreferrer">
+                ↗ Buka {invitation.slug}.marryme.web.id Di Tab Baru
+              </a>
+            </div>
+
+            <div class="preview-iframe-wrapper">
+              <iframe src={invitation.public_url} title="Preview Dunia 3D Undangan"></iframe>
+            </div>
+          </div>
+
+        <!-- Tab 5: Pengaturan -->
+        {:else if activeTab === 'pengaturan'}
+          <div class="workspace-panel">
+            <h3>Pengaturan Undangan &amp; Akun</h3>
+            <p class="section-desc">Informasi teknis mengenai alamat domain dan sesi pengelola.</p>
+
+            <div class="grid-2">
+              <div class="settings-card">
+                <h4>Status Subdomain</h4>
+                <p>Alamat: <code>{invitation.slug}.marryme.web.id</code></p>
+                <p>Status: <strong class="badge-inline" data-status={invitation.status}>{statusLabel(invitation.status)}</strong></p>
+                <p>Zona Waktu: <code>{invitation.timezone}</code></p>
               </div>
-              <button type="submit" class="primary large" disabled={busy || !slugInput.trim()}>
-                Mulai undangan
-              </button>
-            </form>
+              <div class="settings-card">
+                <h4>Akun Pengelola</h4>
+                <p>Nama: <strong>{user.displayName}</strong></p>
+                <p>Email: <code>{user.email || '-'}</code></p>
+                <button type="button" class="ghost-btn-sm mt-12" onclick={() => void handleLogout()}>Keluar dari Akun</button>
+              </div>
+            </div>
           </div>
         {/if}
-      </div>
+
+      {:else}
+        <!-- Logged In Form Create Invitation (If No Invitation Yet) -->
+        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput {busy} {slugPattern} {handleCreate} />
+
+      {/if}
     </section>
   {/if}
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p><span>MarryMe</span> by Jago Institute</p>
+      <p class="footer-year">2026</p>
+    </div>
+  </footer>
 </main>
 
-<style>
-  .onboarding {
-    --paper: #fdf8f4;
-    --surface: #fffdfb;
-    --ink: #292321;
-    --muted: #706662;
-    --line: #eadbd6;
-    --accent: #9e204c;
-    --accent-deep: #8f1d45;
-    --gold: #a97625;
-    --blush: #f6e8ea;
-    --ok: #2f6b4f;
-    position: relative;
-    isolation: isolate;
-    min-height: 100dvh;
-    overflow-x: clip;
-    background:
-      radial-gradient(circle at 76% 15%, rgba(246, 232, 234, 0.72), transparent 30rem),
-      linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
-    color: var(--ink);
-    font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  }
+<!-- QR Code Modal -->
+{#if showQrModal && invitation}
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+    <div
+      class="modal-backdrop-click-target"
+      role="button"
+      tabindex="0"
+      aria-label="Tutup modal"
+      onclick={() => (showQrModal = false)}
+      onkeydown={(e) => { if (e.key === 'Escape') showQrModal = false }}
+    ></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="qr-modal-title">QR Code Undangan</h3>
+        <button type="button" class="close-modal-btn" onclick={() => (showQrModal = false)}>✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">QR Code siap cetak untuk kartu undangan, meja penerima tamu, atau media cetak lainnya.</p>
+        <div class="qr-image-wrapper">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={encodeURIComponent(invitation.public_url)}"
+            alt="QR Code {invitation.slug}"
+          />
+        </div>
+        <p class="qr-url-text"><code>{invitation.public_url}</code></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="primary-btn-sm" onclick={copyLink}>📋 Salin Link</button>
+        <a
+          class="ghost-btn-sm"
+          href="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={encodeURIComponent(invitation.public_url)}"
+          target="_blank"
+          download="QR_{invitation.slug}.png"
+        >
+          💾 Unduh Gambar QR
+        </a>
+      </div>
+    </div>
+  </div>
+{/if}
 
-  .onboarding::before {
-    position: fixed;
-    inset: 0;
-    z-index: -3;
-    background-image: radial-gradient(rgba(143, 29, 69, 0.04) 0.7px, transparent 0.7px);
-    background-size: 8px 8px;
-    content: '';
-  }
 
-  .blob {
-    position: absolute;
-    z-index: -2;
-    border-radius: 50%;
-    filter: blur(15px);
-    pointer-events: none;
-  }
-  .blob-blush {
-    top: 15%;
-    left: -10rem;
-    width: 28rem;
-    height: 28rem;
-    background: rgba(246, 216, 222, 0.44);
-  }
-  .blob-gold {
-    right: -8rem;
-    bottom: 4rem;
-    width: 23rem;
-    height: 23rem;
-    background: rgba(184, 134, 45, 0.12);
-  }
-
-  .botanical {
-    position: absolute;
-    z-index: -1;
-    width: 18rem;
-    height: 27rem;
-    opacity: 0.16;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at 48% 20%, transparent 27%, var(--gold) 28% 29%, transparent 30%),
-      radial-gradient(ellipse at 26% 34%, transparent 25%, var(--gold) 26% 27%, transparent 28%),
-      radial-gradient(ellipse at 68% 47%, transparent 26%, var(--gold) 27% 28%, transparent 29%),
-      linear-gradient(74deg, transparent 49.5%, var(--gold) 50% 50.6%, transparent 51%);
-  }
-  .botanical-left {
-    left: -7rem;
-    bottom: -6rem;
-    transform: rotate(-24deg);
-  }
-  .botanical-right {
-    top: 4rem;
-    right: -8rem;
-    transform: rotate(150deg);
-  }
-
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    max-width: 1120px;
-    min-height: 78px;
-    margin: 0 auto;
-    padding: 12px 24px;
-  }
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .wordmark {
-    color: var(--ink);
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.72rem;
-    font-weight: 600;
-    letter-spacing: -0.035em;
-  }
-  .wordmark span {
-    color: var(--accent-deep);
-  }
-
-  .session-chip {
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--muted);
-    font-size: 0.8125rem;
-    font-weight: 600;
-  }
-
-  .ghost {
-    padding: 10px 12px;
-    border: 1px solid rgba(196, 69, 101, 0.2);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.55);
-    color: var(--ink);
-    cursor: pointer;
-    font: 650 0.8125rem/1 'Outfit', sans-serif;
-    transition: background 0.15s ease;
-  }
-  .ghost:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--ink) 4%, transparent);
-  }
-
-  .journey,
-  .workspace {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: clamp(42px, 6vw, 76px) 24px 72px;
-  }
-
-  .journey {
-    display: grid;
-    grid-template-columns: minmax(0, 1.28fr) minmax(19rem, 0.72fr);
-    align-items: start;
-    gap: clamp(42px, 7vw, 84px);
-  }
-
-  .story-column {
-    min-width: 0;
-  }
-
-  .eyebrow,
-  .card-label {
-    margin: 0 0 12px;
-    color: var(--gold);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  .label {
-    margin: 0 0 8px;
-    color: var(--gold);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  h1 {
-    margin: 0;
-    max-width: 13ch;
-    color: var(--accent-deep);
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(3.15rem, 5.7vw, 5.35rem);
-    font-weight: 500;
-    letter-spacing: -0.052em;
-    line-height: 0.96;
-    overflow-wrap: anywhere;
-    text-wrap: balance;
-  }
-  h1 em {
-    color: var(--gold);
-    font-style: italic;
-    font-weight: inherit;
-  }
-
-  h2 {
-    margin: 8px 0 0;
-    color: var(--ink);
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(1.55rem, 3vw, 2.15rem);
-    font-weight: 600;
-    letter-spacing: -0.035em;
-    line-height: 1.12;
-  }
-
-  .lead,
-  .section-lead {
-    max-width: 52ch;
-    margin: 22px 0 0;
-    color: var(--muted);
-    font-size: clamp(1rem, 1.4vw, 1.12rem);
-    line-height: 1.72;
-    text-wrap: pretty;
-  }
-
-  .muted {
-    margin: 10px 0 0;
-    color: var(--muted);
-    font-size: 1rem;
-    line-height: 1.65;
-    max-width: 48ch;
-  }
-
-  .preview {
-    margin: 38px 0 0;
-  }
-  .preview-window {
-    position: relative;
-    overflow: hidden;
-    aspect-ratio: 16 / 8.8;
-    border: 1px solid rgba(255, 255, 255, 0.82);
-    border-radius: 18px;
-    background: var(--blush);
-    box-shadow: 0 30px 70px -36px rgba(80, 44, 53, 0.5);
-  }
-  .preview-window img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 40%;
-  }
-  .preview-shine {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(130deg, rgba(255, 255, 255, 0.18), transparent 42%, rgba(143, 29, 69, 0.08));
-  }
-  .preview figcaption {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-top: 11px;
-    color: var(--muted);
-    font-size: 0.76rem;
-    letter-spacing: 0.03em;
-  }
-  .preview figcaption span {
-    width: 18px;
-    height: 1px;
-    background: var(--gold);
-  }
-
-  .stepper {
-    margin-top: 34px;
-  }
-  .stepper ol {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 28px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .stepper li {
-    position: relative;
-    display: grid;
-    grid-template-columns: 34px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    padding: 13px 0;
-    border-top: 1px solid var(--line);
-    color: #988b86;
-  }
-  .step-number {
-    color: #b09f98;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-  }
-  .stepper strong,
-  .stepper small {
-    display: block;
-  }
-  .stepper strong {
-    color: #716560;
-    font-size: 0.9rem;
-    font-weight: 650;
-  }
-  .stepper small {
-    margin-top: 3px;
-    font-size: 0.76rem;
-    line-height: 1.4;
-  }
-  .stepper li.active {
-    border-color: var(--accent-deep);
-  }
-  .stepper li.active .step-number,
-  .stepper li.active strong {
-    color: var(--accent-deep);
-  }
-
-  .login-card {
-    position: sticky;
-    top: 28px;
-    margin-top: 34px;
-    padding: clamp(28px, 4vw, 42px);
-    border: 1px solid rgba(219, 197, 190, 0.72);
-    border-radius: 20px;
-    background: rgba(255, 253, 251, 0.91);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      0 32px 72px -42px rgba(76, 39, 49, 0.5);
-    backdrop-filter: blur(20px) saturate(1.08);
-  }
-  .card-label {
-    color: var(--gold);
-  }
-  .login-card h2 {
-    max-width: 11ch;
-    margin-top: 12px;
-    font-size: clamp(2rem, 3.5vw, 2.75rem);
-    line-height: 1.03;
-    text-wrap: balance;
-  }
-  .card-copy {
-    margin: 16px 0 0;
-    color: var(--muted);
-    font-size: 0.95rem;
-    line-height: 1.65;
-  }
-
-  .google-button {
-    display: inline-flex;
-    width: 100%;
-    min-height: 54px;
-    align-items: center;
-    justify-content: center;
-    gap: 11px;
-    margin-top: 25px;
-    padding: 14px 18px;
-    border: 1px solid var(--accent-deep);
-    border-radius: 11px;
-    background: var(--accent-deep);
-    box-shadow: 0 16px 30px -19px rgba(143, 29, 69, 0.9);
-    color: white;
-    font: 650 0.92rem/1.2 'Outfit', sans-serif;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
-  }
-  .google-button:hover:not(:disabled) {
-    background: #761638;
-    box-shadow: 0 19px 34px -18px rgba(143, 29, 69, 0.95);
-    transform: translateY(-2px);
-  }
-  .google-button:active:not(:disabled) {
-    transform: translateY(0) scale(0.99);
-  }
-  .google-button:disabled {
-    cursor: wait;
-    opacity: 0.76;
-  }
-  .google-icon {
-    width: 20px;
-    height: 20px;
-    flex: none;
-    padding: 2px;
-    border-radius: 3px;
-    background: white;
-  }
-  .spinner {
-    width: 17px;
-    height: 17px;
-    border: 2px solid rgba(255, 255, 255, 0.36);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 700ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .login-note {
-    margin: 12px 0 0;
-    color: var(--muted);
-    font-size: 0.73rem;
-    text-align: center;
-  }
-  .login-note span {
-    padding: 0 4px;
-    color: var(--gold);
-  }
-  .rule {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 28px 0 21px;
-    color: #b89d92;
-  }
-  .rule span {
-    height: 1px;
-    flex: 1;
-    background: var(--line);
-  }
-  .rule i {
-    font: 400 0.85rem/1 'Playfair Display', serif;
-  }
-  .reassurance {
-    display: grid;
-    gap: 13px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .reassurance li {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    color: #554b47;
-    font-size: 0.84rem;
-    line-height: 1.45;
-  }
-  .reassurance li span {
-    display: grid;
-    width: 18px;
-    height: 18px;
-    flex: none;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--blush);
-    color: var(--accent-deep);
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-
-  .owner-error {
-    margin: 0 0 16px;
-    padding: 14px;
-    border: 1px solid rgba(143, 29, 69, 0.2);
-    border-radius: 11px;
-    background: #fff4f6;
-    color: var(--accent-deep);
-    font-size: 0.875rem;
-    line-height: 1.45;
-  }
-
-  .login-skeleton {
-    display: grid;
-    gap: 14px;
-  }
-  .skeleton-line,
-  .skeleton-button {
-    display: block;
-    border-radius: 7px;
-    background: linear-gradient(90deg, #f1e7e4, #fbf4f1, #f1e7e4);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s ease infinite;
-  }
-  .skeleton-line {
-    height: 12px;
-  }
-  .skeleton-line.short {
-    width: 36%;
-  }
-  .skeleton-line.heading {
-    width: 78%;
-    height: 34px;
-    margin-top: 7px;
-  }
-  .skeleton-line.medium {
-    width: 70%;
-  }
-  .skeleton-button {
-    height: 54px;
-    margin-top: 14px;
-  }
-  @keyframes shimmer {
-    to {
-      background-position: -200% 0;
-    }
-  }
-
-  .panel {
-    padding: clamp(20px, 3vw, 28px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 30px 70px -42px rgba(83, 38, 54, 0.42);
-    backdrop-filter: blur(22px) saturate(1.1);
-  }
-
-  .layout-split {
-    display: grid;
-    gap: 14px;
-  }
-
-  .account-name {
-    font-size: 1.35rem;
-  }
-
-  .mono {
-    font-variant-numeric: tabular-nums;
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 0.875rem;
-  }
-
-  .invite-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .slug-title {
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-    letter-spacing: -0.02em;
-  }
-
-  .badge {
-    flex: none;
-    padding: 6px 9px;
-    border: 1px solid var(--line);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .badge[data-status='active'] {
-    border-color: color-mix(in srgb, var(--ok) 40%, var(--line));
-    color: var(--ok);
-    background: color-mix(in srgb, var(--ok) 8%, var(--surface));
-  }
-  .badge[data-status='draft'] {
-    color: var(--muted);
-  }
-
-  .couple {
-    margin: 14px 0 0;
-    font-size: 1.05rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  .meta-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 20px;
-    margin: 20px 0 0;
-  }
-  dt {
-    color: var(--muted);
-    font-size: 0.6875rem;
-    font-weight: 650;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  dd {
-    margin: 4px 0 0;
-    font-size: 0.9rem;
-  }
-
-  .draft-note {
-    margin: 20px 0 0;
-    padding: 12px 14px;
-    border-left: 3px solid var(--line);
-    color: var(--muted);
-    font-size: 0.875rem;
-    line-height: 1.55;
-  }
-
-  .create-panel .muted {
-    margin-bottom: 4px;
-  }
-
-  .form {
-    display: grid;
-    gap: 16px;
-    margin-top: 18px;
-  }
-
-  label {
-    display: grid;
-    gap: 8px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  input {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--line);
-    border-radius: 0;
-    padding: 12px 14px;
-    background: #fff;
-    color: var(--ink);
-    font: 400 0.9375rem/1.4 'Outfit', 'Segoe UI', system-ui, sans-serif;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  input:focus {
-    outline: none;
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
-  }
-
-  .slug-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: stretch;
-    gap: 0;
-  }
-  .slug-row input {
-    border-right: 0;
-  }
-  .slug-suffix {
-    display: grid;
-    place-items: center;
-    padding: 0 12px;
-    border: 1px solid var(--line);
-    background: color-mix(in srgb, var(--paper) 70%, var(--surface));
-    color: var(--muted);
-    font-size: 0.8125rem;
-    white-space: nowrap;
-  }
-
-  .name-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  button,
-  .link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    cursor: pointer;
-    font: 650 0.8125rem/1 'Outfit', 'Segoe UI', system-ui, sans-serif;
-    letter-spacing: -0.01em;
-    transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
-  }
-
-  .primary {
-    width: fit-content;
-    padding: 12px 16px;
-    border-radius: 999px;
-    background: var(--accent-deep);
-    color: #fff;
-    box-shadow: 0 14px 32px -16px rgba(159, 35, 72, 0.72);
-  }
-  .primary:hover:not(:disabled) {
-    background: #861b3b;
-    transform: translateY(-1px);
-  }
-  .primary:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-  .primary.large,
-  .link.large {
-    min-height: 50px;
-    padding: 15px 22px;
-    margin-top: 8px;
-    font-size: 0.9375rem;
-  }
-
-  button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  a:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-  }
-
-  /* ─── Marketing sections ─── */
-  .primary-btn,
-  .ghost-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    border-radius: 999px;
-    padding: 10px 16px;
-    font: 650 0.875rem/1 'Outfit', sans-serif;
-    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  }
-  .primary-btn {
-    background: var(--accent-deep);
-    color: #fff;
-    box-shadow: 0 14px 32px -16px rgba(143, 29, 69, 0.72);
-  }
-  .primary-btn:hover {
-    background: #761638;
-    transform: translateY(-1px);
-  }
-  .primary-btn:active {
-    transform: scale(0.98);
-  }
-  .ghost-btn {
-    border: 1px solid var(--line);
-    background: rgba(255, 253, 251, 0.78);
-    color: var(--ink);
-  }
-  .ghost-btn:hover {
-    border-color: rgba(143, 29, 69, 0.35);
-    background: #fff;
-    transform: translateY(-1px);
-  }
-  .primary-btn.large,
-  .ghost-btn.large {
-    min-height: 52px;
-    padding: 14px 22px;
-    font-size: 0.9375rem;
-  }
-
-  .section-inner {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: clamp(56px, 8vw, 96px) 24px;
-  }
-  .section-head {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 36px;
-  }
-  .section-head.center {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  .section-head.center .section-lead {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .eyebrow-deep {
-    margin: 0 0 10px;
-    color: var(--accent-deep);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  .preview-section {
-    background: rgba(255, 255, 255, 0.88);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-
-  .device-stage {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-  .browser-frame {
-    margin: 0;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    background: #241b20;
-    box-shadow: 0 36px 70px -34px rgba(83, 38, 54, 0.42);
-  }
-  .browser-chrome {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: #2a1f24;
-  }
-  .browser-chrome span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #e8a0a0;
-  }
-  .browser-chrome span:nth-child(2) {
-    background: #e8d4a0;
-  }
-  .browser-chrome span:nth-child(3) {
-    background: #a8d4b0;
-  }
-  .browser-url {
-    margin-left: 8px;
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.28);
-    color: #d4c8be;
-    padding: 6px 10px;
-    font-size: 0.7rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .browser-shot {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    object-position: center 38%;
-  }
-  .phone-frame {
-    position: relative;
-    width: min(180px, 34%);
-    margin: -18.5rem 1.25rem 0 auto;
-    overflow: hidden;
-    border: 3px solid var(--ink);
-    border-radius: 1.35rem;
-    background: var(--ink);
-    box-shadow: 0 28px 50px -20px rgba(83, 38, 54, 0.55);
-  }
-  .phone-notch {
-    width: 36%;
-    height: 5px;
-    margin: 8px auto 0;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.22);
-  }
-  .phone-shot {
-    display: block;
-    width: 100%;
-    aspect-ratio: 9 / 16;
-    object-fit: cover;
-  }
-
-  .why-section {
-    background: transparent;
-  }
-  .why-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-  }
-  .why-card {
-    padding: 28px 24px;
-    border: 1px solid rgba(255, 255, 255, 0.85);
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 24px 50px -36px rgba(83, 38, 54, 0.35);
-    backdrop-filter: blur(16px);
-    transition: transform 0.2s ease, border-color 0.2s ease;
-  }
-  .why-card:hover {
-    border-color: rgba(143, 29, 69, 0.28);
-    transform: translateY(-3px);
-  }
-  .why-card h3 {
-    margin: 0;
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-  .why-card p {
-    margin: 10px 0 0;
-    color: var(--muted);
-    font-size: 0.92rem;
-    line-height: 1.65;
-  }
-
-  .steps-section {
-    border-top: 1px solid var(--line);
-  }
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .step-card {
-    padding: 28px 24px;
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    background: rgba(255, 253, 251, 0.82);
-    transition: border-color 0.2s ease, background 0.2s ease;
-  }
-  .step-card:hover {
-    border-color: rgba(143, 29, 69, 0.28);
-    background: #fff;
-  }
-  .step-num {
-    display: block;
-    color: #f1dce3;
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 2.75rem;
-    font-weight: 600;
-    line-height: 1;
-    transition: color 0.2s ease;
-  }
-  .step-card:hover .step-num {
-    color: var(--accent);
-  }
-  .step-card h3 {
-    margin: 14px 0 0;
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-  }
-  .step-card p {
-    margin: 10px 0 0;
-    color: var(--muted);
-    font-size: 0.92rem;
-    line-height: 1.65;
-  }
-
-  .closing {
-    margin-top: 64px;
-    padding: clamp(36px, 5vw, 52px);
-    border: 1px solid rgba(219, 197, 190, 0.72);
-    border-radius: 24px;
-    background:
-      radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.85), transparent 40%),
-      linear-gradient(135deg, #fff8fa, #fce8ee 55%, #f8dce5);
-    text-align: center;
-    box-shadow: 0 30px 60px -40px rgba(83, 38, 54, 0.4);
-  }
-  .closing h2 {
-    color: var(--accent-deep);
-  }
-  .closing p {
-    max-width: 42ch;
-    margin: 14px auto 0;
-    color: var(--ink);
-    font-size: 1rem;
-    line-height: 1.65;
-  }
-  .closing-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  /* ─── Responsive ─── */
-  @media (max-width: 900px) {
-    .journey {
-      grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-      gap: 30px;
-    }
-    .stepper ol {
-      grid-template-columns: 1fr;
-    }
-    .login-card {
-      padding: 28px;
-    }
-    .topbar-right .session-chip {
-      display: none;
-    }
-    .section-head:not(.center) {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .why-grid,
-    .steps-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 720px) {
-    .journey {
-      grid-template-columns: minmax(0, 1fr);
-      padding-top: 32px;
-    }
-    .login-card {
-      position: relative;
-      top: auto;
-      margin-top: 0;
-    }
-    .preview {
-      margin-top: 30px;
-    }
-    .stepper ol {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  @media (max-width: 560px) {
-    .topbar {
-      padding-inline: 14px;
-    }
-    .topbar-right {
-      gap: 8px;
-    }
-    .wordmark {
-      font-size: 1.48rem;
-    }
-    .journey,
-    .workspace {
-      padding-inline: 18px;
-      padding-bottom: 48px;
-    }
-    h1 {
-      font-size: clamp(2.7rem, 13.5vw, 4rem);
-    }
-    .lead {
-      margin-top: 19px;
-      line-height: 1.65;
-    }
-    .preview-window {
-      border-radius: 13px;
-    }
-    .stepper {
-      margin-top: 27px;
-    }
-    .stepper ol {
-      grid-template-columns: 1fr;
-    }
-    .login-card {
-      padding: 25px 21px;
-      border-radius: 16px;
-    }
-    .google-button {
-      font-size: 0.84rem;
-    }
-    .name-row,
-    .meta-grid,
-    .slug-row {
-      grid-template-columns: 1fr;
-    }
-    .slug-row input {
-      border-right: 1px solid var(--line);
-    }
-    .slug-suffix {
-      justify-content: start;
-      min-height: 40px;
-    }
-    .section-inner {
-      padding-inline: 18px;
-    }
-    .phone-frame {
-      width: min(140px, 38%);
-      margin-top: -14.5rem;
-      margin-right: 0.75rem;
-    }
-    .closing {
-      padding: 28px 20px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    button,
-    .link,
-    input {
-      transition: none;
-    }
-    .primary:active:not(:disabled) {
-      transform: none;
-    }
-    .spinner,
-    .skeleton-line,
-    .skeleton-button {
-      animation: none;
-    }
-    .primary-btn,
-    .ghost-btn,
-    .why-card {
-      transition: none;
-    }
-    .primary-btn:active,
-    .ghost-btn:hover,
-    .why-card:hover {
-      transform: none;
-    }
-  }
-</style>

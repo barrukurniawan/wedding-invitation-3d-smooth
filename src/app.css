@@ -18,7 +18,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--ivory);
+  background-color: #fdf8f4;
 }
 
 .world-label {

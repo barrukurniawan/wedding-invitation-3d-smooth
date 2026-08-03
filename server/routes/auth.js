@@ -32,7 +32,7 @@ function rootOrigin() {
 }
 
 function redirectError(res, code) {
-  return res.redirect(`${rootOrigin()}/dashboard?authError=${encodeURIComponent(code)}`)
+  return res.redirect(`${rootOrigin()}/?authError=${encodeURIComponent(code)}`)
 }
 
 router.get('/google/start', authLimit, async (req, res, next) => {

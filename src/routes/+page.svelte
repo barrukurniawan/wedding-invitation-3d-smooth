@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import LandingShell from '$lib/components/platform/LandingShell.svelte'
+  import DashboardShell from '$lib/components/platform/DashboardShell.svelte'
   import TenantBootstrap from '$lib/components/tenant/TenantBootstrap.svelte'
   import TenantStateScreen from '$lib/components/tenant/TenantStateScreen.svelte'
   import { classifyBrowserHost, type HostContext } from '$lib/routing/host'
@@ -13,7 +13,7 @@
 </script>
 
 {#if hostContext?.type === 'root'}
-  <LandingShell />
+  <DashboardShell />
 {:else if hostContext?.type === 'invitation'}
   <TenantBootstrap />
 {:else if hostContext?.type === 'invalid'}

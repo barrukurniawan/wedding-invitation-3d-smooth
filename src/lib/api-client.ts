@@ -67,6 +67,8 @@ export interface OwnerInvitation {
   id: number
   slug: string
   status: string
+  payment_proof_url: string | null
+  payment_submitted_at: string | null
   reception_at: string
   timezone: string
   expires_at: string
@@ -80,6 +82,20 @@ export interface OwnerInvitation {
     resepsi_date: string
     resepsi_location: string
   } | null
+}
+
+export interface AdminInvitation {
+  id: number
+  slug: string
+  status: string
+  payment_proof_url: string | null
+  payment_submitted_at: string | null
+  created_at: string
+  activated_at: string | null
+  bride_name: string | null
+  groom_name: string | null
+  user_email: string | null
+  user_display_name: string | null
 }
 
 let csrfToken = ''
@@ -126,7 +142,9 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
-  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
   const method = (init.method || 'GET').toUpperCase()
   if (csrfToken && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     headers.set('X-CSRF-Token', csrfToken)
@@ -203,7 +221,7 @@ export async function getUserSession() {
   return session
 }
 
-export function startGoogleLogin(returnTo = '/dashboard') {
+export function startGoogleLogin(returnTo = '/') {
   const path = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`
   window.location.assign(path)
 }
@@ -228,3 +246,38 @@ export function createInvitation(input: {
     body: JSON.stringify(input),
   })
 }
+
+export function getMyConfig() {
+  return request<WeddingConfig>('/my/config')
+}
+
+export function updateMyConfig(config: Partial<WeddingConfig>) {
+  const { id, updated_at, ...editableConfig } = config
+  return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(editableConfig) })
+}
+
+export function checkoutPayment() {
+  return request<{ token: string; redirect_url: string }>('/my/payment/checkout', { method: 'POST' })
+}
+
+export function getAdminInvitations() {
+  return request<AdminInvitation[]>('/admin/invitations')
+}
+
+export function getAdminInvitation(id: number) {
+  return request<AdminInvitation>(`/admin/invitations/${id}`)
+}
+
+export function activateInvitation(id: number) {
+  return request<void>(`/admin/invitations/${id}/activate`, { method: 'POST' })
+}
+
+export function rejectInvitation(id: number) {
+  return request<void>(`/admin/invitations/${id}/reject`, { method: 'POST' })
+}
+
+export function getMyGuestbook() {
+  return request<{ items: GuestbookEntry[]; stats: GuestbookStats }>('/my/guestbook')
+}
+
+
