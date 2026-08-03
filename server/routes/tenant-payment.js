@@ -2,14 +2,9 @@ import { Router } from 'express'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { snap } from '../services/midtrans.js'
+import { buildPublicUrl } from '../services/host.js'
 
 const router = Router()
-
-function publicUrl(slug) {
-  const base = (process.env.BASE_DOMAIN || 'marryme.web.id').toLowerCase()
-  const protocol = process.env.COOKIE_SECURE === 'true' ? 'https' : 'http'
-  return `${protocol}://${slug}.${base}`
-}
 
 function serializeInvitation(row) {
   return {
@@ -23,7 +18,7 @@ function serializeInvitation(row) {
     expires_at: String(row.expires_at).replace(' ', 'T'),
     retention_until: String(row.retention_until).replace(' ', 'T'),
     activated_at: row.activated_at ? String(row.activated_at).replace(' ', 'T') : null,
-    public_url: publicUrl(row.slug),
+    public_url: buildPublicUrl(row.slug),
     config: row.bride_name == null ? null : {
       bride_name: row.bride_name,
       groom_name: row.groom_name,

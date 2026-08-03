@@ -169,7 +169,8 @@
       </div>
     {:else}
       <!-- Upload area cover -->
-      <label
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
         class="upload-zone cover-zone"
         class:uploading={uploadingCover}
         onclick={() => !uploadingCover && coverInputEl?.click()}
@@ -186,7 +187,7 @@
           <span class="upload-hint">Klik untuk pilih foto utama pasangan</span>
           <span class="upload-sub">JPG, PNG, atau WebP · Maks 5 MB</span>
         {/if}
-      </label>
+      </div>
     {/if}
 
     <input

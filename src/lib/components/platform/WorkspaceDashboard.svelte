@@ -390,6 +390,14 @@
               <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
                 📱 QR Code
               </button>
+              <a
+                class="wa-btn-sm"
+                href={`https://wa.me/?text=${encodeURIComponent(`Hai! Kami mengundang kamu ke pernikahan${myConfig?.bride_name && myConfig?.groom_name ? ` ${myConfig.bride_name} & ${myConfig.groom_name}` : ''}. 💍\n\nBuka undangan 3D kami di sini:\n${invitation.public_url}\n\nKami tunggu kehadiranmu! 🎊`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                📲 Bagikan via WhatsApp
+              </a>
             </div>
           </div>
 

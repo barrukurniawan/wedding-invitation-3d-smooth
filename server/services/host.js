@@ -20,3 +20,15 @@ export function classifyHost(rawHostname, baseDomain = process.env.BASE_DOMAIN |
   if (!SLUG_PATTERN.test(slug) || RESERVED_SLUGS.has(slug)) return { type: 'invalid' }
   return { type: 'invitation', hostname, slug }
 }
+
+export function buildPublicUrl(slug) {
+  const base = (process.env.BASE_DOMAIN || DEFAULT_BASE_DOMAIN).toLowerCase()
+  const protocol = process.env.COOKIE_SECURE === 'true' ? 'https' : 'http'
+  
+  if (base === 'localhost' || base === '127.0.0.1') {
+    const port = process.env.WEB_PORT || 5173
+    return `http://${slug}.${base}:${port}`
+  }
+  
+  return `${protocol}://${slug}.${base}`
+}

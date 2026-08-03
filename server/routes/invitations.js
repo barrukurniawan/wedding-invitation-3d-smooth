@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import pool from '../db.js'
-import { RESERVED_SLUGS, SLUG_PATTERN } from '../services/host.js'
+import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 
 const router = Router()
@@ -16,12 +16,6 @@ const createSchema = z.object({
   ).optional(),
 }).strict()
 
-function publicUrl(slug) {
-  const base = (process.env.BASE_DOMAIN || 'marryme.web.id').toLowerCase()
-  const protocol = process.env.COOKIE_SECURE === 'true' ? 'https' : 'http'
-  return `${protocol}://${slug}.${base}`
-}
-
 function serializeInvitation(row) {
   return {
     id: Number(row.id),
@@ -34,7 +28,7 @@ function serializeInvitation(row) {
     expires_at: String(row.expires_at).replace(' ', 'T'),
     retention_until: String(row.retention_until).replace(' ', 'T'),
     activated_at: row.activated_at ? String(row.activated_at).replace(' ', 'T') : null,
-    public_url: publicUrl(row.slug),
+    public_url: buildPublicUrl(row.slug),
     config: row.bride_name == null ? null : {
       bride_name: row.bride_name,
       groom_name: row.groom_name,

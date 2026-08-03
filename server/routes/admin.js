@@ -4,6 +4,8 @@ import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import pool from '../db.js'
 import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionToken, requireAdmin } from '../auth.js'
+import { sendActivationEmail } from '../services/email.js'
+import { buildPublicUrl } from '../services/host.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -247,10 +249,7 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
 
     const r = invRows[0]
     if (r.email) {
-      const isDev = process.env.NODE_ENV === 'development'
-      const public_url = isDev 
-        ? `http://${r.slug}.localhost:5173` 
-        : `https://${r.slug}.${process.env.BASE_DOMAIN || 'marryme.web.id'}`
+      const public_url = buildPublicUrl(r.slug)
         
       sendActivationEmail(r.email, {
         bride_name: r.bride_name,
