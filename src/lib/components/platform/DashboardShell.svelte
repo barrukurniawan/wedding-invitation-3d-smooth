@@ -55,6 +55,7 @@
   // UI Interactive Modals & Toasts
   let showQrModal = $state(false)
   let copiedToast = $state(false)
+  let avatarError = $state(false)
 
   onMount(() => {
     document.getElementById('startup-shell')?.remove()
@@ -91,7 +92,7 @@
     error = ''
     requestAnimationFrame(() => {
       try {
-        startGoogleLogin('/')
+        startGoogleLogin('/account')
       } catch {
         busy = false
         error = 'Login Google belum berhasil.'
@@ -134,11 +135,19 @@
         await Promise.all([loadConfig(), loadGuestbook()])
       }
       error = ''
+      if (user && window.location.pathname === '/') {
+        window.location.href = '/account'
+        return
+      }
     } catch (err) {
       user = null
       invitation = null
       if (!(err instanceof ApiError) || err.status !== 401) {
         error = 'Login Google belum berhasil.'
+      }
+      if (window.location.pathname === '/account') {
+        window.location.href = '/'
+        return
       }
     } finally {
       loading = false
@@ -154,6 +163,9 @@
       invitation = null
       myConfig = null
       myGuestbook = null
+      if (window.location.pathname === '/account') {
+        window.location.href = '/'
+      }
     } catch (err) {
       error = err instanceof ApiError ? err.message : 'Belum dapat keluar dari akun.'
     } finally {
@@ -315,10 +327,10 @@
     <div class="topbar-right">
       {#if user}
         <div class="profile-chip-wrapper" title={user.email || user.displayName}>
-          {#if user.avatarUrl}
-            <img src={user.avatarUrl} alt={user.displayName} class="user-avatar" />
+          {#if user.avatarUrl && !avatarError}
+            <img src={user.avatarUrl} alt={user.displayName} class="user-avatar" onerror={() => (avatarError = true)} />
           {:else}
-            <div class="avatar-fallback">{user.displayName.charAt(0).toUpperCase()}</div>
+            <div class="avatar-fallback">{user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}</div>
           {/if}
           <div class="user-info">
             <span class="user-name">{user.displayName}</span>
@@ -545,7 +557,6 @@
         <div class="hero-progress-card">
           <div class="hero-header-row">
             <div>
-              <p class="workspace-eyebrow">Pusat Pengelola Undangan</p>
               <h1 id="owner-title">
                 {#if myConfig?.bride_name && myConfig?.groom_name}
                   {myConfig.bride_name} &amp; {myConfig.groom_name}

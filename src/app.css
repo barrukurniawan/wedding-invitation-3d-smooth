@@ -14,11 +14,13 @@
   --panel-shadow: 0 24px 64px -24px rgba(28, 16, 20, 0.7);
 }
 
+html,
 body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #fdf8f4;
+  min-height: 100vh;
 }
 
 .world-label {

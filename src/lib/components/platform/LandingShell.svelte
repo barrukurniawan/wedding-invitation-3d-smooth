@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { getUserSession, type UserAccount } from '$lib/api-client'
+
+  let user = $state<UserAccount | null>(null)
 
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
@@ -14,7 +17,15 @@
     { src: '/documentation/example6.png', alt: 'Cuplikan suasana sore undangan' },
   ]
 
-  onMount(() => document.getElementById('startup-shell')?.remove())
+  onMount(async () => {
+    document.getElementById('startup-shell')?.remove()
+    try {
+      const session = await getUserSession()
+      user = session.user
+    } catch {
+      user = null
+    }
+  })
 </script>
 
 <svelte:head>
@@ -36,8 +47,12 @@
   <header class="topbar">
     <a class="wordmark" href="/" aria-label="MarryMe">Marry<span>Me</span></a>
     <div class="topbar-right">
-      <a class="text-btn" href="/dashboard">Masuk</a>
-      <a class="primary-btn" href="/dashboard">Buat undangan</a>
+      {#if user}
+        <a class="primary-btn" href="/account">✨ Dashboard Saya</a>
+      {:else}
+        <a class="text-btn" href="/account">Masuk</a>
+        <a class="primary-btn" href="/account">Buat undangan</a>
+      {/if}
     </div>
   </header>
 
@@ -51,7 +66,7 @@
         acara, lokasi, dan buku tamu.
       </p>
       <div class="hero-actions">
-        <a class="primary-btn large" href="/dashboard">Buat undangan gratis</a>
+        <a class="primary-btn large" href="/account">Buat undangan gratis</a>
         <a class="ghost-btn large" href={DEMO_URL} target="_blank" rel="noreferrer">Lihat demo</a>
       </div>
       <p class="hero-note">Demo publik · kia-toni.marryme.web.id</p>
@@ -136,7 +151,7 @@
 
       <div class="preview-cta">
         <a class="primary-btn large" href={DEMO_URL} target="_blank" rel="noreferrer">Lihat demo</a>
-        <a class="ghost-btn large" href="/dashboard">Buat undangan gratis</a>
+        <a class="ghost-btn large" href="/account">Buat undangan gratis</a>
       </div>
     </div>
   </section>
@@ -209,7 +224,7 @@
         <h2>Siap membuat undangan yang dikenang?</h2>
         <p>Mulai gratis, atau coba dulu demo publik untuk merasakan dunia 3D-nya.</p>
         <div class="hero-actions center">
-          <a class="primary-btn large" href="/dashboard">Buat undangan gratis</a>
+          <a class="primary-btn large" href="/account">Buat undangan gratis</a>
           <a class="ghost-btn large" href={DEMO_URL} target="_blank" rel="noreferrer">Lihat demo</a>
         </div>
       </div>
