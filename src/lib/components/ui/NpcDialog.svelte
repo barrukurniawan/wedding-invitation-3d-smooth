@@ -14,7 +14,7 @@
     }
   }
 
-  function parseText(text: string) {
+  function parseText(text: string | undefined) {
     if (!text) return ''
     const bride = $weddingConfig.bride_name || 'Kia'
     const groom = $weddingConfig.groom_name || 'Toni'

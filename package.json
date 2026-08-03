@@ -26,7 +26,6 @@
     "@threlte/extras": "^9.0.0",
     "@types/three": "^0.185.1",
     "gsap": "^3.12.5",
-    "midtrans-client": "^1.4.3",
     "three": "^0.185.1"
   }
 }
