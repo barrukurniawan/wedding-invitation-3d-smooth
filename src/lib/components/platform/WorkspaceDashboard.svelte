@@ -377,7 +377,7 @@
           <!-- Subdomain & Copy Link Card -->
           <div class="control-card link-card">
             <p class="control-label">Link Undangan Kamu</p>
-            <h2 class="subdomain-url"><code>{invitation.slug}.marryme.web.id</code></h2>
+            <h2 class="subdomain-url"><code>{invitation.public_url.replace(/^https?:\/\//, '')}</code></h2>
             <p class="subdomain-note">Alamat link ini sudah dipesan eksklusif untuk pernikahan kalian.</p>
 
             <div class="link-actions-row">

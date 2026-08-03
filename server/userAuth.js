@@ -5,12 +5,15 @@ export const USER_COOKIE = 'wedding_user_session'
 const sessionHours = Math.max(1, Number(process.env.USER_SESSION_TTL_HOURS || process.env.SESSION_TTL_HOURS || 168))
 
 export function userCookieOptions() {
+  const domain = process.env.BASE_DOMAIN || 'marryme.web.id'
+  const isLocal = domain === 'localhost' || domain === '127.0.0.1'
   return {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.COOKIE_SECURE === 'true',
     path: '/',
     maxAge: sessionHours * 60 * 60 * 1000,
+    domain: isLocal ? undefined : `.${domain}`,
   }
 }
 
@@ -51,6 +54,23 @@ export async function revokeUserSession(token) {
     'UPDATE user_sessions SET revoked_at = UTC_TIMESTAMP() WHERE token_hash = ? AND revoked_at IS NULL',
     [hashToken(token)],
   )
+}
+
+export async function getUserSession(req) {
+  const token = req.cookies[USER_COOKIE]
+  if (!token) return null
+  
+  const [rows] = await pool.query(
+    `SELECT u.id, u.email, u.display_name, u.status
+     FROM user_sessions s
+     JOIN users u ON u.id = s.user_id
+     WHERE s.token_hash = ?
+       AND s.revoked_at IS NULL
+       AND s.expires_at > UTC_TIMESTAMP()`,
+    [hashToken(token)]
+  )
+  if (!rows[0] || rows[0].status !== 'active') return null
+  return rows[0]
 }
 
 export async function requireUser(req, res, next) {

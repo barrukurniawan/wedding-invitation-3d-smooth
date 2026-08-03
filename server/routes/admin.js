@@ -220,7 +220,7 @@ router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
   }
 })
 
-import { sendActivationEmail } from '../services/email.js'
+
 
 router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) => {
   const invId = Number(req.params.id)

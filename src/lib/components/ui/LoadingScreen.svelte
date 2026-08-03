@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { isLoaded } from '../../stores/gameState.svelte'
   import { loadProgress } from '../../stores/loadProgress.svelte'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   onMount(() => {
     document.getElementById('startup-shell')?.remove()
@@ -18,7 +19,7 @@
     </div>
     <h2 class="mt-4 font-serif text-3xl font-bold tracking-wide text-[var(--deep-rose)]">Halo, Undangan yang Terhormat</h2>
     <p class="mt-3 max-w-sm text-sm text-[var(--ink)]/60">
-      Sedang memuat undangan pernikahan KIA &amp; TONI<br />
+      Sedang memuat undangan pernikahan {$weddingConfig.bride_name?.toUpperCase() || 'KIA'} &amp; {$weddingConfig.groom_name?.toUpperCase() || 'TONI'}<br />
       <span class="text-[var(--ink)]/40">Harap tunggu sebentar…</span>
     </p>
     <div

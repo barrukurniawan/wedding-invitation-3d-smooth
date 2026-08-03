@@ -4,6 +4,7 @@
   import { labelDefs, screenLabels } from '../../stores/labelStore.svelte'
   import { playerLabel } from '../../stores/gameState.svelte'
   import { playerPos } from '../../stores/playerMovement.svelte'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   const { camera, renderer } = useThrelte()
   const _v3 = new THREE.Vector3()
@@ -26,6 +27,10 @@
     const w = r.domElement.clientWidth
     const h = r.domElement.clientHeight
     const labels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
+    
+    const bride = $weddingConfig.bride_name || 'Kia'
+    const groom = $weddingConfig.groom_name || 'Toni'
+
     for (const def of labelDefs) {
       const dist = Math.hypot(def.world[0] - playerPos.x, def.world[2] - playerPos.z)
       const opacity = opacityFor(dist)
@@ -35,7 +40,9 @@
       const behind = _v3.z > 1
       const x = (_v3.x * 0.5 + 0.5) * w
       const y = (-_v3.y * 0.5 + 0.5) * h
-      labels.push({ id: def.id, text: def.text, x, y, behind, opacity, objective: def.objective ?? false })
+      
+      const text = def.text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
+      labels.push({ id: def.id, text, x, y, behind, opacity, objective: def.objective ?? false })
     }
 
     if ($playerLabel) {

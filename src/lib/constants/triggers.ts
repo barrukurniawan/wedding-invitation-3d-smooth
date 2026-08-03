@@ -28,11 +28,11 @@ export const triggerZones: TriggerZone[] = [
       name: 'Resepsionis',
       avatar: '🛎',
       messages: [
-        'Selamat datang di pernikahan 👰🏻 Kia & 🤵🏻 Toni! Silakan berjalan ke arah pelaminan.',
+        'Selamat datang di pernikahan 👰🏻 {bride} & 🤵🏻 {groom}! Silakan berjalan ke arah pelaminan.',
         'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
         'Jangan lupa memberikan ucapan 💌 di kotak ucapan ya! 📮'
       ],
-      venueAddress: 'Venue Pernikahan Kia & Toni',
+      venueAddress: 'Venue Pernikahan {bride} & {groom}',
       mapsUrl: 'https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7'
     }
   },

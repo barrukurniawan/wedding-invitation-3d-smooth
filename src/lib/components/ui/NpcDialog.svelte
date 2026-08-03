@@ -1,5 +1,6 @@
 <script lang="ts">
   import { activeModal, activeNpcData, closeModal } from '../../stores/gameState.svelte'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   let currentMessageIndex = $state(0)
 
@@ -11,6 +12,13 @@
     if ($activeNpcData && currentMessageIndex < $activeNpcData.messages.length - 1) {
       currentMessageIndex++
     }
+  }
+
+  function parseText(text: string) {
+    if (!text) return ''
+    const bride = $weddingConfig.bride_name || 'Kia'
+    const groom = $weddingConfig.groom_name || 'Toni'
+    return text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
   }
 </script>
 
@@ -36,7 +44,7 @@
 
       <div class="min-h-[80px] rounded-xl p-4 w-card">
         <p class="text-sm leading-relaxed text-[var(--ivory)]/90 md:text-base">
-          {$activeNpcData.messages[currentMessageIndex]}
+          {parseText($activeNpcData.messages[currentMessageIndex])}
         </p>
         {#if $activeNpcData.mapsUrl}
           <a
@@ -46,7 +54,7 @@
             class="mt-3 flex items-center gap-2 rounded-lg border border-[var(--rose)]/40 bg-[var(--rose)]/10 px-3 py-2 text-xs font-semibold text-[var(--ivory)]/90 transition hover:bg-[var(--rose)]/20 hover:border-[var(--rose)]/70"
           >
             <span class="text-base">📍</span>
-            <span class="flex-1">{$activeNpcData.venueAddress}</span>
+            <span class="flex-1">{parseText($activeNpcData.venueAddress)}</span>
             <span class="ml-auto shrink-0 rounded-md bg-[var(--rose)]/70 px-2 py-0.5 text-white">Buka Maps →</span>
           </a>
         {/if}

@@ -1,5 +1,6 @@
 import pool from '../db.js'
 import { classifyHost, RESERVED_SLUGS, SLUG_PATTERN } from '../services/host.js'
+import { getUserSession } from '../userAuth.js'
 
 function error(res, status, code, message) {
   return res.status(status).json({ error: { code, message } })
@@ -30,7 +31,7 @@ export async function requirePublicInvitation(req, res, next) {
 
   try {
     const [rows] = await pool.query(
-      `SELECT id, slug, status, reception_at, timezone, expires_at
+      `SELECT id, owner_user_id, slug, status, reception_at, timezone, expires_at
        FROM invitations
        WHERE slug = ? AND deleted_at IS NULL
        LIMIT 1`,
@@ -45,8 +46,15 @@ export async function requirePublicInvitation(req, res, next) {
     if (invitation.status === 'expired' || new Date(`${invitation.expires_at}Z`).getTime() <= Date.now()) {
       return error(res, 410, 'INVITATION_EXPIRED', 'Masa aktif undangan telah berakhir.')
     }
+    
     if (invitation.status !== 'active') {
-      return error(res, 404, 'INVITATION_INACTIVE', 'Undangan tidak ditemukan.')
+      const isDev = process.env.NODE_ENV === 'development'
+      if (!isDev) {
+        const user = await getUserSession(req)
+        if (!user || user.id !== invitation.owner_user_id) {
+          return error(res, 404, 'INVITATION_INACTIVE', 'Undangan tidak ditemukan.')
+        }
+      }
     }
 
     req.invitation = invitation
