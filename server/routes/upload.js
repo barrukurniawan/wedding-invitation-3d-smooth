@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
+import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 
 const router = Router()
 
@@ -104,14 +105,40 @@ router.post(
       }
 
       const proofUrl = `/api/my/proof/${req.file.filename}`
-      await pool.query(
-        `UPDATE invitations
-         SET payment_proof_url = ?,
-             payment_submitted_at = UTC_TIMESTAMP(),
-             status = CASE WHEN status NOT IN ('active', 'pending_verification') THEN 'pending_verification' ELSE status END
-         WHERE id = ?`,
-        [proofUrl, req.invitation.id],
-      )
+      await withTransaction(async (connection) => {
+        await connection.query(
+          `UPDATE invitations
+           SET payment_proof_url = ?, payment_submitted_at = UTC_TIMESTAMP()
+           WHERE id = ? AND deleted_at IS NULL`,
+          [proofUrl, req.invitation.id],
+        )
+        const [payments] = await connection.query(
+          `SELECT id FROM payments
+           WHERE invitation_id = ? AND provider = 'manual' AND status IN ('created', 'pending')
+           ORDER BY id DESC LIMIT 1 FOR UPDATE`,
+          [req.invitation.id],
+        )
+        let paymentId = payments[0]?.id
+        if (paymentId) {
+          await connection.query('UPDATE payments SET status = \'received\', proof_url = ? WHERE id = ?', [proofUrl, paymentId])
+        } else {
+          const [insert] = await connection.query(
+            `INSERT INTO payments (invitation_id, provider, amount, status, proof_url, provider_status)
+             VALUES (?, 'manual', ?, 'received', ?, 'proof_submitted')`,
+            [req.invitation.id, Number(process.env.INVITATION_PRICE_IDR ?? 0), proofUrl],
+          )
+          paymentId = insert.insertId
+        }
+        await transitionInvitation({
+          invitationId: req.invitation.id,
+          toStatus: 'pending_verification',
+          actorType: 'user',
+          actorId: req.user.id,
+          reason: 'Bukti transfer dikirim',
+          paymentId,
+          connection,
+        })
+      })
       res.json({ proof_url: proofUrl, status: 'pending_verification' })
     } catch (err) {
       if (req.file) fs.unlink(req.file.path, () => {})

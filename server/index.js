@@ -50,6 +50,12 @@ app.use('/api/admin', requireRootHost, adminRoutes)
 
 app.use((err, req, res, next) => {
   console.error('Unhandled API error:', err)
+  if (err?.code === 'INVALID_STATUS_TRANSITION') {
+    return res.status(409).json({ error: { code: err.code, message: err.message } })
+  }
+  if (err?.code === 'INVITATION_NOT_FOUND') {
+    return res.status(404).json({ error: { code: err.code, message: err.message } })
+  }
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Terjadi kesalahan pada server.' } })
 })
 

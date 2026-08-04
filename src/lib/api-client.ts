@@ -75,6 +75,7 @@ export interface OwnerInvitation {
   expires_at: string
   retention_until: string
   activated_at: string | null
+  rejection_reason?: string | null
   public_url: string
   config: {
     bride_name: string
@@ -97,6 +98,7 @@ export interface AdminInvitation {
   groom_name: string | null
   user_email: string | null
   user_display_name: string | null
+  rejection_reason?: string | null
 }
 
 let csrfToken = ''
@@ -274,8 +276,8 @@ export function activateInvitation(id: number) {
   return request<void>(`/admin/invitations/${id}/activate`, { method: 'POST' })
 }
 
-export function rejectInvitation(id: number) {
-  return request<void>(`/admin/invitations/${id}/reject`, { method: 'POST' })
+export function rejectInvitation(id: number, reason: string) {
+  return request<void>(`/admin/invitations/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
 }
 
 export function getMyGuestbook() {
@@ -334,11 +336,11 @@ export function uploadPaymentProof(
   })
 }
 
-function xhrUpload(
+function xhrUpload<T>(
   url: string,
   file: File,
   onProgress?: (pct: number) => void,
-): Promise<{ photo_url: string; type: string }> {
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -353,7 +355,7 @@ function xhrUpload(
     }
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        try { resolve(JSON.parse(xhr.responseText)) }
+        try { resolve(JSON.parse(xhr.responseText) as T) }
         catch { reject(new ApiError(xhr.status, 'PARSE_ERROR', 'Respons tidak valid.')) }
       } else {
         let message = 'Upload gagal.', code = 'UPLOAD_FAILED'
@@ -371,14 +373,14 @@ export function uploadPhoto(
   type: 'cover' | 'gallery' = 'gallery',
   onProgress?: (pct: number) => void
 ): Promise<{ photo_url: string; type: string }> {
-  return xhrUpload(`/api/my/upload/photo?type=${type}`, file, onProgress) as Promise<{ photo_url: string; type: string }>
+  return xhrUpload<{ photo_url: string; type: string }>(`/api/my/upload/photo?type=${type}`, file, onProgress)
 }
 
 export function uploadMusic(
   file: File,
   onProgress?: (pct: number) => void
 ): Promise<{ bgm_url: string }> {
-  return xhrUpload('/api/my/upload/music', file, onProgress) as Promise<{ bgm_url: string }>
+  return xhrUpload<{ bgm_url: string }>('/api/my/upload/music', file, onProgress)
 }
 
 export function deletePhoto(photoUrl: string): Promise<void> {

@@ -11,6 +11,7 @@ const migrations = [
   '004_saas_tenant_foundation.sql',
   '005_user_auth_sessions.sql',
   '006_payment_proof.sql',
+  '007_payment_audit_and_state.sql',
 ]
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDirectory = process.env.MIGRATIONS_DIR

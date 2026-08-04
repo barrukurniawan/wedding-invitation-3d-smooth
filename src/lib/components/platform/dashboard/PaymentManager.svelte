@@ -3,7 +3,11 @@
   import { ApiError, checkoutPayment, uploadPaymentProof } from '$lib/api-client'
   import { onMount } from 'svelte'
 
-  const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY as string | undefined
+  const PAYMENT_MODE = ((import.meta.env.VITE_PAYMENT_MODE as string | undefined) || 'manual').toLowerCase()
+  const PACKAGE_AMOUNT = Number(import.meta.env.VITE_INVITATION_PRICE_IDR ?? 0)
+  const MIDTRANS_CLIENT_KEY = PAYMENT_MODE === 'midtrans'
+    ? import.meta.env.VITE_MIDTRANS_CLIENT_KEY as string | undefined
+    : undefined
   const MIDTRANS_SANDBOX = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION !== 'true'
 
   let snapScriptLoaded = $state(false)
@@ -54,8 +58,8 @@
       const data = await checkoutPayment()
       ;(window as any).snap.pay(data.token, {
         onSuccess: () => {
-          paymentMsg = '✓ Pembayaran berhasil! Halaman akan diperbarui...'
-          setTimeout(() => window.location.reload(), 1800)
+           paymentMsg = '✓ Pembayaran diterima. Menunggu verifikasi admin...'
+           setTimeout(() => void onStatusChange('pending_verification'), 800)
         },
         onPending: () => {
           paymentMsg = 'Menunggu konfirmasi pembayaran dari bank...'
@@ -106,7 +110,10 @@
     }
   }
 
-  const isConfigure = !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY')
+  const isConfigure = PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY')
+  const formattedPrice = PACKAGE_AMOUNT === 0
+    ? 'Gratis'
+    : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`
 </script>
 
 <div class="workspace-panel">
@@ -118,7 +125,7 @@
   <!-- Paket Info -->
   <div class="package-card">
     <div class="package-name">Paket Undangan 3D</div>
-    <div class="package-price">Rp 150.000</div>
+    <div class="package-price">{formattedPrice}</div>
     <ul class="package-features">
       <li>✓ Subdomain eksklusif (slug.marryme.web.id)</li>
       <li>✓ Dunia 3D interaktif seumur hidup event</li>
@@ -133,7 +140,7 @@
       <span class="success-icon">🎉</span>
       <div>
         <strong>Pembayaran Terverifikasi!</strong>
-        <p>Undangan pernikahan kalian sudah aktif dan bisa diakses publik.</p>
+        <p>Undangan pernikahan kalian sudah aktif dan bisa dibagikan ke tamu.</p>
         <p class="muted-text">Aktif sejak: {fmtDate(invitation.activated_at || '')}</p>
       </div>
     </div>
@@ -189,14 +196,15 @@
           {:else if !snapScriptLoaded}
             Memuat sistem pembayaran...
           {:else}
-            Bayar Sekarang — Rp 150.000
+            Bayar Sekarang — {formattedPrice}
           {/if}
         </button>
       </form>
 
     <!-- Manual Transfer Upload -->
     {:else}
-      <div class="bank-info-card">
+       {#if PACKAGE_AMOUNT > 0}
+       <div class="bank-info-card">
         <div class="bank-row">
           <span class="bank-label">Bank</span>
           <strong>BCA</strong>
@@ -211,13 +219,14 @@
         </div>
         <div class="bank-row">
           <span class="bank-label">Jumlah</span>
-          <strong class="amount">Rp 150.000</strong>
+           <strong class="amount">{formattedPrice}</strong>
         </div>
-      </div>
+       </div>
+       {/if}
 
-      <form class="proof-upload-form" onsubmit={handleProofUpload}>
-        <h4>Upload Bukti Transfer</h4>
-        <p class="section-desc">Setelah transfer, upload foto/screenshot bukti pembayaran. Format: JPG, PNG, WebP (maks 5 MB)</p>
+       <form class="proof-upload-form" onsubmit={handleProofUpload}>
+         <h4>{PACKAGE_AMOUNT > 0 ? 'Upload Bukti Transfer' : 'Kirim Konfirmasi Manual'}</h4>
+        <p class="section-desc">{PACKAGE_AMOUNT === 0 ? 'Upload konfirmasi untuk mengaktifkan undangan secara manual.' : 'Setelah transfer, upload foto/screenshot bukti pembayaran.'} Format: JPG, PNG, WebP (maks 5 MB). Link publik baru aktif setelah admin memverifikasi.</p>
 
         <label class="file-drop-area" class:has-file={proofFile !== null}>
           {#if proofFile}

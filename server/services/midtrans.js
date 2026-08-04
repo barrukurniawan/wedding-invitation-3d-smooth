@@ -9,3 +9,13 @@ export const snap = new midtransClient.Snap({
   serverKey: process.env.MIDTRANS_SERVER_KEY || 'SB-Mid-server-YOUR_SERVER_KEY',
   clientKey: process.env.MIDTRANS_CLIENT_KEY || 'SB-Mid-client-YOUR_CLIENT_KEY'
 })
+
+export function midtransConfigured() {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY || ''
+  const clientKey = process.env.MIDTRANS_CLIENT_KEY || ''
+  return Boolean(
+    serverKey && clientKey
+      && !serverKey.includes('YOUR_')
+      && !clientKey.includes('YOUR_'),
+  )
+}

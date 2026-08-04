@@ -28,6 +28,7 @@ function serializeInvitation(row) {
     expires_at: String(row.expires_at).replace(' ', 'T'),
     retention_until: String(row.retention_until).replace(' ', 'T'),
     activated_at: row.activated_at ? String(row.activated_at).replace(' ', 'T') : null,
+    rejection_reason: row.rejection_reason || null,
     public_url: buildPublicUrl(row.slug),
     config: row.bride_name == null ? null : {
       bride_name: row.bride_name,
@@ -53,7 +54,7 @@ function defaultReceptionAt() {
 router.get('/me', requireUser, async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at,
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        LEFT JOIN wedding_configs c ON c.invitation_id = i.id
@@ -146,7 +147,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
     )
 
     const [rows] = await connection.query(
-      `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at,
+      `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        JOIN wedding_configs c ON c.invitation_id = i.id

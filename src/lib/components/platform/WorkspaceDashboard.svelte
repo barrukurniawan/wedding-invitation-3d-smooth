@@ -344,7 +344,15 @@
 
           <!-- Status Consequence Alert Banner -->
           <div class="status-alert-box" data-status={invitation.status}>
-            {#if invitation.status === 'draft'}
+             {#if invitation.status === 'draft' && invitation.rejection_reason}
+               <div class="status-alert-content">
+                 <span class="alert-icon">!</span>
+                 <div>
+                   <strong>Status: Bukti Pembayaran Perlu Diperbaiki</strong>
+                   <p>{invitation.rejection_reason}</p>
+                 </div>
+               </div>
+             {:else if invitation.status === 'draft'}
               <div class="status-alert-content">
                 <span class="alert-icon">💡</span>
                 <div>
@@ -384,20 +392,26 @@
               <button type="button" class="primary-btn-sm" onclick={copyLink}>
                 📋 Salin Link
               </button>
-              <a class="ghost-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
-                ↗ Buka Undangan
-              </a>
-              <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
-                📱 QR Code
-              </button>
-              <a
+               {#if invitation.status === 'active'}
+               <a class="ghost-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
+                 ↗ Buka Undangan
+               </a>
+               {/if}
+               {#if invitation.status === 'active'}
+               <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
+                 📱 QR Code
+               </button>
+               {/if}
+               {#if invitation.status === 'active'}
+               <a
                 class="wa-btn-sm"
                 href={`https://wa.me/?text=${encodeURIComponent(`Hai! Kami mengundang kamu ke pernikahan${myConfig?.bride_name && myConfig?.groom_name ? ` ${myConfig.bride_name} & ${myConfig.groom_name}` : ''}. 💍\n\nBuka undangan 3D kami di sini:\n${invitation.public_url}\n\nKami tunggu kehadiranmu! 🎊`)}`}
                 target="_blank"
                 rel="noreferrer"
-              >
-                📲 Bagikan via WhatsApp
-              </a>
+               >
+                 📲 Bagikan via WhatsApp
+               </a>
+               {/if}
             </div>
           </div>
 
@@ -570,7 +584,10 @@
             {invitation} 
             {myConfig} 
             {fmtDate} 
-            onStatusChange={(newStatus) => { invitation = { ...invitation, status: newStatus } as typeof invitation }}
+            onStatusChange={async () => {
+              const latest = await getMyInvitation()
+              invitation = latest.invitation
+            }}
           />
 
         <!-- Tab 4: Preview -->
@@ -658,14 +675,16 @@
       </div>
       <div style="display: flex; gap: 10px; justify-content: center;">
         <button type="button" class="primary-btn-sm" onclick={copyLink}>📋 Salin Link</button>
-        <a
+              {#if invitation.status === 'active'}
+              <a
           class="ghost-btn-sm"
           href="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={encodeURIComponent(invitation.public_url)}"
           target="_blank"
           download="QR_{invitation.slug}.png"
         >
           💾 Unduh QR
-        </a>
+              </a>
+              {/if}
       </div>
     </div>
   </div>

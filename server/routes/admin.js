@@ -6,6 +6,7 @@ import pool from '../db.js'
 import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionToken, requireAdmin } from '../auth.js'
 import { sendActivationEmail } from '../services/email.js'
 import { buildPublicUrl } from '../services/host.js'
+import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -156,7 +157,7 @@ router.post('/password', requireAdmin, async (req, res, next) => {
 router.get('/invitations', requireAdmin, async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at,
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.rejection_reason,
               i.created_at, i.activated_at,
               c.bride_name, c.groom_name,
               u.email AS user_email, u.display_name AS user_display_name
@@ -173,7 +174,8 @@ router.get('/invitations', requireAdmin, async (req, res, next) => {
       payment_proof_url: r.payment_proof_url || null,
       payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
       created_at: String(r.created_at).replace(' ', 'T'),
-      activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+       activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+       rejection_reason: r.rejection_reason || null,
       bride_name: r.bride_name || null,
       groom_name: r.groom_name || null,
       user_email: r.user_email || null,
@@ -190,7 +192,7 @@ router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
   if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
   try {
     const [rows] = await pool.query(
-      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at,
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.rejection_reason,
               i.created_at, i.activated_at,
               c.bride_name, c.groom_name,
               u.email AS user_email, u.display_name AS user_display_name
@@ -209,7 +211,8 @@ router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
       payment_proof_url: r.payment_proof_url || null,
       payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
       created_at: String(r.created_at).replace(' ', 'T'),
-      activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+       activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
+       rejection_reason: r.rejection_reason || null,
       bride_name: r.bride_name || null,
       groom_name: r.groom_name || null,
       user_email: r.user_email || null,
@@ -227,7 +230,7 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
   if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
   try {
     const [invRows] = await pool.query(
-      `SELECT i.slug, u.email, c.bride_name, c.groom_name
+      `SELECT i.id, i.slug, i.status, i.payment_proof_url, u.email, c.bride_name, c.groom_name
        FROM invitations i
        LEFT JOIN users u ON u.id = i.owner_user_id
        LEFT JOIN wedding_configs c ON c.invitation_id = i.id
@@ -236,18 +239,33 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
     )
     if (!invRows[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
 
-    const [result] = await pool.query(
-      `UPDATE invitations
-       SET status = 'active',
-           activated_at = UTC_TIMESTAMP(),
-           verified_by = ?,
-           verified_at = UTC_TIMESTAMP()
-       WHERE id = ? AND deleted_at IS NULL`,
-      [req.admin.id, invId],
+    const invitation = invRows[0]
+    if (invitation.status !== 'pending_verification') {
+      return res.status(409).json({ error: { code: 'INVALID_VERIFICATION_STATE', message: 'Undangan belum berada dalam antrean verifikasi.' } })
+    }
+    const [paymentRows] = await pool.query(
+      `SELECT id FROM payments
+       WHERE invitation_id = ? AND status = 'received'
+       ORDER BY id DESC LIMIT 1`,
+      [invId],
     )
-    if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    if (!paymentRows[0]) {
+      return res.status(409).json({ error: { code: 'PAYMENT_REQUIRED', message: 'Pembayaran tervalidasi belum tersedia.' } })
+    }
 
-    const r = invRows[0]
+    await withTransaction(async (connection) => {
+      await transitionInvitation({
+        invitationId: invId,
+        toStatus: 'active',
+        actorType: 'admin',
+        actorId: req.admin.id,
+        reason: 'Pembayaran diverifikasi admin',
+        paymentId: paymentRows[0].id,
+        connection,
+      })
+    })
+
+    const r = invitation
     if (r.email) {
       const public_url = buildPublicUrl(r.slug)
         
@@ -268,14 +286,24 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
 router.post('/invitations/:id/reject', requireAdmin, async (req, res, next) => {
   const invId = Number(req.params.id)
   if (!invId) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  const parsed = z.object({ reason: z.string().trim().min(1).max(1000) }).safeParse(req.body || {})
+  if (!parsed.success) return invalid(res, parsed.error)
   try {
-    const [result] = await pool.query(
-      `UPDATE invitations
-       SET status = 'draft'
-       WHERE id = ? AND deleted_at IS NULL`,
-      [invId],
-    )
-    if (result.affectedRows === 0) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    await withTransaction(async (connection) => {
+      await transitionInvitation({
+        invitationId: invId,
+        toStatus: 'draft',
+        actorType: 'admin',
+        actorId: req.admin.id,
+        reason: parsed.data.reason,
+        connection,
+      })
+      await connection.query(
+        `UPDATE invitations SET payment_proof_url = NULL, payment_submitted_at = NULL
+         WHERE id = ? AND deleted_at IS NULL`,
+        [invId],
+      )
+    })
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -283,4 +311,3 @@ router.post('/invitations/:id/reject', requireAdmin, async (req, res, next) => {
 })
 
 export default router
-

@@ -98,10 +98,11 @@
   }
 
   async function handleReject(id: number) {
-    if (!confirm('Tolak pembayaran & kembalikan status ke draft?')) return
+    const reason = window.prompt('Alasan penolakan pembayaran:')?.trim()
+    if (!reason) return
     verifyingId = id
     try {
-      await rejectInvitation(id)
+      await rejectInvitation(id, reason)
       await loadAdminInvitations()
     } catch (error) {
       savedMsg = error instanceof ApiError ? `Gagal: ${error.message}` : 'Gagal menolak'

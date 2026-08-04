@@ -72,6 +72,8 @@ DB_PASSWORD=__REPLACE_WITH_STRONG_PASSWORD__
 DB_NAME=wedding_db
 SESSION_TTL_HOURS=12
 COOKIE_SECURE=true
+PAYMENT_MODE=manual
+INVITATION_PRICE_IDR=0
 ADMIN_INITIAL_USERNAME=admin
 ADMIN_INITIAL_PASSWORD=__REPLACE_WITH_STRONG_PASSWORD_12_CHARS__
 ```
@@ -123,7 +125,7 @@ cp database/schema.sql init-db/01-schema.sql
 # User edits this file to fill in passwords
 cp server/.env.example server/.env.docker
 nano server/.env.docker
-# Change: DB_HOST=db, DB_PASSWORD=<real>, COOKIE_SECURE=true, ADMIN_INITIAL_PASSWORD=<real>
+# Change: DB_HOST=db, DB_PASSWORD=<real>, COOKIE_SECURE=true, PAYMENT_MODE=manual, INVITATION_PRICE_IDR=0, ADMIN_INITIAL_PASSWORD=<real>
 ```
 
 ### Step 5: Get SSL certificate FIRST (before starting Nginx)

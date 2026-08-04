@@ -36,12 +36,13 @@
     }}
   >
     <div class="space-y-2 group">
-      <label class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
+       <label for="invitation-slug" class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
         Alamat Undangan (Subdomain)
       </label>
       <div class="flex items-center rounded-2xl shadow-sm border border-slate-200 bg-white/90 overflow-hidden focus-within:ring-4 focus-within:ring-amber-400/20 focus-within:border-amber-400 transition-all duration-300">
         <input
-          bind:value={slugInput}
+           id="invitation-slug"
+           bind:value={slugInput}
           maxlength="63"
           pattern={slugPattern}
           placeholder="nama-pasangan"
@@ -58,22 +59,24 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2 group">
-        <label class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
+         <label for="bride-name" class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
           Nama Mempelai Wanita
         </label>
         <input 
-          bind:value={brideInput} 
+           id="bride-name"
+           bind:value={brideInput}
           maxlength="255" 
           placeholder="Mis: Kia Anindya" 
           class="w-full bg-white/90 border border-slate-200 rounded-2xl py-4 px-5 text-slate-800 placeholder-slate-400 outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all duration-300 font-medium"
         />
       </div>
       <div class="space-y-2 group">
-        <label class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
+         <label for="groom-name" class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
           Nama Mempelai Pria
         </label>
         <input 
-          bind:value={groomInput} 
+           id="groom-name"
+           bind:value={groomInput}
           maxlength="255" 
           placeholder="Mis: Toni Pratama" 
           class="w-full bg-white/90 border border-slate-200 rounded-2xl py-4 px-5 text-slate-800 placeholder-slate-400 outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all duration-300 font-medium"
