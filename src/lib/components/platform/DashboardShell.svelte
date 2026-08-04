@@ -42,7 +42,7 @@
     'https://kia-toni.marryme.web.id'
 
   // Workspace Navigation & Sub-tabs
-  let activeTab = $state<'dashboard' | 'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('dashboard')
+  let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('edit')
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
 
   // Config & Payment & Guestbook State
