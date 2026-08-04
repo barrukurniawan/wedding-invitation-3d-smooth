@@ -14,14 +14,11 @@
     isolation: isolate;
     display: flex;
     flex-direction: column;
-    /* allow horizontal scroll on mobile instead of clipping content */
-    overflow-x: hidden;
+    /* use clip instead of hidden to prevent forcing overflow-y: auto */
+    overflow-x: clip;
     box-sizing: border-box;
     width: 100%;
-    background:
-      radial-gradient(circle at 76% 15%, rgba(246, 232, 234, 0.72), transparent 30rem),
-      linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
-    background-attachment: fixed;
+    background: var(--paper);
     color: var(--ink);
     font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
   }
@@ -30,13 +27,28 @@
     box-sizing: border-box;
   }
 
+  /* Fixed gradient — GPU-composited layer instead of background-attachment:fixed */
+  .onboarding::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -4;
+    background:
+      radial-gradient(circle at 76% 15%, rgba(246, 232, 234, 0.72), transparent 30rem),
+      linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
+    will-change: transform;
+    pointer-events: none;
+  }
+
   .onboarding::before {
+    content: '';
     position: fixed;
     inset: 0;
     z-index: -3;
     background-image: radial-gradient(rgba(143, 29, 69, 0.04) 0.7px, transparent 0.7px);
     background-size: 8px 8px;
-    content: '';
+    will-change: transform;
+    pointer-events: none;
   }
 
   .blob {

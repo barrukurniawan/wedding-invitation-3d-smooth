@@ -243,7 +243,7 @@
   :global(body) {
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   
   .landing {
@@ -258,22 +258,36 @@
     --blush: #f6e8ea;
     position: relative;
     isolation: isolate;
-    min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow-x: clip;
-    background:
-      radial-gradient(circle at 76% 12%, rgba(246, 232, 234, 0.7), transparent 30rem),
-      linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
+    background: var(--paper);
     color: var(--ink);
     font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
   }
 
+  .landing::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -4;
+    background:
+      radial-gradient(circle at 76% 12%, rgba(246, 232, 234, 0.7), transparent 30rem),
+      linear-gradient(135deg, var(--paper), #fffaf7 52%, #fbf1ef);
+    will-change: transform;
+    pointer-events: none;
+  }
+
   .landing::before {
+    content: '';
     position: fixed;
     inset: 0;
     z-index: -3;
     background-image: radial-gradient(rgba(143, 29, 69, 0.04) 0.7px, transparent 0.7px);
     background-size: 8px 8px;
-    content: '';
+    will-change: transform;
+    pointer-events: none;
   }
 
   .blob {
