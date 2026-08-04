@@ -136,7 +136,7 @@
     <section class="sender-section recipients-section">
       <div class="bulk-toolbar">
         <div><p class="section-kicker">Penerima</p><h4>Pilih kontak untuk dikirim</h4></div>
-        <div class="bulk-actions-top"><label><input type="checkbox" checked={allSelected} onchange={toggleAll} /> Pilih semua</label><button type="button" class="bulk-button" disabled={!selected.length} onclick={startBulk}>Mulai Kirim ({selected.length})</button></div>
+        <div class="bulk-actions-top"><label class="select-all"><input type="checkbox" checked={allSelected} onchange={toggleAll} /> <span>Pilih semua</span></label><button type="button" class="bulk-button" disabled={!selected.length} onclick={startBulk}>Mulai Kirim ({selected.length})</button></div>
       </div>
 
     {#if loading}
@@ -147,10 +147,10 @@
       <div class="contact-list">
         {#each contacts as contact}
           <div class="contact-row">
-            <input type="checkbox" checked={selected.includes(contact.id)} onchange={() => toggleSelected(contact.id)} aria-label={`Pilih ${contact.name}`} />
+            <input class="contact-checkbox" type="checkbox" checked={selected.includes(contact.id)} onchange={() => toggleSelected(contact.id)} aria-label={`Pilih ${contact.name}`} />
+            <span class="contact-avatar" aria-hidden="true">{contact.name.trim().charAt(0).toUpperCase()}</span>
             <div class="contact-detail"><strong>{contact.name}</strong><span>+{contact.phone}</span>{#if opened.includes(contact.id)}<em>Chat dibuka</em>{/if}</div>
-            <button type="button" class="whatsapp-button" aria-label={`Buka chat WhatsApp ${contact.name}`} title="Buka Chat WhatsApp" onclick={() => openChat(contact)}>WhatsApp</button>
-            <button type="button" class="delete-contact" aria-label={`Hapus ${contact.name}`} onclick={() => void removeContact(contact.id)}>×</button>
+            <div class="contact-actions"><button type="button" class="whatsapp-button" aria-label={`Buka chat WhatsApp ${contact.name}`} title="Buka Chat WhatsApp" onclick={() => openChat(contact)}>WA</button><button type="button" class="delete-contact" aria-label={`Hapus penerima ${contact.name}`} title="Hapus penerima" onclick={() => void removeContact(contact.id)}>×</button></div>
           </div>
         {/each}
       </div>
@@ -178,7 +178,7 @@
 
 <style>
   .invitation-sender { position: relative; width: 100%; max-width: none; min-width: 0; box-sizing: border-box; }
-  .sender-header, .bulk-toolbar, .contact-row { display: flex; align-items: center; gap: 12px; }
+  .sender-header, .bulk-toolbar { display: flex; align-items: center; gap: 12px; }
   .sender-header { justify-content: space-between; margin-bottom: 22px; }
   .sender-header h3 { margin-bottom: 6px; }
   .sender-section { width: 100%; min-width: 0; box-sizing: border-box; padding: 24px; border: 1px solid rgba(100, 76, 79, .12); border-radius: 16px; background: #ffffff; box-shadow: 0 2px 14px rgba(0,0,0,0.02); }
@@ -200,17 +200,21 @@
   .template-box { display: grid; gap: 7px; }
   .template-box small { color: var(--muted, #777); }
   .bulk-toolbar { justify-content: space-between; }
-  .bulk-actions-top { display: flex; align-items: center; gap: 14px; }
+  .bulk-actions-top { display: flex; align-items: center; justify-content: flex-end; gap: 18px; margin-left: auto; }
+  .select-all { display: inline-flex; align-items: center; gap: 8px; color: var(--muted, #777); font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .select-all input, .contact-checkbox { width: 16px; height: 16px; margin: 0; accent-color: #8f5e68; }
   .contact-list { display: grid; gap: 10px; margin-top: 20px; }
-  .contact-row { min-width: 0; padding: 14px 18px; border: 1px solid #e8e4e1; border-radius: 12px; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
+  .contact-row { display: grid; grid-template-columns: 18px 34px minmax(0, 1fr) auto; align-items: center; min-width: 0; padding: 12px 14px; border: 1px solid #e8e4e1; border-radius: 12px; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
   .contact-row:hover { border-color: #d8d4d1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .contact-detail { flex: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 4px; }
-  .contact-detail strong { color: #2d2525; font-size: 0.95rem; font-weight: 600; }
+  .contact-avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #f4e6e8; color: #8f5e68; font-size: .78rem; font-weight: 800; }
+  .contact-detail { min-width: 0; display: grid; gap: 3px; padding-left: 10px; }
+  .contact-detail strong { min-width: 0; overflow: hidden; color: #2d2525; font-size: 0.95rem; font-weight: 700; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
   .contact-detail span { color: #665b4c; font-size: .85rem; }
   .contact-detail em { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #e8f5ed; color: #168447; font-size: .7rem; font-style: normal; font-weight: 600; margin-top: 2px; }
-  .whatsapp-button { display: flex; align-items: center; justify-content: center; gap: 6px; width: auto; height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: #20b957; color: white; font-size: .75rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .contact-actions { display: flex; align-items: center; gap: 6px; margin-left: 14px; }
+  .whatsapp-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: #20b957; color: white; font-size: .62rem; font-weight: 800; cursor: pointer; transition: background 0.2s, transform 0.1s; }
   .whatsapp-button:hover { background: #1b9e4a; transform: scale(1.02); }
-  .delete-contact { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #a35c5c; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; }
+  .delete-contact { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #a34f58; font-size: 1.25rem; line-height: 1; cursor: pointer; transition: background 0.2s, color 0.2s; }
   .delete-contact:hover { background: #fdf5f5; }
   .sender-error { color: #a33d3d; font-size: .84rem; margin-top: 14px; }
   .bulk-modal { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: rgba(23, 20, 17, .48); padding: 18px; }
@@ -219,5 +223,5 @@
   .bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
   .bulk-actions button { border: 1px solid #ddd; border-radius: 8px; padding: 9px 11px; cursor: pointer; }
   .bulk-actions .bulk-button { border-color: #20b957; background: #20b957; }
-  @media (max-width: 680px) { .contact-form { grid-template-columns: 1fr; } .sender-header, .section-heading, .bulk-toolbar { align-items: flex-start; flex-direction: column; } .bulk-actions-top { width: 100%; justify-content: space-between; } }
+  @media (max-width: 680px) { .contact-form { grid-template-columns: 1fr; } .sender-header, .section-heading, .bulk-toolbar { align-items: flex-start; flex-direction: column; } .bulk-actions-top { width: 100%; justify-content: space-between; margin-left: 0; } .contact-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto; padding: 11px 10px; } .contact-detail { padding-left: 8px; } .contact-detail strong { font-size: .88rem; } .contact-actions { margin-left: 8px; } .whatsapp-button, .delete-contact { width: 34px; height: 34px; } }
 </style>
