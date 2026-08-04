@@ -101,6 +101,14 @@ export interface AdminInvitation {
   rejection_reason?: string | null
 }
 
+export interface InvitationContact {
+  id: string
+  name: string
+  phone: string
+  created_at: string
+  updated_at: string
+}
+
 let csrfToken = ''
 
 export function setCsrfToken(token: string) {
@@ -388,4 +396,19 @@ export function deletePhoto(photoUrl: string): Promise<void> {
     method: 'DELETE',
     body: JSON.stringify({ photo_url: photoUrl }),
   })
+}
+
+export function getMyContacts() {
+  return request<{ contacts: InvitationContact[]; limit: number }>('/my/contacts')
+}
+
+export function createMyContact(name: string, phone: string) {
+  return request<{ contact: InvitationContact }>('/my/contacts', {
+    method: 'POST',
+    body: JSON.stringify({ name, phone }),
+  })
+}
+
+export function deleteMyContact(id: string) {
+  return request<void>(`/my/contacts/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }

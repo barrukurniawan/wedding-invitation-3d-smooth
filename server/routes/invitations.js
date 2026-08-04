@@ -4,7 +4,7 @@ import pool from '../db.js'
 import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { isFreeManualPackage } from '../services/paymentConfig.js'
-import { transitionInvitation } from '../services/invitationState.js'
+import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 
 const router = Router()
 
@@ -55,6 +55,24 @@ function defaultReceptionAt() {
 
 router.get('/me', requireUser, async (req, res, next) => {
   try {
+    if (isFreeManualPackage()) {
+      const [ownedRows] = await pool.query(
+        `SELECT id, status FROM invitations
+         WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1`,
+        [req.user.id],
+      )
+      if (ownedRows[0]?.status === 'draft') {
+        await withTransaction(async (connection) => {
+          await transitionInvitation({
+            invitationId: ownedRows[0].id,
+            toStatus: 'active',
+            actorType: 'system',
+            reason: 'Paket gratis: aktivasi otomatis saat membuka dashboard',
+            connection,
+          })
+        })
+      }
+    }
     const [rows] = await pool.query(
       `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location

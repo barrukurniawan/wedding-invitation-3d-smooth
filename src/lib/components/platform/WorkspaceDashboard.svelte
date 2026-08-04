@@ -24,6 +24,7 @@
   import QuoteEditor from './editor/QuoteEditor.svelte'
   import GuestbookManager from './dashboard/GuestbookManager.svelte'
   import PaymentManager from './dashboard/PaymentManager.svelte'
+  import InvitationSender from './dashboard/InvitationSender.svelte'
   import OnboardingWizard from './OnboardingWizard.svelte'
 
   let loading = $state(true)
@@ -37,7 +38,7 @@
   const slugPattern = '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
 
   // Workspace Navigation & Sub-tabs
-  let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan'>('edit')
+  let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan' | 'kirim'>('edit')
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'>('mempelai')
 
   // Config & Payment & Guestbook State
@@ -402,16 +403,6 @@
                  📱 QR Code
                </button>
                {/if}
-               {#if invitation.status === 'active'}
-               <a
-                class="wa-btn-sm"
-                href={`https://wa.me/?text=${encodeURIComponent(`Hai! Kami mengundang kamu ke pernikahan${myConfig?.bride_name && myConfig?.groom_name ? ` ${myConfig.bride_name} & ${myConfig.groom_name}` : ''}. 💍\n\nBuka undangan 3D kami di sini:\n${invitation.public_url}\n\nKami tunggu kehadiranmu! 🎊`)}`}
-                target="_blank"
-                rel="noreferrer"
-               >
-                 📲 Bagikan via WhatsApp
-               </a>
-               {/if}
             </div>
           </div>
 
@@ -483,6 +474,14 @@
             onclick={() => (activeTab = 'pengaturan')}
           >
             ⚙️ Pengaturan
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            class:active={activeTab === 'kirim'}
+            onclick={() => (activeTab = 'kirim')}
+          >
+            📲 Kirim Undangan
           </button>
         </nav>
 
@@ -607,7 +606,10 @@
             </div>
           </div>
 
-        <!-- Tab 5: Pengaturan -->
+         {:else if activeTab === 'kirim'}
+           <InvitationSender {invitation} {myConfig} />
+
+         <!-- Tab 5: Pengaturan -->
         {:else if activeTab === 'pengaturan'}
           <div class="workspace-panel">
             <h3>Pengaturan Undangan &amp; Akun</h3>

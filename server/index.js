@@ -14,6 +14,7 @@ import tenantConfigRoutes from './routes/tenant-config.js'
 import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import uploadRoutes from './routes/upload.js'
+import contactRoutes from './routes/contacts.js'
 import pool from './db.js'
 import { attachHostContext, requirePublicInvitation, requireRootHost } from './middleware/tenant.js'
 
@@ -45,6 +46,7 @@ app.use('/api/invitations', requireRootHost, invitationRoutes)
 app.use('/api/my', requireRootHost, tenantConfigRoutes)
 app.use('/api/my', requireRootHost, tenantPaymentRoutes)
 app.use('/api/my', requireRootHost, uploadRoutes)
+app.use('/api/my/contacts', requireRootHost, contactRoutes)
 app.use('/api/payment', midtransWebhookRoutes)
 app.use('/api/admin', requireRootHost, adminRoutes)
 
