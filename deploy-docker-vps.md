@@ -1,5 +1,7 @@
 # Deploy Wedding-summer to VPS with Docker
 
+> This document describes the current VPS state observed on 2026-08-04. Container ages, image tags, and commit IDs are volatile facts, not deployment guarantees.
+
 ## VPS Specs
 - Ubuntu 24.04.4 LTS, kernel 6.8.0-134-generic
 - RAM 5 GB, CPU 3 core, SSD 60 GB
@@ -201,3 +203,58 @@ ufw --force enable
 | bcrypt native module fails in Alpine | `python3 make g++` in server Dockerfile |
 | Container OOM on 5GB VPS | MySQL buffer pool 256M, Node max-old-space 300M |
 | SSL cert expires | Cron job auto-renews every 3 months |
+
+## Current VPS State
+
+- Host: Ubuntu 24.04.4 LTS, x86_64, kernel `6.8.0-134-generic`
+- Resources: approximately 4.8 GiB RAM, 2 GiB swap, 58 GiB root disk with approximately 47 GiB free at last observation
+- Docker Engine `29.6.2`; Docker Compose `v5.3.1`
+- UFW is enabled with inbound deny by default; only TCP ports 22, 80, and 443 are allowed
+- Public HTTPS health check: `curl -fsS https://marryme.web.id`
+- API health check: `curl -fsS https://marryme.web.id/api/health`
+- Wedding project: `/opt/wedding-summer`, branch `refactor`; an untracked `static/models/pemandu.glb` must be preserved
+- AI project: `/opt/ai-workspace`; LiteLLM service remains active on the private Docker network and is not publicly exposed
+- The one-shot `migrate` service is expected to remain `Exited (0)` after a successful deployment
+
+## Hermes Operations
+
+Hermes Agent replaced the custom Python Telegram bot on 2026-08-04. Hermes runs as the unprivileged `hermes` user under the systemd unit `hermes-gateway.service`. The replacement gateway uses Telegram long polling and is restricted to the configured numeric owner allowlist.
+
+### Configuration and boundaries
+
+- Hermes state: `/home/hermes/.hermes/`
+- Hermes non-secret configuration: `/home/hermes/.hermes/config.yaml`
+- Hermes secrets: `/home/hermes/.hermes/.env`, mode `0600`; never print, commit, or copy this file
+- Hermes SSH identity: `/home/hermes/.ssh/id_ed25519`, used only for the `hermes-ops` account
+- Hermes remote working directory: `/opt/wedding-summer`
+- LiteLLM stays on the private `ai-workspace_default` Docker network; Hermes uses its private container address and does not publish a new host port
+- Hermes does not mount the Docker socket or Wedding secret files
+- The old `ai-workspace-telegram-bot` container is retired; do not start a second Telegram poller with the replacement token
+
+### Safe checks
+
+```bash
+systemctl status hermes-gateway
+journalctl -u hermes-gateway --since "-15 minutes" --no-pager
+docker compose -f /opt/wedding-summer/docker-compose.yml ps -a
+docker compose -f /opt/ai-workspace/docker-compose.yml ps
+curl -fsS https://marryme.web.id
+curl -fsS https://marryme.web.id/api/health
+```
+
+Use `hermes doctor` as the `hermes` user after upgrades. Logs are expected to be redacted, but operators must still avoid sending environment files, private keys, database data, or full secret-bearing logs to chat.
+
+### Deployment and rollback
+
+1. Snapshot Hermes state before upgrades, including `config.yaml`, cron, memory, skills, sessions, and pairing state. Keep snapshots outside Git.
+2. Validate `hermes doctor`, a read-only terminal request, a Wedding health check, and an approval-gated harmless command in a disposable path.
+3. Restart only `hermes-gateway.service` for Hermes changes. Confirm exactly one Telegram gateway is polling.
+4. If rollback is required, stop Hermes, restore the custom bot configuration only with a newly verified token, and leave Hermes state intact. Do not remove Wedding containers, the named database volume, or the router.
+
+Never run `docker compose down -v`, `docker system prune`, broad recursive ownership changes, unrestricted Docker access, firewall changes, or remote script piping from Telegram. Destructive cron jobs remain denied by default.
+
+### Existing maintenance jobs
+
+- `/usr/local/bin/healthcheck-wedding.sh` runs every five minutes
+- Certbot renewal runs through the existing timer/cron configuration and restarts only Wedding `web` through its deploy hook
+- Do not alter these jobs during Hermes maintenance unless separately approved
