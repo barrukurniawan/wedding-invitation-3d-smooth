@@ -3,6 +3,8 @@ import { z } from 'zod'
 import pool from '../db.js'
 import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
+import { isFreeManualPackage } from '../services/paymentConfig.js'
+import { transitionInvitation } from '../services/invitationState.js'
 
 const router = Router()
 
@@ -114,14 +116,14 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
     }
 
     const [insert] = await connection.query(
-      `INSERT INTO invitations (
-         owner_user_id, slug, status, reception_at, timezone,
-         expires_at, retention_until
-       ) VALUES (
-         ?, ?, 'draft', ?, 'Asia/Jakarta',
-         DATE_ADD(?, INTERVAL 7 DAY), DATE_ADD(?, INTERVAL 37 DAY)
-       )`,
-      [req.user.id, slug, receptionMysql, receptionMysql, receptionMysql],
+       `INSERT INTO invitations (
+          owner_user_id, slug, status, reception_at, timezone,
+          expires_at, retention_until
+        ) VALUES (
+          ?, ?, ?, ?, 'Asia/Jakarta',
+          DATE_ADD(?, INTERVAL 7 DAY), DATE_ADD(?, INTERVAL 37 DAY)
+        )`,
+       [req.user.id, slug, isFreeManualPackage() ? 'active' : 'draft', receptionMysql, receptionMysql, receptionMysql],
     )
     const invitationId = Number(insert.insertId)
 
@@ -145,6 +147,19 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
        )`,
       [invitationId, brideName, groomName, receptionMysql, groomName],
     )
+
+    if (isFreeManualPackage()) {
+      await connection.query(
+        'UPDATE invitations SET activated_at = UTC_TIMESTAMP() WHERE id = ?',
+        [invitationId],
+      )
+      await connection.query(
+        `INSERT INTO invitation_status_events
+           (invitation_id, from_status, to_status, actor_type, reason)
+         VALUES (?, 'draft', 'active', 'system', 'Paket gratis: aktivasi otomatis')`,
+        [invitationId],
+      )
+    }
 
     const [rows] = await connection.query(
       `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,

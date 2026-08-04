@@ -1,4 +1,5 @@
 import pool from '../db.js'
+import { isFreeManualPackage } from './paymentConfig.js'
 
 const transitions = new Map([
   ['draft', new Set(['awaiting_payment', 'pending_verification'])],
@@ -12,6 +13,10 @@ const transitions = new Map([
 
 export function canTransition(fromStatus, toStatus) {
   return transitions.get(fromStatus)?.has(toStatus) === true
+}
+
+export function canActivateFreeInvitation(fromStatus, env = process.env) {
+  return fromStatus === 'draft' && isFreeManualPackage(env)
 }
 
 export async function transitionInvitation({
@@ -34,7 +39,8 @@ export async function transitionInvitation({
     throw error
   }
   if (invitation.status === toStatus) return invitation.status
-  if (!canTransition(invitation.status, toStatus)) {
+  const freeActivation = toStatus === 'active' && canActivateFreeInvitation(invitation.status)
+  if (!freeActivation && !canTransition(invitation.status, toStatus)) {
     const error = new Error(`Perubahan status ${invitation.status} ke ${toStatus} tidak diizinkan.`)
     error.code = 'INVALID_STATUS_TRANSITION'
     throw error

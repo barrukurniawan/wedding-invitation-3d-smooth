@@ -110,6 +110,7 @@
     }
   }
 
+  const isFreePackage = PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0
   const isConfigure = PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY')
   const formattedPrice = PACKAGE_AMOUNT === 0
     ? 'Gratis'
@@ -139,7 +140,7 @@
     <div class="success-box">
       <span class="success-icon">🎉</span>
       <div>
-        <strong>Pembayaran Terverifikasi!</strong>
+        <strong>{isFreePackage ? 'Paket Gratis Aktif!' : 'Pembayaran Terverifikasi!'}</strong>
         <p>Undangan pernikahan kalian sudah aktif dan bisa dibagikan ke tamu.</p>
         <p class="muted-text">Aktif sejak: {fmtDate(invitation.activated_at || '')}</p>
       </div>
@@ -159,7 +160,16 @@
       </div>
     </div>
 
-  {:else}
+   {:else if isFreePackage}
+     <div class="success-box">
+       <span class="success-icon">🎉</span>
+       <div>
+         <strong>Paket Undangan 3D Gratis</strong>
+         <p>Undangan kalian sudah aktif tanpa pembayaran. Link dapat langsung dibagikan kepada tamu.</p>
+       </div>
+     </div>
+
+   {:else}
     <!-- Payment Mode Selector -->
     {#if !isConfigure}
       <div class="payment-mode-tabs">

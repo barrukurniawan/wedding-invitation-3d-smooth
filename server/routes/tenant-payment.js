@@ -5,10 +5,11 @@ import { midtransConfigured, snap } from '../services/midtrans.js'
 import { buildPublicUrl } from '../services/host.js'
 import { randomUUID } from 'node:crypto'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
+import { invitationPriceIdr, paymentMode } from '../services/paymentConfig.js'
 
 const router = Router()
-const PAYMENT_MODE = (process.env.PAYMENT_MODE || 'manual').toLowerCase()
-const PACKAGE_AMOUNT = Number(process.env.INVITATION_PRICE_IDR ?? 0)
+const PAYMENT_MODE = paymentMode()
+const PACKAGE_AMOUNT = invitationPriceIdr()
 
 function serializeInvitation(row) {
   return {
@@ -65,7 +66,7 @@ router.post(
       if (!midtransConfigured()) {
         return res.status(503).json({ error: { code: 'PAYMENT_NOT_CONFIGURED', message: 'Pembayaran online belum dikonfigurasi.' } })
       }
-      if (!Number.isInteger(PACKAGE_AMOUNT) || PACKAGE_AMOUNT < 0) {
+      if (PACKAGE_AMOUNT === null || !Number.isInteger(PACKAGE_AMOUNT)) {
         return res.status(503).json({ error: { code: 'PAYMENT_NOT_CONFIGURED', message: 'Paket pembayaran belum dikonfigurasi.' } })
       }
 

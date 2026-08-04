@@ -6,6 +6,7 @@ import { randomBytes } from 'node:crypto'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
+import { invitationPriceIdr } from '../services/paymentConfig.js'
 
 const router = Router()
 
@@ -125,7 +126,7 @@ router.post(
           const [insert] = await connection.query(
             `INSERT INTO payments (invitation_id, provider, amount, status, proof_url, provider_status)
              VALUES (?, 'manual', ?, 'received', ?, 'proof_submitted')`,
-            [req.invitation.id, Number(process.env.INVITATION_PRICE_IDR ?? 0), proofUrl],
+            [req.invitation.id, invitationPriceIdr() ?? 0, proofUrl],
           )
           paymentId = insert.insertId
         }

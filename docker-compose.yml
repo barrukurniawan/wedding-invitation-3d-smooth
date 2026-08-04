@@ -83,6 +83,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
+      args:
+        VITE_PAYMENT_MODE: ${VITE_PAYMENT_MODE:-manual}
+        VITE_INVITATION_PRICE_IDR: ${VITE_INVITATION_PRICE_IDR:-0}
     restart: unless-stopped
     ports:
       - "80:80"
