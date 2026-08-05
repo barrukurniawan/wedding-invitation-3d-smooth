@@ -21,10 +21,20 @@ export const ADMIN_CONFIG_FIELDS = [
   'quote',
 ]
 
+export const ADMIN_CONFIG_METADATA_FIELDS = ['id', 'invitation_id', 'updated_at']
+
 export function pickAdminConfigFields(config) {
   return Object.fromEntries(
     ADMIN_CONFIG_FIELDS
       .filter((field) => config[field] !== undefined)
       .map((field) => [field, config[field]]),
   )
+}
+
+export function stripAdminConfigMetadata(config) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return config
+
+  const normalized = { ...config }
+  for (const field of ADMIN_CONFIG_METADATA_FIELDS) delete normalized[field]
+  return normalized
 }

@@ -7,6 +7,7 @@ import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionTo
 import { sendActivationEmail } from '../services/email.js'
 import { buildPublicUrl } from '../services/host.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
+import { stripAdminConfigMetadata } from '../services/adminConfig.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -76,7 +77,7 @@ router.get('/config', requireAdmin, async (req, res, next) => {
 })
 
 router.put('/config', requireAdmin, async (req, res, next) => {
-  const parsed = configSchema.safeParse(req.body)
+  const parsed = configSchema.safeParse(stripAdminConfigMetadata(req.body))
   if (!parsed.success) return invalid(res, parsed.error)
   const data = parsed.data
   const fields = Object.keys(data)
