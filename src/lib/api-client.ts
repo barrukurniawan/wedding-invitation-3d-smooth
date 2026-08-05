@@ -152,6 +152,41 @@ export class ApiError extends Error {
   }
 }
 
+const ADMIN_EDITABLE_CONFIG_FIELDS = [
+  'bride_name',
+  'groom_name',
+  'bride_parents',
+  'groom_parents',
+  'wedding_photo',
+  'wedding_date',
+  'akad_date',
+  'akad_time',
+  'akad_location',
+  'resepsi_date',
+  'resepsi_time',
+  'resepsi_location',
+  'qris_image',
+  'bank_name',
+  'bank_account',
+  'bank_holder',
+  'maps_url',
+  'venue_address',
+  'gallery_photos',
+  'quote',
+] as const
+
+export type AdminConfigUpdate = Partial<Pick<WeddingConfig, (typeof ADMIN_EDITABLE_CONFIG_FIELDS)[number]>>
+
+export function buildAdminConfigPayload(config: Partial<WeddingConfig>): AdminConfigUpdate {
+  const payload = {} as AdminConfigUpdate
+  for (const field of ADMIN_EDITABLE_CONFIG_FIELDS) {
+    if (config[field] !== undefined) {
+      payload[field] = config[field] as never
+    }
+  }
+  return payload
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
@@ -207,8 +242,10 @@ export function getAdminConfig() {
 }
 
 export function updateAdminConfig(config: Partial<WeddingConfig>) {
-  const { id, updated_at, ...editableConfig } = config
-  return request<WeddingConfig>('/admin/config', { method: 'PUT', body: JSON.stringify(editableConfig) })
+  return request<WeddingConfig>('/admin/config', {
+    method: 'PUT',
+    body: JSON.stringify(buildAdminConfigPayload(config)),
+  })
 }
 
 export function getAdminGuestbook(page = 1, limit = 20) {
@@ -233,7 +270,7 @@ export async function getUserSession() {
   return session
 }
 
-export function startGoogleLogin(returnTo = '/') {
+export function startGoogleLogin(returnTo = '/account') {
   const path = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`
   window.location.assign(path)
 }

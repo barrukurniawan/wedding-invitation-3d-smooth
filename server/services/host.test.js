@@ -44,3 +44,8 @@ test('normalizes OAuth return paths to allowlisted root paths only', () => {
   assert.equal(normalizeReturnPath('../admin'), '/')
   assert.equal(normalizeReturnPath('dashboard'), '/')
 })
+
+test('uses the account page as the OAuth entry point when returnTo is omitted', () => {
+  assert.equal(normalizeReturnPath(undefined, '/account'), '/account')
+  assert.equal(normalizeReturnPath('https://evil.test', '/account'), '/account')
+})

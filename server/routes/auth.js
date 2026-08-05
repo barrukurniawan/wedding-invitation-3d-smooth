@@ -42,7 +42,7 @@ router.get('/google/start', authLimit, async (req, res, next) => {
         error: { code: 'OAUTH_NOT_CONFIGURED', message: 'Login Google belum dikonfigurasi.' },
       })
     }
-    const returnPath = normalizeReturnPath(req.query.returnTo)
+    const returnPath = normalizeReturnPath(req.query.returnTo, '/account')
     const { state, nonce, codeChallenge } = await createOAuthState(returnPath)
     const url = buildGoogleAuthUrl({ state, nonce, codeChallenge })
     res.redirect(url)

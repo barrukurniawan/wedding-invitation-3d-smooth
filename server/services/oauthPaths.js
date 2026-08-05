@@ -1,7 +1,7 @@
-export function normalizeReturnPath(raw) {
+export function normalizeReturnPath(raw, fallback = '/') {
   if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) {
-    return '/'
+    return fallback
   }
-  if (raw.length > 255 || raw.includes('://')) return '/'
+  if (raw.length > 255 || raw.includes('://')) return fallback
   return raw
 }
