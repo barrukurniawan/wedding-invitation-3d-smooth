@@ -44,28 +44,136 @@
 <!-- Mobile guidance stays above the scene and clear of both thumb controls. -->
 {#if showApproachHint || showInteractionHint}
   <div
-    class="pointer-events-none absolute left-1/2 top-[calc(env(safe-area-inset-top)+8.5rem)] z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 md:hidden"
+    class="mobile-hint pointer-events-none absolute left-1/2 z-40 -translate-x-1/2"
     role="status"
     aria-live="polite"
     transition:fade={{ duration: 180 }}
   >
-    <div class="rounded-xl border border-[var(--champagne)]/35 bg-[rgba(35,24,28,0.76)] px-4 py-2.5 text-center text-sm font-medium leading-snug text-[var(--ivory)] shadow-lg backdrop-blur-md">
-      {showInteractionHint
-        ? 'Tekan E untuk berinteraksi.'
-        : 'Dekati resepsionis untuk membuka undangan.'}
+    <div class="hint-card">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        {#if showInteractionHint}
+          <path d="M8.5 11.3V8.6a1.45 1.45 0 0 1 2.9 0v2.1-3.1a1.45 1.45 0 0 1 2.9 0v3.1-1.9a1.45 1.45 0 0 1 2.9 0v3.3-1.2a1.45 1.45 0 0 1 2.9 0v3.6c0 3.7-2.5 6-6.3 6h-1.2c-2.3 0-4.2-1.1-5.5-3l-2.6-3.8a1.5 1.5 0 0 1 2.4-1.8l1.6 1.4Z" />
+        {:else}
+          <path d="M12 3v3m-6.4-.4 2.1 2.1M3 12h3m.4 6.4 2.1-2.1M12 18v3m6.4-2.6-2.1-2.1M18 12h3m-2.6-6.4-2.1 2.1" />
+          <circle cx="12" cy="12" r="3.2" />
+        {/if}
+      </svg>
+      {#if showInteractionHint}
+        <span class="touch-copy">Ketuk Buka untuk berinteraksi.</span>
+        <span class="keyboard-copy">Tekan E untuk berinteraksi.</span>
+      {:else}
+        <span>Dekati resepsionis untuk membuka undangan.</span>
+      {/if}
     </div>
   </div>
 {/if}
 
 {#if showInteractionHint}
   <div
-    class="absolute bottom-28 left-1/2 z-40 hidden -translate-x-1/2 cursor-pointer select-none items-center space-x-3 rounded-full border border-[var(--champagne)]/50 bg-[var(--panel-bg)] px-6 py-3 text-[var(--ivory)] shadow-lg backdrop-blur-md md:flex"
+    class="desktop-hint absolute bottom-28 left-1/2 z-40 hidden -translate-x-1/2 cursor-pointer select-none items-center gap-3 md:flex"
     role="button"
     tabindex="0"
     onclick={interact}
     onkeydown={(e) => e.code === 'Enter' && interact()}
   >
-    <span class="rounded bg-[var(--ivory)] px-2 py-0.5 text-sm font-bold text-[var(--deep-rose)] shadow">E</span>
-    <span class="text-sm font-medium md:text-base">Tekan E untuk berinteraksi dengan {$nearbyTrigger?.label}</span>
+    <kbd>E</kbd>
+    <span>Berinteraksi dengan {$nearbyTrigger?.label}</span>
   </div>
 {/if}
+
+<style>
+  .mobile-hint {
+    top: calc(env(safe-area-inset-top) + 7.25rem);
+    width: min(calc(100% - 2rem), 22rem);
+  }
+
+  .touch-copy { display: none; }
+
+  .hint-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    border: 1px solid rgba(217, 183, 123, 0.48);
+    border-radius: 1.15rem;
+    background: var(--hud-maroon-glass);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 16px 34px -22px rgba(47, 21, 28, 0.9);
+    padding: 0.75rem 1rem;
+    color: #fff8ef;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    -webkit-backdrop-filter: blur(14px) saturate(1.08);
+    backdrop-filter: blur(14px) saturate(1.08);
+  }
+
+  .hint-card svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: #ecd39d;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.65;
+  }
+
+  .desktop-hint {
+    border: 1px solid var(--hud-edge);
+    border-radius: 999px;
+    background: var(--hud-ivory);
+    box-shadow: inset 0 1px 0 var(--hud-edge-soft), var(--hud-shadow);
+    padding: 0.65rem 1.05rem 0.65rem 0.65rem;
+    color: var(--hud-copy);
+    font-size: 0.88rem;
+    font-weight: 500;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    transition: transform 180ms ease, background 180ms ease;
+  }
+
+  .desktop-hint:hover { background: var(--hud-ivory-strong); }
+  .desktop-hint:active { transform: translateX(-50%) scale(0.98); }
+  .desktop-hint:focus-visible { outline: 2px solid var(--hud-gold); outline-offset: 3px; }
+
+  .desktop-hint kbd {
+    display: grid;
+    width: 1.9rem;
+    height: 1.9rem;
+    place-items: center;
+    border: 1px solid rgba(113, 54, 69, 0.22);
+    border-radius: 0.55rem;
+    background: var(--hud-maroon);
+    box-shadow: 0 2px 0 rgba(63, 30, 39, 0.28);
+    color: #fff8ef;
+    font: 700 0.76rem/1 Outfit, sans-serif;
+  }
+
+  @media (pointer: coarse) {
+    .touch-copy { display: inline; }
+    .keyboard-copy { display: none; }
+    .desktop-hint { display: none !important; }
+  }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    .mobile-hint { display: none; }
+  }
+
+  @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
+    .mobile-hint {
+      top: calc(env(safe-area-inset-top) + 4.8rem);
+      width: min(calc(100% - 10rem), 20rem);
+    }
+
+    .hint-card {
+      border-radius: 0.9rem;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-hint { transition: none; }
+  }
+</style>

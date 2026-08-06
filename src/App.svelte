@@ -58,7 +58,7 @@
   })
 </script>
 
-<div class="invitation-app relative h-screen w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
+<div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
     <World {lowPower} onReady={() => setLoaded(true)} />
   {/if}
@@ -89,7 +89,18 @@
 
 <style>
   .invitation-app {
+    --hud-ivory: rgba(255, 250, 242, 0.8);
+    --hud-ivory-strong: rgba(255, 250, 242, 0.92);
+    --hud-edge: rgba(217, 183, 123, 0.62);
+    --hud-edge-soft: rgba(255, 255, 255, 0.72);
+    --hud-maroon: #713645;
+    --hud-maroon-glass: rgba(91, 42, 54, 0.86);
+    --hud-copy: #4a353b;
+    --hud-muted: #806e72;
+    --hud-gold: #c9a45e;
+    --hud-shadow: 0 18px 44px -22px rgba(62, 34, 41, 0.62);
     user-select: none;
     -webkit-user-select: none;
+    font-family: Outfit, 'Segoe UI', system-ui, sans-serif;
   }
 </style>

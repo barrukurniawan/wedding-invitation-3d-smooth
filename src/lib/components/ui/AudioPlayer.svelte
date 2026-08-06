@@ -50,9 +50,105 @@
 </script>
 
 <button
-  class="absolute right-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-stone-700 bg-stone-900/70 text-lg backdrop-blur-md transition hover:bg-stone-800"
+  class="audio-control absolute z-40 flex items-center justify-center"
+  class:is-playing={playing}
   onclick={toggle}
-  title="Musik latar"
+  title={playing ? 'Jeda musik' : 'Putar musik'}
+  aria-label={playing ? 'Jeda musik latar' : 'Putar musik latar'}
+  aria-pressed={playing}
 >
-  {playing ? '🔊' : '🔇'}
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M5 9.5h3.2L12.5 6v12l-4.3-3.5H5z" />
+    {#if playing}
+      <path class="sound-wave wave-one" d="M15.2 9.1a4 4 0 0 1 0 5.8" />
+      <path class="sound-wave wave-two" d="M17.7 6.9a7 7 0 0 1 0 10.2" />
+    {:else}
+      <path d="m15.2 10 4 4m0-4-4 4" />
+    {/if}
+  </svg>
+  <span class="audio-status" aria-hidden="true"></span>
 </button>
+
+<style>
+  .audio-control {
+    top: calc(env(safe-area-inset-top) + 0.75rem);
+    right: max(0.75rem, env(safe-area-inset-right));
+    width: 2.8rem;
+    height: 2.8rem;
+    border: 1px solid var(--hud-edge);
+    border-radius: 50%;
+    background: var(--hud-ivory);
+    box-shadow: inset 0 1px 0 var(--hud-edge-soft), 0 12px 26px -18px rgba(55, 30, 37, 0.8);
+    color: var(--hud-maroon);
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    -webkit-backdrop-filter: blur(16px) saturate(1.05);
+    backdrop-filter: blur(16px) saturate(1.05);
+  }
+
+  .audio-control:hover { background: var(--hud-ivory-strong); }
+  .audio-control:active { transform: scale(0.94); }
+  .audio-control:focus-visible { outline: 2px solid var(--hud-gold); outline-offset: 3px; }
+
+  .audio-control svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.65;
+  }
+
+  .audio-control svg path:first-child {
+    fill: rgba(113, 54, 69, 0.12);
+  }
+
+  .audio-status {
+    position: absolute;
+    right: 0.18rem;
+    bottom: 0.2rem;
+    width: 0.46rem;
+    height: 0.46rem;
+    border: 1px solid rgba(255, 250, 242, 0.95);
+    border-radius: 50%;
+    background: #9a858a;
+    transition: background 180ms ease, box-shadow 180ms ease;
+  }
+
+  .is-playing .audio-status {
+    background: var(--hud-gold);
+    box-shadow: 0 0 0 2px rgba(201, 164, 94, 0.18);
+  }
+
+  .is-playing .wave-one { animation: audio-wave 1.4s ease-in-out infinite; }
+  .is-playing .wave-two { animation: audio-wave 1.4s 120ms ease-in-out infinite; }
+
+  @keyframes audio-wave {
+    0%, 100% { opacity: 0.48; }
+    50% { opacity: 1; }
+  }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    .audio-control {
+      top: calc(env(safe-area-inset-top) + 1rem);
+      right: max(1rem, env(safe-area-inset-right));
+    }
+  }
+
+  @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
+    .audio-control {
+      top: calc(env(safe-area-inset-top) + 0.45rem);
+      right: max(0.85rem, env(safe-area-inset-right));
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .audio-control svg { width: 1.2rem; height: 1.2rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .audio-control,
+    .audio-status { transition: none; }
+    .sound-wave { animation: none !important; opacity: 1; }
+  }
+</style>
