@@ -60,15 +60,15 @@
   >
     <div class="w-modal-panel relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[1.5rem] w-panel">
       {#if showPayment}
-        <button onclick={() => (showPayment = false)} class="modal-icon-button absolute left-3 top-3 z-10" aria-label="Kembali">←</button>
-        <button onclick={handleClose} class="modal-icon-button absolute right-3 top-3 z-10" aria-label="Tutup">✕</button>
-        <div class="space-y-4 p-5 text-center">
-          <div class="flex items-start justify-between text-left">
-            <div>
-              <p class="text-xs uppercase tracking-[0.22em] text-[var(--deep-rose)]/65">Amplop Digital</p>
-              <h4 class="mt-1 text-lg font-bold text-[var(--deep-rose)]">{$weddingConfig.bride_name} & {$weddingConfig.groom_name}</h4>
-            </div>
+        <div class="payment-header px-5 pt-4">
+          <button onclick={() => (showPayment = false)} class="modal-icon-button" aria-label="Kembali">←</button>
+          <div class="min-w-0 text-center">
+            <p class="text-xs uppercase tracking-[0.22em] text-[var(--deep-rose)]/65">Amplop Digital</p>
+            <h4 class="mt-1 break-words text-lg font-bold leading-tight text-[var(--deep-rose)]">{$weddingConfig.bride_name} & {$weddingConfig.groom_name}</h4>
           </div>
+          <button onclick={handleClose} class="modal-icon-button" aria-label="Tutup">✕</button>
+        </div>
+        <div class="space-y-4 p-5 pt-3 text-center">
           <div class="mx-auto overflow-hidden rounded-xl bg-white p-2 shadow-lg">
             {#if $weddingConfig.qris_image}
               <img src={$weddingConfig.qris_image} alt="QRIS {$weddingConfig.bride_name} dan {$weddingConfig.groom_name}" class="mx-auto aspect-square w-48 rounded-lg object-cover" />
@@ -211,6 +211,13 @@
 
   .modal-icon-button:hover { background: white; transform: translateY(-1px); }
   .modal-icon-button:focus-visible { outline: 2px solid var(--champagne); outline-offset: 2px; }
+
+  .payment-header {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+    align-items: start;
+    gap: 0.75rem;
+  }
 
   .countdown-copy {
     font-family: Outfit, 'Segoe UI', system-ui, sans-serif;
