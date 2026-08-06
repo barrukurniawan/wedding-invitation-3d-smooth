@@ -43,7 +43,7 @@
       </div>
 
       <div class="min-h-[80px] rounded-[1.15rem] p-4 w-card">
-        <p class="text-sm leading-relaxed text-[var(--ink)] md:text-base">
+        <p class="whitespace-pre-line text-sm leading-relaxed text-[var(--ink)] md:text-base">
           {parseText($activeNpcData.messages[currentMessageIndex])}
         </p>
         {#if currentMessageIndex === 0 && ($activeNpcData.venueAddress || $activeNpcData.mapsUrl)}

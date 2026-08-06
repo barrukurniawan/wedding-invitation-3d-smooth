@@ -102,9 +102,9 @@
               class="h-full w-full object-cover"
             />
           {/if}
-          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#3b272b]/78 via-[#3b272b]/30 to-transparent px-4 pb-4 pt-12 text-center">
-            <p class="font-display text-xl italic text-white">{$weddingConfig.bride_name} &amp; {$weddingConfig.groom_name}</p>
-            <p class="mt-1 text-xs text-white/80">{$weddingConfig.akad_date}</p>
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#fff8ef]/95 via-[#fff8ef]/65 to-transparent px-4 pb-4 pt-12 text-center">
+            <p class="font-display text-xl italic text-[var(--deep-rose)]">{$weddingConfig.bride_name} &amp; {$weddingConfig.groom_name}</p>
+            <p class="mt-1 text-xs font-medium text-[var(--deep-rose)]/75">{$weddingConfig.akad_date}</p>
           </div>
         </div>
 
@@ -128,28 +128,28 @@
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--champagne)]/90">Akad Nikah</p>
-                    <p class="text-sm font-medium text-[var(--ivory)]">{$weddingConfig.akad_date}</p>
-                    <p class="text-xs text-[var(--ivory)]/55">{$weddingConfig.akad_time}</p>
-                    <p class="text-xs text-[var(--ivory)]/40">{$weddingConfig.akad_location}</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Akad Nikah</p>
+                    <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.akad_date}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.akad_time}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/65">{$weddingConfig.akad_location}</p>
                   </div>
                 </div>
               </div>
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--champagne)]/90">Resepsi</p>
-                    <p class="text-sm font-medium text-[var(--ivory)]">{$weddingConfig.resepsi_date}</p>
-                    <p class="text-xs text-[var(--ivory)]/55">{$weddingConfig.resepsi_time}</p>
-                    <p class="text-xs text-[var(--ivory)]/40">{$weddingConfig.resepsi_location}</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Resepsi</p>
+                    <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.resepsi_date}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.resepsi_time}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/65">{$weddingConfig.resepsi_location}</p>
                   </div>
                 </div>
               </div>
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
-                  <div class="text-xs leading-relaxed text-[var(--ivory)]/80">
-                    <p><span class="text-[var(--ivory)]/45">Mempelai Pria:</span> {$weddingConfig.groom_name} putra dari {$weddingConfig.groom_parents}</p>
-                    <p class="mt-1"><span class="text-[var(--ivory)]/45">Mempelai Wanita:</span> {$weddingConfig.bride_name} putri dari {$weddingConfig.bride_parents}</p>
+                  <div class="text-xs leading-relaxed text-[var(--deep-rose)]/80">
+                    <p><span class="font-semibold text-[var(--deep-rose)]">Mempelai Pria:</span> {$weddingConfig.groom_name} putra dari {$weddingConfig.groom_parents}</p>
+                    <p class="mt-1"><span class="font-semibold text-[var(--deep-rose)]">Mempelai Wanita:</span> {$weddingConfig.bride_name} putri dari {$weddingConfig.bride_parents}</p>
                   </div>
                 </div>
               </div>
@@ -165,10 +165,10 @@
                   />
                 </div>
               {:else}
-                <p class="col-span-2 py-8 text-center text-xs text-[var(--ivory)]/40">Galeri foto belum ditambahkan.</p>
+                <p class="col-span-2 py-8 text-center text-xs text-[var(--deep-rose)]/65">Galeri foto belum ditambahkan.</p>
               {/each}
             </div>
-            <p class="mt-2 text-center text-xs text-[var(--ivory)]/40">Galeri prewedding</p>
+            <p class="mt-2 text-center text-xs text-[var(--deep-rose)]/65">Galeri prewedding</p>
           {/if}
         </div>
 
