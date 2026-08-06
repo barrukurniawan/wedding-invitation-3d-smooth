@@ -52,27 +52,27 @@
 
 {#if $activeModal === 'guestbook'}
   <div
-    class="modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
+    class="modal-backdrop w-modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"
     onclick={(e) => { if (e.target === e.currentTarget) closeModal() }}
     onkeydown={(e) => { if (e.code === 'Escape') closeModal() }}
     tabindex="-1"
   >
-    <div class="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-[1.5rem] w-panel">
-      <div class="flex items-center justify-between border-b border-[var(--champagne)]/20 px-5 py-4 sm:px-6">
-        <div class="flex items-center space-x-3">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 text-[var(--deep-rose)] shadow-sm" aria-hidden="true">
+    <div class="w-modal-panel flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-[1.5rem] w-panel">
+      <div class="guestbook-header flex items-center justify-between gap-4 border-b border-[var(--champagne)]/20 px-5 py-4 sm:px-6">
+        <div class="guestbook-title-group flex min-w-0 flex-1 items-center gap-3">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/70 text-[var(--deep-rose)] shadow-sm" aria-hidden="true">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4zM4 8l8 6 8-6M7 4.5h10" /></svg>
           </span>
-          <div>
+          <div class="min-w-0 flex-1">
             <h3 class="text-lg font-bold text-[var(--deep-rose)]">Buku Tamu</h3>
-            <p class="text-xs text-[var(--ink)]/50">{entries.length} ucapan masuk</p>
+            <p class="guestbook-count text-xs text-[var(--ink)]/50">{entries.length} ucapan masuk</p>
           </div>
         </div>
-        <div class="flex gap-2">
-          <button class="rounded-lg px-3 py-1.5 text-xs font-medium w-tab {showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = true)}>Tulis</button>
-          <button class="rounded-lg px-3 py-1.5 text-xs font-medium w-tab {!showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = false)}>Baca</button>
+        <div class="guestbook-toggle-group flex shrink-0 items-center gap-2">
+          <button class="guestbook-tab rounded-lg px-3 py-1.5 text-xs font-medium w-tab {showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = true)}>Tulis</button>
+          <button class="guestbook-tab rounded-lg px-3 py-1.5 text-xs font-medium w-tab {!showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = false)}>Baca</button>
         </div>
       </div>
 
@@ -132,5 +132,52 @@
     background: rgba(66, 43, 45, 0.28);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
+  }
+
+  .guestbook-title-group h3,
+  .guestbook-count {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .guestbook-title-group {
+    min-width: 0;
+    flex-basis: 0;
+  }
+
+  .guestbook-tab {
+    min-width: 3.7rem;
+    min-height: 2.5rem;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 23rem) {
+    .guestbook-header {
+      align-items: flex-start;
+      gap: 0.85rem;
+    }
+
+    .guestbook-title-group {
+      align-items: flex-start;
+    }
+
+    .guestbook-title-group h3 {
+      font-size: 1rem;
+      line-height: 1.15;
+    }
+
+    .guestbook-count {
+      max-width: 6rem;
+      line-height: 1.25;
+    }
+
+    .guestbook-toggle-group {
+      gap: 0.35rem;
+    }
+
+    .guestbook-tab {
+      min-width: 3.35rem;
+      padding-inline: 0.55rem;
+    }
   }
 </style>

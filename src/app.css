@@ -63,6 +63,10 @@ body {
     backdrop-filter: blur(18px) saturate(1.05);
     color: var(--ink);
   }
+
+  .w-modal-panel {
+    contain: layout paint;
+  }
   .w-card {
     background: rgba(247, 239, 229, 0.72);
     border: 1px solid rgba(196, 157, 91, 0.2);
@@ -131,6 +135,21 @@ body {
   .w-input:focus-visible {
     outline: 2px solid rgba(196, 157, 91, 0.8);
     outline-offset: 2px;
+  }
+}
+
+/* Blur is the only expensive part of the light modal treatment. Keep the
+   cream surface and border on touch devices, but avoid a full-screen backdrop
+   filter on lower-power mobile GPUs. */
+@media (pointer: coarse) {
+  .w-modal-backdrop {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .w-modal-panel {
+    -webkit-backdrop-filter: blur(8px) saturate(1.02);
+    backdrop-filter: blur(8px) saturate(1.02);
   }
 }
 

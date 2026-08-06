@@ -1124,9 +1124,6 @@
     <T.BoxGeometry args={[0.9, 1.0, 2.7]} />
     <T.MeshBasicMaterial />
   </T.Mesh>
-  <!-- Kotak ucapan -->
-  <T.Mesh position={[-5, 1.0, -10]} visible={false}>
-    <T.BoxGeometry args={[0.8, 1.6, 0.7]} />
-    <T.MeshBasicMaterial />
-  </T.Mesh>
+  <!-- Kotak ucapan sengaja tidak menjadi occluder kamera agar spring-arm tidak
+       zoom jitter saat pemain mendekat dari sisi depan maupun belakang. -->
 </T.Group>

@@ -31,7 +31,7 @@ export const triggerZones: TriggerZone[] = [
         'Selamat datang di pernikahan 👰🏻 {bride} & 🤵🏻 {groom}! Silakan berjalan ke arah pelaminan.',
         'Jangan lupa memberikan ucapan 💌 di kotak ucapan ya! 📮'
       ],
-      venueAddress: 'Venue Pernikahan {bride} & {groom}',
+      venueAddress: 'Jl. Kebon Sirih No.17, RT.14/RW.7, Gambir, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340',
       mapsUrl: 'https://maps.app.goo.gl/uvFSZDLTFFYxuwGP7'
     }
   },

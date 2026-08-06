@@ -162,7 +162,9 @@
   .open-action:active { transform: scale(0.96); }
   .open-action:focus-visible { outline: 2px solid var(--hud-gold); outline-offset: 3px; }
 
-  @media (pointer: fine) {
+  /* Keep controls available in narrow/mobile emulation even when the browser
+     reports a fine pointer. Only wide desktop layouts hide them. */
+  @media (min-width: 768px) and (pointer: fine) {
     .mobile-controls { display: none; }
   }
 

@@ -51,14 +51,14 @@
 
 {#if $activeModal === 'weddingStage'}
   <div
-    class="modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
+    class="modal-backdrop w-modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"
     onclick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     onkeydown={(e) => { if (e.code === 'Escape') handleClose() }}
     tabindex="-1"
   >
-    <div class="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[1.5rem] w-panel">
+    <div class="w-modal-panel relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[1.5rem] w-panel">
       {#if showPayment}
         <button onclick={() => (showPayment = false)} class="modal-icon-button absolute left-3 top-3 z-10" aria-label="Kembali">←</button>
         <button onclick={handleClose} class="modal-icon-button absolute right-3 top-3 z-10" aria-label="Tutup">✕</button>

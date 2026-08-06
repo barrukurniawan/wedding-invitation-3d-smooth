@@ -24,14 +24,14 @@
 
 {#if $activeModal === 'npc' && $activeNpcData}
   <div
-    class="modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
+    class="modal-backdrop w-modal-backdrop absolute inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"
     onclick={(e) => { if (e.target === e.currentTarget) closeModal() }}
     onkeydown={(e) => { if (e.code === 'Escape') closeModal() }}
     tabindex="-1"
   >
-    <div class="flex w-full max-w-md flex-col space-y-5 rounded-[1.5rem] p-5 w-panel sm:p-6">
+    <div class="w-modal-panel flex w-full max-w-md flex-col space-y-5 rounded-[1.5rem] p-5 w-panel sm:p-6">
       <div class="flex items-center space-x-4">
         <div class="flex h-16 w-16 items-center justify-center rounded-[1.15rem] border border-[var(--champagne)]/40 bg-white/60 text-3xl shadow-sm">
           {$activeNpcData.avatar}
