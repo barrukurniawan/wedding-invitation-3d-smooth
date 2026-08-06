@@ -11,7 +11,7 @@
   let error = $state('')
   let nameInput = $state('')
   let phoneInput = $state('')
-  let template = $state('Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan 3D kami di sini:\n{link}\n\nKami tunggu kehadiranmu!')
+  let template = $state('Assalamualaikum Warahmatullahi Wabarakatuh. Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan dunia 3D kami di sini:\n{link}\n\nKami tunggu kehadiranmu!')
   let selected = $state<string[]>([])
   let opened = $state<string[]>([])
   let bulkIndex = $state<number | null>(null)
@@ -58,7 +58,11 @@
     const couple = myConfig?.bride_name && myConfig?.groom_name
       ? `${myConfig.bride_name} & ${myConfig.groom_name}`
       : 'pernikahan kami'
-    return template.replaceAll('{nama}', contact.name).replaceAll('{mempelai}', couple).replaceAll('{link}', invitation.public_url)
+    const personalizedUrl = new URL(invitation.public_url.replace(/\/+$/, ''))
+    personalizedUrl.searchParams.set('send', contact.name.trim())
+    personalizedUrl.search = personalizedUrl.searchParams.toString().replace(/\+/g, '%20')
+    const personalizedLink = personalizedUrl.toString().replace(/\/?\?send=/, '?send=')
+    return template.replaceAll('{nama}', contact.name).replaceAll('{mempelai}', couple).replaceAll('{link}', personalizedLink)
   }
 
   function openChat(contact: InvitationContact) {
