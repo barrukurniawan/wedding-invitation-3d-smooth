@@ -29,7 +29,6 @@ export const triggerZones: TriggerZone[] = [
       avatar: '🛎',
       messages: [
         'Selamat datang di pernikahan 👰🏻 {bride} & 🤵🏻 {groom}! Silakan berjalan ke arah pelaminan.',
-        'Venue pernikahan berada di alamat yang tercantum di bawah ini. Gunakan tombol Maps untuk membuka rute lokasi.',
         'Jangan lupa memberikan ucapan 💌 di kotak ucapan ya! 📮'
       ],
       venueAddress: 'Venue Pernikahan {bride} & {groom}',
