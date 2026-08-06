@@ -45,6 +45,7 @@
   clip="Victory"
   appearance={bride}
   weddingSkirt={true}
+  bridalVeil={true}
   onReady={markReady}
 />
 

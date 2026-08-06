@@ -6,6 +6,7 @@
   import type { Appearance } from '../../utils/appearance'
   import { applyAppearance } from '../../utils/appearance'
   import { createWaveClip, createNodClip } from '../../utils/waveAnimation'
+  import BridalVeil from './BridalVeil.svelte'
 
   let {
     url,
@@ -17,6 +18,7 @@
     useWave = false,
     useNod = false,
     weddingSkirt = false,
+    bridalVeil = false,
     onReady
   }: {
     url: string
@@ -28,6 +30,7 @@
     useWave?: boolean
     useNod?: boolean
     weddingSkirt?: boolean
+    bridalVeil?: boolean
     onReady?: () => void
   } = $props()
 
@@ -105,6 +108,9 @@
         onReady?.()
       }}
     />
+    {#if bridalVeil}
+      <BridalVeil root={scene} />
+    {/if}
   {/await}
 
   {#if weddingSkirt}
