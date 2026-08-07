@@ -2,6 +2,8 @@
   import { browser } from '$app/environment'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
+  let { sceneReady = false }: { sceneReady?: boolean } = $props()
+
   let audio: HTMLAudioElement | null = $state(null)
   let playing = $state(false)
   let currentUrl = $state('')
@@ -44,7 +46,7 @@
   }
 
   function ensureAudio() {
-    if (!browser) return
+    if (!browser || !sceneReady) return
     const targetUrl = $weddingConfig?.bgm_url || '/audio/Marry%20You.mp3'
     
     // If audio is already initialized and the URL changed
@@ -81,7 +83,7 @@
   })
 
   $effect(() => {
-    if ($weddingConfig && browser && !audio) void playAudio()
+    if ($weddingConfig && browser && sceneReady && !audio) void playAudio()
   })
 
   $effect(() => () => removeGestureListeners())

@@ -14,13 +14,12 @@
 
   const CRITICAL_GLB = [
     '/models/tamu.glb',
-    '/models/resepsionis.glb',
-    '/models/pengantin-pria.glb',
-    '/models/pengantin-wanita.glb'
+    '/models/resepsionis.glb'
   ]
 
   let World = $state<Component>()
   let lowPower = $state(false)
+  let sceneReady = $state(false)
 
   function preloadCriticalGlb() {
     // Warm HTTP cache while Three/Threlte chunk parses; useGltf hits same URLs.
@@ -62,7 +61,7 @@
 
 <div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
-    <World {lowPower} onReady={() => { completeProgress(); setLoaded(true) }} />
+    <World {lowPower} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true) }} />
   {/if}
 
   <!-- 2D Label Overlay -->
@@ -85,7 +84,7 @@
   <GuestbookModal />
   <WeddingStageModal />
   <MobileControls />
-  <AudioPlayer />
+  <AudioPlayer {sceneReady} />
   <LoadingScreen />
 </div>
 

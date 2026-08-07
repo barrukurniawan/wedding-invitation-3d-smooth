@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store'
 
-/** player + 3 NPC + environment critical */
-export const CRITICAL_TOTAL = 5
+/** player + receptionist + environment critical */
+export const CRITICAL_TOTAL = 3
 
 export const loadDone = writable(0)
 export const fakeProgress = writable(0)

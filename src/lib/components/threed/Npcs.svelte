@@ -1,12 +1,20 @@
 <script lang="ts">
   import Character from './Character.svelte'
 
-  let { onReady }: { onReady?: () => void } = $props()
-  let readyCount = 0
+  let {
+    loadWeddingCouple = false,
+    onReceptionistReady,
+    onCoupleReady,
+  }: {
+    loadWeddingCouple?: boolean
+    onReceptionistReady?: () => void
+    onCoupleReady?: () => void
+  } = $props()
+  let coupleReadyCount = 0
 
-  function markReady() {
-    readyCount += 1
-    if (readyCount === 3) onReady?.()
+  function markCoupleReady() {
+    coupleReadyCount += 1
+    if (coupleReadyCount === 2) onCoupleReady?.()
   }
 
   const S = 0.62
@@ -33,29 +41,31 @@
   clip="Idle"
   useNod={true}
   appearance={receptionist}
-  onReady={markReady}
+  onReady={onReceptionistReady}
 />
 
-<!-- Pengantin wanita (Kia) -->
-<Character
-  url="/models/pengantin-wanita.glb"
-  position={[-0.72, STAGE_Y, -18.6]}
-  rotationY={0.3}
-  scale={S}
-  clip="Victory"
-  appearance={bride}
-  weddingSkirt={true}
-  bridalVeil={true}
-  onReady={markReady}
-/>
+{#if loadWeddingCouple}
+  <!-- Pengantin wanita (Kia) -->
+  <Character
+    url="/models/pengantin-wanita.glb"
+    position={[-0.72, STAGE_Y, -18.6]}
+    rotationY={0.3}
+    scale={S}
+    clip="Victory"
+    appearance={bride}
+    weddingSkirt={true}
+    bridalVeil={true}
+    onReady={markCoupleReady}
+  />
 
-<!-- Pengantin pria (Toni) -->
-<Character
-  url="/models/pengantin-pria.glb"
-  position={[0.72, STAGE_Y, -18.6]}
-  rotationY={-0.3}
-  scale={S}
-  clip="Victory"
-  appearance={groom}
-  onReady={markReady}
-/>
+  <!-- Pengantin pria (Toni) -->
+  <Character
+    url="/models/pengantin-pria.glb"
+    position={[0.72, STAGE_Y, -18.6]}
+    rotationY={-0.3}
+    scale={S}
+    clip="Victory"
+    appearance={groom}
+    onReady={markCoupleReady}
+  />
+{/if}
