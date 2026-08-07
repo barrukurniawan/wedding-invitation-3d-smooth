@@ -63,7 +63,7 @@
   </div>
 
   {#if $nearbyTrigger && !$activeModal}
-    <div class="pointer-events-auto">
+    <div class="action-slot pointer-events-auto">
       <button
         class="open-action flex items-center justify-center"
         onclick={interact}
@@ -80,12 +80,24 @@
 
 <style>
   .mobile-controls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
     bottom: 0;
+    min-width: 0;
+    overflow: visible;
     padding:
       1rem
       max(1rem, env(safe-area-inset-right))
       max(1rem, env(safe-area-inset-bottom))
       max(1rem, env(safe-area-inset-left));
+  }
+
+  .joystick,
+  .action-slot {
+    flex: 0 0 auto;
   }
 
   .joystick {
@@ -170,6 +182,7 @@
 
   @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
     .mobile-controls {
+      width: 100%;
       padding:
         0.6rem
         max(0.85rem, env(safe-area-inset-right))
