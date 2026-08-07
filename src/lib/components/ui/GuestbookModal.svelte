@@ -59,7 +59,7 @@
     onkeydown={(e) => { if (e.code === 'Escape') closeModal() }}
     tabindex="-1"
   >
-    <div class="w-modal-panel flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-[1.5rem] w-panel">
+    <div class="w-modal-panel guestbook-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-[1.5rem] w-panel">
       <div class="guestbook-header flex items-center justify-between gap-4 border-b border-[var(--champagne)]/20 px-5 py-4 sm:px-6">
         <div class="guestbook-title-group flex min-w-0 flex-1 items-center gap-3">
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/70 text-[var(--deep-rose)] shadow-sm" aria-hidden="true">
@@ -77,7 +77,8 @@
       </div>
 
       {#if showForm}
-        <form onsubmit={(e) => { e.preventDefault(); submitForm() }} class="flex flex-col space-y-4 p-6">
+        <form onsubmit={(e) => { e.preventDefault(); submitForm() }} class="guestbook-form flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:px-6">
+          <div class="flex flex-col space-y-4">
           <div>
             <label for="gb-name" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/70">Nama Lengkap</label>
             <input id="gb-name" bind:value={form.name} type="text" required placeholder="Masukkan nama Anda" class="w-full rounded-xl px-4 py-2.5 text-sm w-input" />
@@ -94,11 +95,12 @@
             <label for="gb-msg" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/70">Ucapan & Doa</label>
             <textarea id="gb-msg" bind:value={form.message} rows="3" required placeholder="Tuliskan ucapan selamat menikah..." class="w-full resize-none rounded-xl px-4 py-2.5 text-sm w-input"></textarea>
           </div>
-          <div class="flex space-x-3 pt-2">
+          {#if submitError}<p class="text-center text-xs text-red-500">{submitError}</p>{/if}
+          </div>
+          <div class="guestbook-actions -mx-5 mt-4 flex shrink-0 space-x-3 border-t border-[var(--champagne)]/20 bg-[var(--panel-bg)] px-5 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 sm:-mx-6 sm:px-6">
             <button type="button" class="flex-1 rounded-xl py-2.5 text-sm font-medium w-btn-ghost" onclick={closeModal}>Batal</button>
             <button type="submit" disabled={submitting} class="flex-1 rounded-xl py-2.5 text-sm font-semibold w-btn-primary transition disabled:opacity-60">{submitting ? 'Mengirim...' : 'Kirim Ucapan'}</button>
           </div>
-          {#if submitError}<p class="text-center text-xs text-red-400">{submitError}</p>{/if}
         </form>
       {:else}
         <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 max-h-96">
@@ -132,6 +134,27 @@
     background: rgba(66, 43, 45, 0.28);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
+  }
+
+  .guestbook-form {
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .guestbook-actions button {
+    min-height: 2.75rem;
+    flex-shrink: 0;
+  }
+
+  .guestbook-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  @media (max-height: 42rem) {
+    .guestbook-header { padding-block: 0.75rem; }
+    .guestbook-form { padding-top: 1rem; }
   }
 
   .guestbook-title-group h3,

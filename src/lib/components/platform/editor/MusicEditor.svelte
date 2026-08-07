@@ -10,10 +10,14 @@
   let uploadProgress = $state(0)
   let uploadMsg = $state('')
 
+  const DEFAULT_MUSIC_URL = '/audio/Marry%20You.mp3'
   const PRESETS = [
-    { label: 'Ambient / Romantis (Default)', url: '/audio/ambient.mp3' },
-    { label: 'Akustik Santai', url: '/audio/acoustic.mp3' },
-    { label: 'Piano Elegan', url: '/audio/piano.mp3' }
+    { label: 'Marry You (Default)', url: DEFAULT_MUSIC_URL },
+    { label: 'Until I Found You', url: '/audio/Until%20I%20Found%20You.mp3' },
+    { label: 'A Thousand Years', url: '/audio/A%20Thousand%20Years.mp3' },
+    { label: 'Love Story', url: '/audio/Love%20Story.mp3' },
+    { label: 'Sempurna', url: '/audio/Sempurna.mp3' },
+    { label: 'Separuh Aku', url: '/audio/Separuh%20Aku.mp3' },
   ]
 
   // Jika bgm_url kosong atau tidak ada di preset, asumsikan custom
@@ -21,8 +25,9 @@
 
   onMount(() => {
     if (!config.bgm_url) {
-      selectedOption = '/audio/ambient.mp3'
-      config.bgm_url = '/audio/ambient.mp3'
+       selectedOption = DEFAULT_MUSIC_URL
+       config.bgm_url = DEFAULT_MUSIC_URL
+       config.bgm_title = 'Marry You'
     } else {
       const isPreset = PRESETS.some(p => p.url === config.bgm_url)
       selectedOption = isPreset ? config.bgm_url : 'custom'
@@ -32,7 +37,8 @@
   function handleOptionChange(e: Event) {
     const target = e.target as HTMLInputElement
     if (target.value !== 'custom') {
-      config.bgm_url = target.value
+       config.bgm_url = target.value
+       config.bgm_title = PRESETS.find((preset) => preset.url === target.value)?.label.replace(' (Default)', '') || ''
     }
   }
 
@@ -46,10 +52,11 @@
     uploadMsg = ''
 
     try {
-      const result = await uploadMusic(file, (pct) => {
+       const result = await uploadMusic(file, (pct) => {
         uploadProgress = Math.round(pct)
       })
-      config.bgm_url = result.bgm_url
+       config.bgm_url = result.bgm_url
+       config.bgm_title = result.bgm_title
       selectedOption = 'custom'
       uploadMsg = '✓ Musik berhasil diunggah!'
     } catch (err: any) {
@@ -110,7 +117,7 @@
           disabled={isUploading}
           onclick={() => uploadInputEl?.click()}
         >
-          {isUploading ? `Mengunggah... ${uploadProgress}%` : 'Pilih File MP3 (Maks 10MB)'}
+           {isUploading ? `Mengunggah... ${uploadProgress}%` : 'Pilih File MP3 (Maks 10MB)'}
         </button>
 
         {#if uploadMsg}
@@ -122,8 +129,9 @@
     {/if}
 
     {#if config.bgm_url}
-      <div class="mt-6">
-        <p class="text-sm font-semibold text-[var(--muted)] mb-2 uppercase tracking-wide">Pratinjau Musik</p>
+       <div class="mt-6">
+         <p class="text-sm font-semibold text-[var(--muted)] mb-2 uppercase tracking-wide">Pratinjau Musik</p>
+         <p class="mb-2 text-sm font-medium text-[var(--ink)]">{config.bgm_title || decodeURIComponent(config.bgm_url.split('/').pop()?.replace(/\.mp3$/i, '') || '')}</p>
         <!-- svelte-ignore a11y_media_has_caption -->
         <audio 
           controls 

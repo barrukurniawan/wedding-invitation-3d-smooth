@@ -33,6 +33,7 @@ const configSchema = z.object({
   quote: text(2000),
   gallery_photos: z.array(text(2048)).max(30),
   bgm_url: text(2048),
+  bgm_title: text(255),
 }).partial().strict()
 
 function invalid(res, error) {
@@ -158,4 +159,3 @@ router.get('/guestbook', requireUser, async (req, res, next) => {
 })
 
 export default router
-

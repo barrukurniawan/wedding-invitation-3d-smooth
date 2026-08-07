@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { WeddingConfig } from '$lib/api-client'
-  import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
+import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
+  import { prepareImageUpload } from '$lib/utils/prepareImageUpload'
 
   let { config = $bindable() }: { config: WeddingConfig } = $props()
 
@@ -40,7 +41,9 @@
     coverMsg = ''
     coverProgress = 0
     try {
-      const result = await uploadPhoto(file, 'cover', (pct) => { coverProgress = pct })
+       coverMsg = 'Mengoptimalkan foto...'
+       const prepared = await prepareImageUpload(file)
+       const result = await uploadPhoto(prepared, 'cover', (pct) => { coverProgress = pct })
       config.wedding_photo = result.photo_url
       coverMsg = '✓ Foto cover berhasil diunggah!'
     } catch (err) {
@@ -84,8 +87,10 @@
       const err = validateFile(file)
       if (err) { galleryMsg = `${file.name}: ${err}`; continue }
 
-      try {
-        const result = await uploadPhoto(file, 'gallery', (pct) => {
+       try {
+         galleryMsg = `Mengoptimalkan ${file.name}...`
+         const prepared = await prepareImageUpload(file)
+         const result = await uploadPhoto(prepared, 'gallery', (pct) => {
           galleryProgress = Math.round(((uploaded + pct / 100) / files.length) * 100)
         })
         config.gallery_photos = [...(config.gallery_photos || []), result.photo_url]
@@ -132,7 +137,7 @@
 <div class="form-section">
   <h3>Galeri Foto &amp; Foto Utama</h3>
   <p class="section-desc">
-    Foto-foto yang akan ditampilkan dalam pigura 3D di dunia virtual pernikahan kalian. Maks 30 foto, JPG/PNG/WebP, maks 5 MB per file.
+     Foto-foto yang akan ditampilkan dalam pigura 3D di dunia virtual pernikahan kalian. Maks 30 foto, JPG/PNG/WebP, otomatis dioptimalkan hingga 2 MB per file.
   </p>
 
   <!-- ── Foto Cover Utama ── -->
@@ -147,7 +152,7 @@
     {#if config.wedding_photo}
       <!-- Preview cover yang sudah ada -->
       <div class="cover-preview">
-        <img src={config.wedding_photo} alt="Foto utama pasangan" class="cover-img" />
+        <img src={config.wedding_photo} alt="Foto utama pasangan" class="cover-img" onerror={(event) => ((event.currentTarget as HTMLImageElement).hidden = true)} />
         <div class="cover-overlay">
           <button
             type="button"
@@ -185,7 +190,7 @@
         {:else}
           <span class="upload-icon">🖼</span>
           <span class="upload-hint">Klik untuk pilih foto utama pasangan</span>
-          <span class="upload-sub">JPG, PNG, atau WebP · Maks 5 MB</span>
+           <span class="upload-sub">JPG, PNG, atau WebP · Otomatis dioptimalkan hingga 2 MB</span>
         {/if}
       </div>
     {/if}
@@ -240,7 +245,7 @@
         {:else}
           <span class="upload-icon">📷</span>
           <span class="upload-hint">Seret &amp; lepas foto di sini, atau <u>klik untuk pilih</u></span>
-          <span class="upload-sub">Bisa pilih banyak sekaligus · JPG, PNG, WebP · Maks 5 MB per file</span>
+           <span class="upload-sub">Bisa pilih banyak sekaligus · JPG, PNG, WebP · Otomatis dioptimalkan hingga 2 MB</span>
         {/if}
       </div>
     {/if}
@@ -262,7 +267,7 @@
     <div class="gallery-grid">
       {#each config.gallery_photos || [] as photo, idx}
         <div class="gallery-item" class:deleting={deletingUrl === photo}>
-          <img src={photo} alt="Foto Galeri {idx + 1}" loading="lazy" />
+          <img src={photo} alt="Foto Galeri {idx + 1}" loading="lazy" onerror={(event) => ((event.currentTarget as HTMLImageElement).hidden = true)} />
           <div class="gallery-item-overlay">
             <span class="gallery-item-num">{idx + 1}</span>
             <button

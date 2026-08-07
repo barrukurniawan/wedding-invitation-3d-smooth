@@ -21,6 +21,7 @@ export interface WeddingConfig {
   gallery_photos: string[]
   quote: string
   bgm_url?: string
+  bgm_title?: string
   updated_at: string
 }
 
@@ -141,7 +142,8 @@ export const defaultConfig: WeddingConfig = {
   venue_address: '',
   gallery_photos: [],
   quote: '',
-  bgm_url: '',
+  bgm_url: '/audio/Marry%20You.mp3',
+  bgm_title: 'Marry You',
   updated_at: '',
 }
 
@@ -424,8 +426,8 @@ export function uploadPhoto(
 export function uploadMusic(
   file: File,
   onProgress?: (pct: number) => void
-): Promise<{ bgm_url: string }> {
-  return xhrUpload<{ bgm_url: string }>('/api/my/upload/music', file, onProgress)
+): Promise<{ bgm_url: string; bgm_title: string }> {
+  return xhrUpload<{ bgm_url: string; bgm_title: string }>('/api/my/upload/music', file, onProgress)
 }
 
 export function deletePhoto(photoUrl: string): Promise<void> {

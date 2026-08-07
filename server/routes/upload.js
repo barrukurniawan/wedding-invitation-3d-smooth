@@ -7,6 +7,8 @@ import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { invitationPriceIdr } from '../services/paymentConfig.js'
+import { isSafePhotoFilename } from '../services/photoFiles.js'
+import { cleanMusicTitle } from '../services/musicTitle.js'
 
 const router = Router()
 
@@ -15,7 +17,7 @@ const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 // ── Helper: multer error → JSON ───────────────────────────────────────────────
 function multerErrorHandler(err, req, res, next) {
   if (err?.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ error: { code: 'FILE_TOO_LARGE', message: 'Ukuran file maksimal 5 MB.' } })
+    return res.status(400).json({ error: { code: 'FILE_TOO_LARGE', message: 'Ukuran foto maksimal 2 MB.' } })
   }
   if (err?.message) {
     return res.status(400).json({ error: { code: 'INVALID_FILE', message: err.message } })
@@ -23,7 +25,7 @@ function multerErrorHandler(err, req, res, next) {
   next(err)
 }
 
-function makeUploader(dir, prefix) {
+function makeUploader(dir, prefix, maxSize = 5 * 1024 * 1024) {
   fs.mkdirSync(dir, { recursive: true })
   const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, dir),
@@ -34,7 +36,7 @@ function makeUploader(dir, prefix) {
   })
   return multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: maxSize },
     fileFilter(_req, file, cb) {
       if (ALLOWED_MIMES.has(file.mimetype)) return cb(null, true)
       cb(new Error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.'))
@@ -47,8 +49,8 @@ const PROOFS_DIR  = path.join(process.cwd(), 'uploads', 'proofs')
 const PHOTOS_DIR  = path.join(process.cwd(), 'uploads', 'photos')
 const MUSIC_DIR   = path.join(process.cwd(), 'uploads', 'music')
 
-const uploadProof = makeUploader(PROOFS_DIR, 'proof')
-const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo')
+const uploadProof = makeUploader(PROOFS_DIR, 'proof', 5 * 1024 * 1024)
+const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo', 2 * 1024 * 1024)
 
 function makeMusicUploader(dir, prefix) {
   fs.mkdirSync(dir, { recursive: true })
@@ -69,6 +71,10 @@ function makeMusicUploader(dir, prefix) {
 }
 
 const uploadMusic = makeMusicUploader(MUSIC_DIR, 'music')
+
+function isSafeMusicFilename(filename) {
+  return filename === path.basename(filename) && /^music_[a-zA-Z0-9_-]+\.mp3$/.test(filename)
+}
 
 // ── Middleware: verify user has an invitation ─────────────────────────────────
 async function requireInvitation(req, res, next) {
@@ -184,7 +190,7 @@ router.post(
     try {
       if (!req.file) return res.status(400).json({ error: { code: 'NO_FILE', message: 'File tidak ditemukan.' } })
 
-      const photoUrl = `/api/my/photos/${req.file.filename}`
+      const photoUrl = `/api/public/photos/${req.file.filename}`
 
       // type: 'cover' (wedding_photo) | 'gallery' (append to gallery_photos)
       const type = req.query.type === 'cover' ? 'cover' : 'gallery'
@@ -196,7 +202,7 @@ router.post(
           [req.invitation.id],
         )
         const oldPhoto = old[0]?.wedding_photo
-        if (oldPhoto?.startsWith('/api/my/photos/')) {
+        if (oldPhoto?.includes('/photos/')) {
           fs.unlink(path.join(PHOTOS_DIR, path.basename(oldPhoto)), () => {})
         }
         await pool.query(
@@ -253,7 +259,7 @@ router.delete(
 
       if (photo_url === config?.wedding_photo) {
         // Remove cover photo
-        if (photo_url.startsWith('/api/my/photos/')) {
+        if (photo_url.includes('/photos/')) {
           fs.unlink(path.join(PHOTOS_DIR, path.basename(photo_url)), () => {})
         }
         await pool.query(
@@ -269,7 +275,7 @@ router.delete(
         if (updated.length === current.length) {
           return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Foto tidak ditemukan.' } })
         }
-        if (photo_url.startsWith('/api/my/photos/')) {
+        if (photo_url.includes('/photos/')) {
           fs.unlink(path.join(PHOTOS_DIR, path.basename(photo_url)), () => {})
         }
         await pool.query(
@@ -301,6 +307,17 @@ router.get('/photos/:filename', requireUser, requireInvitation, async (req, res,
   } catch (err) { next(err) }
 })
 
+export function servePublicPhoto(req, res, next) {
+  try {
+    const filename = path.basename(req.params.filename)
+    if (!isSafePhotoFilename(filename)) {
+      return res.status(400).json({ error: { code: 'INVALID_FILE', message: 'Nama foto tidak valid.' } })
+    }
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    res.sendFile(path.join(PHOTOS_DIR, filename))
+  } catch (err) { next(err) }
+}
+
 // ── POST /api/my/upload/music ───────────────────────────────────────────────
 router.post(
   '/upload/music',
@@ -311,23 +328,24 @@ router.post(
     try {
       if (!req.file) return res.status(400).json({ error: { code: 'NO_FILE', message: 'File tidak ditemukan.' } })
 
-      const musicUrl = `/api/my/music/${req.file.filename}`
+      const musicUrl = `/api/public/music/${req.file.filename}`
+      const musicTitle = cleanMusicTitle(req.file.originalname)
 
       const [old] = await pool.query(
         `SELECT bgm_url FROM wedding_configs WHERE invitation_id = ?`,
         [req.invitation.id],
       )
       const oldBgm = old[0]?.bgm_url
-      if (oldBgm?.startsWith('/api/my/music/')) {
+      if (oldBgm?.includes('/music/')) {
         fs.unlink(path.join(MUSIC_DIR, path.basename(oldBgm)), () => {})
       }
 
       await pool.query(
-        `UPDATE wedding_configs SET bgm_url = ? WHERE invitation_id = ?`,
-        [musicUrl, req.invitation.id],
+        `UPDATE wedding_configs SET bgm_url = ?, bgm_title = ? WHERE invitation_id = ?`,
+        [musicUrl, musicTitle, req.invitation.id],
       )
 
-      res.json({ bgm_url: musicUrl })
+      res.json({ bgm_url: musicUrl, bgm_title: musicTitle })
     } catch (err) {
       if (req.file) fs.unlink(req.file.path, () => {})
       next(err)
@@ -349,5 +367,14 @@ router.get('/music/:filename', requireUser, requireInvitation, async (req, res, 
     res.sendFile(path.join(MUSIC_DIR, req.params.filename))
   } catch (err) { next(err) }
 })
+
+export function servePublicMusic(req, res, next) {
+  try {
+    const filename = req.params.filename
+    if (!isSafeMusicFilename(filename)) return res.status(400).json({ error: { code: 'INVALID_FILE', message: 'Nama musik tidak valid.' } })
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    res.sendFile(path.join(MUSIC_DIR, filename))
+  } catch (err) { next(err) }
+}
 
 export default router

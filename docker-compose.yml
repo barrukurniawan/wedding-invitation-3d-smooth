@@ -46,6 +46,9 @@ services:
       PORT: "3001"
       BASE_DOMAIN: marryme.web.id
       TRUST_PROXY: "1"
+    volumes:
+      - ./uploads/photos:/app/uploads/photos
+      - ./uploads/music:/app/uploads/music
     depends_on:
       db:
         condition: service_healthy

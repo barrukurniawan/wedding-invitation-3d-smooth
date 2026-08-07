@@ -1,6 +1,6 @@
 <script lang="ts">
   import { nearbyTrigger, activeModal, openModal } from '../../stores/gameState.svelte'
-  import { joystickDelta } from '../../stores/playerMovement.svelte'
+  import { joystickDelta, playerMoving } from '../../stores/playerMovement.svelte'
 
   let knobOffset = $state({ x: 0, y: 0 })
   let joystickCenter = { x: 0, y: 0 }
@@ -53,6 +53,9 @@
     ontouchend={handleTouchEnd}
     ontouchcancel={handleTouchEnd}
   >
+    {#if !$playerMoving}
+      <span class="movement-cue" aria-hidden="true">Geser untuk bergerak</span>
+    {/if}
     <span class="joystick-axis axis-x" aria-hidden="true"></span>
     <span class="joystick-axis axis-y" aria-hidden="true"></span>
     <span class="joystick-ring" aria-hidden="true"></span>
@@ -108,6 +111,21 @@
     box-shadow: inset 0 1px 0 var(--hud-edge-soft), 0 14px 34px -24px rgba(55, 30, 37, 0.75);
     -webkit-backdrop-filter: blur(14px) saturate(0.85);
     backdrop-filter: blur(14px) saturate(0.85);
+  }
+
+  .movement-cue {
+    position: absolute;
+    bottom: calc(100% + 0.55rem);
+    left: 50%;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid rgba(217, 183, 123, 0.45);
+    border-radius: 0.7rem;
+    background: rgba(255, 250, 242, 0.86);
+    color: var(--hud-maroon);
+    font: 600 0.62rem/1 Outfit, sans-serif;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    box-shadow: 0 8px 18px -12px rgba(55, 30, 37, 0.7);
   }
 
   .joystick-ring {

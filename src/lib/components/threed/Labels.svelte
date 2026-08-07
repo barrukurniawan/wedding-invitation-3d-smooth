@@ -12,12 +12,13 @@
   // Label hanya terbaca saat mendekat; semakin jauh semakin memudar lalu hilang
   // supaya dunia tidak terlihat seperti scene editor yang penuh penanda.
   const LABEL_FULL = 9 // jarak di mana label tampil penuh
-  const LABEL_MAX = 15 // jarak di mana label lenyap
+  const LABEL_MAX = 15 // jarak di mana label mulai memakai opacity dasar
+  const LABEL_BASE_OPACITY = 0.34
 
   function opacityFor(distance: number): number {
     if (distance <= LABEL_FULL) return 1
-    if (distance >= LABEL_MAX) return 0
-    return 1 - (distance - LABEL_FULL) / (LABEL_MAX - LABEL_FULL)
+    if (distance >= LABEL_MAX) return LABEL_BASE_OPACITY
+    return LABEL_BASE_OPACITY + (1 - LABEL_BASE_OPACITY) * (1 - (distance - LABEL_FULL) / (LABEL_MAX - LABEL_FULL))
   }
 
   useTask(() => {

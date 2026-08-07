@@ -9,6 +9,7 @@
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
   import WeddingHero from './lib/components/ui/WeddingHero.svelte'
   import { setLoaded, setGuestName, setPlayerLabel } from './lib/stores/gameState.svelte'
+  import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
 
   const CRITICAL_GLB = [
@@ -33,6 +34,7 @@
   }
 
   onMount(() => {
+    beginRealProgress()
     try {
       const params = new URLSearchParams(window.location.search)
       const raw = params.get('send')
@@ -60,7 +62,7 @@
 
 <div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
-    <World {lowPower} onReady={() => setLoaded(true)} />
+    <World {lowPower} onReady={() => { completeProgress(); setLoaded(true) }} />
   {/if}
 
   <!-- 2D Label Overlay -->

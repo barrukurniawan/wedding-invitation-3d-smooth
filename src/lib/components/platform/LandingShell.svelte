@@ -75,13 +75,18 @@
     <aside class="hero-aside" aria-label="Cuplikan undangan">
       <figure class="preview">
         <div class="preview-window">
-          <img
-            src="/documentation/example_widescreen.png"
-            alt="Contoh dunia undangan pernikahan 3D MarryMe"
-            width="1600"
-            height="900"
-            decoding="async"
-          />
+          <picture>
+            <source srcset="/documentation/example_widescreen.webp" type="image/webp" />
+            <img class="hero-preview-image"
+              src="/documentation/example_widescreen.png"
+              alt="Contoh dunia undangan pernikahan 3D MarryMe"
+              width="1600"
+              height="900"
+              fetchpriority="high"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
           <div class="preview-shine" aria-hidden="true"></div>
           <span class="live-badge">Live preview · 3D world</span>
         </div>
@@ -524,6 +529,7 @@
     background: var(--blush);
     box-shadow: 0 30px 70px -36px rgba(80, 44, 53, 0.5);
   }
+  .preview-window picture,
   .preview-window img {
     display: block;
     width: 100%;
@@ -983,4 +989,3 @@
     text-align: center;
   }
 </style>
-

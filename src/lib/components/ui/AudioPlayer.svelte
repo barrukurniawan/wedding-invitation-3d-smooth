@@ -5,10 +5,48 @@
   let audio: HTMLAudioElement | null = $state(null)
   let playing = $state(false)
   let currentUrl = $state('')
+  let needsGesture = $state(false)
+  let gestureBound = false
+
+  function removeGestureListeners() {
+    if (!browser || !gestureBound) return
+    window.removeEventListener('pointerdown', retryFromGesture)
+    window.removeEventListener('keydown', retryFromGesture)
+    gestureBound = false
+  }
+
+  function bindGestureListeners() {
+    if (!browser || gestureBound) return
+    window.addEventListener('pointerdown', retryFromGesture, { once: true, passive: true })
+    window.addEventListener('keydown', retryFromGesture, { once: true })
+    gestureBound = true
+  }
+
+  function retryFromGesture() {
+    gestureBound = false
+    void playAudio()
+  }
+
+  async function playAudio() {
+    ensureAudio()
+    if (!audio) return false
+    try {
+      await audio.play()
+      playing = true
+      needsGesture = false
+      removeGestureListeners()
+      return true
+    } catch {
+      playing = false
+      needsGesture = true
+      bindGestureListeners()
+      return false
+    }
+  }
 
   function ensureAudio() {
     if (!browser) return
-    const targetUrl = $weddingConfig?.bgm_url || '/audio/ambient.mp3'
+    const targetUrl = $weddingConfig?.bgm_url || '/audio/Marry%20You.mp3'
     
     // If audio is already initialized and the URL changed
     if (audio && currentUrl !== targetUrl) {
@@ -18,7 +56,7 @@
       audio.load()
       currentUrl = targetUrl
       if (wasPlaying) {
-        audio.play().catch(() => { playing = false })
+        audio.play().catch(() => { playing = false; needsGesture = true; bindGestureListeners() })
       }
     }
     // Initial creation
@@ -37,6 +75,12 @@
     }
   })
 
+  $effect(() => {
+    if ($weddingConfig && browser && !audio) void playAudio()
+  })
+
+  $effect(() => () => removeGestureListeners())
+
   function toggle() {
     ensureAudio()
     if (!audio) return
@@ -44,7 +88,7 @@
       audio.pause()
       playing = false
     } else {
-      audio.play().then(() => (playing = true)).catch(() => {})
+      void playAudio()
     }
   }
 </script>
@@ -56,6 +100,7 @@
   title={playing ? 'Jeda musik' : 'Putar musik'}
   aria-label={playing ? 'Jeda musik latar' : 'Putar musik latar'}
   aria-pressed={playing}
+  aria-describedby={needsGesture ? 'audio-hint' : undefined}
 >
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M5 9.5h3.2L12.5 6v12l-4.3-3.5H5z" />
@@ -68,6 +113,9 @@
   </svg>
   <span class="audio-status" aria-hidden="true"></span>
 </button>
+{#if needsGesture && !playing}
+  <span id="audio-hint" class="audio-hint">Nyalakan musik</span>
+{/if}
 
 <style>
   .audio-control {
@@ -83,6 +131,20 @@
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
     -webkit-backdrop-filter: blur(16px) saturate(1.05);
     backdrop-filter: blur(16px) saturate(1.05);
+  }
+
+  .audio-hint {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 4.1rem);
+    right: max(0.75rem, env(safe-area-inset-right));
+    z-index: 40;
+    border: 1px solid var(--hud-edge);
+    border-radius: 0.7rem;
+    background: var(--hud-ivory-strong);
+    padding: 0.42rem 0.65rem;
+    color: var(--hud-maroon);
+    font: 650 0.68rem/1 Outfit, sans-serif;
+    box-shadow: var(--hud-shadow);
   }
 
   .audio-control:hover { background: var(--hud-ivory-strong); }
