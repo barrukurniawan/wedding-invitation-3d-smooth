@@ -2,15 +2,16 @@
   import { onMount, type Component } from 'svelte'
   import { configError, configStatus, loadConfig } from '../../stores/weddingConfig.svelte'
   import TenantStateScreen from './TenantStateScreen.svelte'
+  import InvitationLoading from '../ui/InvitationLoading.svelte'
 
   let InvitationApp = $state<Component>()
 
   async function bootstrap() {
+    const appPromise = import('../../../App.svelte')
     await loadConfig()
-    if ($configStatus === 'ready') {
-      const module = await import('../../../App.svelte')
-      InvitationApp = module.default
-    }
+    if ($configStatus !== 'ready') return
+    const module = await appPromise
+    InvitationApp = module.default
   }
 
   onMount(() => {
@@ -29,6 +30,6 @@
   <TenantStateScreen state="notFound" />
 {:else if $configStatus === 'error'}
   <TenantStateScreen state="error" message={$configError} onRetry={() => void bootstrap()} />
-{:else}
-  <TenantStateScreen state="loading" />
-{/if}
+  {:else}
+    <InvitationLoading />
+  {/if}
