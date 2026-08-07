@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
+import { normalizeMusicConfig } from '../services/configDefaults.js'
 
 const router = Router()
 
@@ -43,7 +44,7 @@ function invalid(res, error) {
 }
 
 function serializeConfig(config) {
-  const result = { ...config }
+  const result = normalizeMusicConfig(config)
   result.id = Number(result.invitation_id || result.id)
   result.gallery_photos = typeof result.gallery_photos === 'string'
     ? JSON.parse(result.gallery_photos)

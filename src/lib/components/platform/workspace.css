@@ -357,16 +357,31 @@
 
 /* 4. Owner Tabs (Main Navigation) */
 .owner-tabs {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
   border-bottom: 2px solid #eee4e6;
   margin-bottom: 24px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 2px;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 12px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.owner-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
   padding: 12px 20px;
   background: transparent;
   border: none;
@@ -377,6 +392,7 @@
   color: var(--muted);
   cursor: pointer;
   white-space: nowrap;
+  scroll-snap-align: start;
   transition: color 0.15s ease, border-color 0.15s ease;
   margin-bottom: -2px;
 }

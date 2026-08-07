@@ -302,9 +302,16 @@ export function getMyConfig() {
   return request<WeddingConfig>('/my/config')
 }
 
-export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?: number }) {
+export function buildMyConfigPayload(config: Partial<WeddingConfig> & { invitation_id?: number }) {
   const { id, updated_at, invitation_id, ...editableConfig } = config
-  return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(editableConfig) })
+  return Object.fromEntries(
+    Object.entries(editableConfig).filter(([, value]) => value !== null && value !== undefined),
+  )
+}
+
+export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?: number }) {
+  const payload = buildMyConfigPayload(config)
+  return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(payload) })
 }
 
 export function checkoutPayment() {

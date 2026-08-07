@@ -3,7 +3,7 @@
   import * as THREE from 'three'
   import { labelDefs, screenLabels } from '../../stores/labelStore.svelte'
   import { playerLabel } from '../../stores/gameState.svelte'
-  import { playerPos } from '../../stores/playerMovement.svelte'
+  import { playerMoving, playerPos } from '../../stores/playerMovement.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
 
   const { camera, renderer } = useThrelte()
@@ -34,7 +34,7 @@
 
     for (const def of labelDefs) {
       const dist = Math.hypot(def.world[0] - playerPos.x, def.world[2] - playerPos.z)
-      const opacity = opacityFor(dist)
+      const opacity = def.showBeforeMove || $playerMoving ? opacityFor(dist) : 0
       if (opacity <= 0) continue
       _v3.set(def.world[0], def.world[1], def.world[2])
       _v3.project(cam)

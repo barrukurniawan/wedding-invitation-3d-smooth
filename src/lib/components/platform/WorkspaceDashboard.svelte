@@ -39,6 +39,7 @@
 
   // Workspace Navigation & Sub-tabs
   let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan' | 'kirim'>('edit')
+  let ownerTabs = $state<HTMLElement | null>(null)
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote'>('mempelai')
 
   // Config & Payment & Guestbook State
@@ -53,6 +54,18 @@
   let showQrModal = $state(false)
   let copiedToast = $state(false)
   let avatarError = $state(false)
+
+  $effect(() => {
+    activeTab
+    if (!ownerTabs) return
+    const frame = requestAnimationFrame(() => {
+      const active = ownerTabs?.querySelector<HTMLElement>('.tab-btn.active')
+      if (!active) return
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      active.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' })
+    })
+    return () => cancelAnimationFrame(frame)
+  })
 
   onMount(() => {
     document.getElementById('startup-shell')?.remove()
@@ -427,7 +440,7 @@
         </div>
 
         <!-- Primary Workspace Tabs -->
-        <nav class="owner-tabs" aria-label="Navigasi Utama Workspace">
+        <nav bind:this={ownerTabs} class="owner-tabs" aria-label="Navigasi Utama Workspace">
           <button
             type="button"
             class="tab-btn"
@@ -446,7 +459,7 @@
               void loadGuestbook()
             }}
           >
-            💌 Buku Tamu &amp; RSVP {#if myGuestbook?.stats.total}<span class="tab-badge">{myGuestbook.stats.total}</span>{/if}
+            💌 Buku Tamu {#if myGuestbook?.stats.total}<span class="tab-badge">{myGuestbook.stats.total}</span>{/if}
           </button>
 
           <button

@@ -57,7 +57,6 @@
     color: #c44565;
     font: 600 0.9rem/1 'Playfair Display', Georgia, serif;
     letter-spacing: 0.18em;
-    animation: loading-pulse 1.2s ease-in-out infinite;
   }
 
   h1 {
@@ -97,17 +96,12 @@
     animation: stripe-shimmer 2s linear infinite;
   }
 
-  @keyframes loading-pulse {
-    50% { transform: scale(1.08); opacity: 0.72; }
-  }
-
   @keyframes stripe-shimmer {
     from { background-position: 0 0; }
     to { background-position: 40px 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .loading-mark { animation-duration: 2.5s; }
     .loading-bar { animation: none; transition: none; }
   }
 </style>

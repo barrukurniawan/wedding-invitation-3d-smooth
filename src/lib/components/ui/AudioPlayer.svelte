@@ -5,26 +5,27 @@
   let audio: HTMLAudioElement | null = $state(null)
   let playing = $state(false)
   let currentUrl = $state('')
-  let needsGesture = $state(false)
-  let gestureBound = false
+  let gestureListenersBound = false
 
-  function removeGestureListeners() {
-    if (!browser || !gestureBound) return
-    window.removeEventListener('pointerdown', retryFromGesture)
-    window.removeEventListener('keydown', retryFromGesture)
-    gestureBound = false
+  function tryPlayFromGesture() {
+    if (playing) return
+    void playAudio()
   }
 
   function bindGestureListeners() {
-    if (!browser || gestureBound) return
-    window.addEventListener('pointerdown', retryFromGesture, { once: true, passive: true })
-    window.addEventListener('keydown', retryFromGesture, { once: true })
-    gestureBound = true
+    if (!browser || gestureListenersBound) return
+    window.addEventListener('pointerdown', tryPlayFromGesture, { passive: true })
+    window.addEventListener('touchstart', tryPlayFromGesture, { passive: true })
+    window.addEventListener('keydown', tryPlayFromGesture)
+    gestureListenersBound = true
   }
 
-  function retryFromGesture() {
-    gestureBound = false
-    void playAudio()
+  function removeGestureListeners() {
+    if (!browser || !gestureListenersBound) return
+    window.removeEventListener('pointerdown', tryPlayFromGesture)
+    window.removeEventListener('touchstart', tryPlayFromGesture)
+    window.removeEventListener('keydown', tryPlayFromGesture)
+    gestureListenersBound = false
   }
 
   async function playAudio() {
@@ -33,12 +34,10 @@
     try {
       await audio.play()
       playing = true
-      needsGesture = false
       removeGestureListeners()
       return true
     } catch {
       playing = false
-      needsGesture = true
       bindGestureListeners()
       return false
     }
@@ -56,7 +55,13 @@
       audio.load()
       currentUrl = targetUrl
       if (wasPlaying) {
-        audio.play().catch(() => { playing = false; needsGesture = true; bindGestureListeners() })
+        audio.play().then(() => {
+          playing = true
+          removeGestureListeners()
+        }).catch(() => {
+          playing = false
+          bindGestureListeners()
+        })
       }
     }
     // Initial creation
@@ -100,7 +105,6 @@
   title={playing ? 'Jeda musik' : 'Putar musik'}
   aria-label={playing ? 'Jeda musik latar' : 'Putar musik latar'}
   aria-pressed={playing}
-  aria-describedby={needsGesture ? 'audio-hint' : undefined}
 >
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M5 9.5h3.2L12.5 6v12l-4.3-3.5H5z" />
@@ -111,11 +115,7 @@
       <path d="m15.2 10 4 4m0-4-4 4" />
     {/if}
   </svg>
-  <span class="audio-status" aria-hidden="true"></span>
 </button>
-{#if needsGesture && !playing}
-  <span id="audio-hint" class="audio-hint">Nyalakan musik</span>
-{/if}
 
 <style>
   .audio-control {
@@ -131,20 +131,6 @@
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
     -webkit-backdrop-filter: blur(16px) saturate(1.05);
     backdrop-filter: blur(16px) saturate(1.05);
-  }
-
-  .audio-hint {
-    position: fixed;
-    top: calc(env(safe-area-inset-top) + 4.1rem);
-    right: max(0.75rem, env(safe-area-inset-right));
-    z-index: 40;
-    border: 1px solid var(--hud-edge);
-    border-radius: 0.7rem;
-    background: var(--hud-ivory-strong);
-    padding: 0.42rem 0.65rem;
-    color: var(--hud-maroon);
-    font: 650 0.68rem/1 Outfit, sans-serif;
-    box-shadow: var(--hud-shadow);
   }
 
   .audio-control:hover { background: var(--hud-ivory-strong); }
@@ -163,23 +149,6 @@
 
   .audio-control svg path:first-child {
     fill: rgba(113, 54, 69, 0.12);
-  }
-
-  .audio-status {
-    position: absolute;
-    right: 0.18rem;
-    bottom: 0.2rem;
-    width: 0.46rem;
-    height: 0.46rem;
-    border: 1px solid rgba(255, 250, 242, 0.95);
-    border-radius: 50%;
-    background: #9a858a;
-    transition: background 180ms ease, box-shadow 180ms ease;
-  }
-
-  .is-playing .audio-status {
-    background: var(--hud-gold);
-    box-shadow: 0 0 0 2px rgba(201, 164, 94, 0.18);
   }
 
   .is-playing .wave-one { animation: audio-wave 1.4s ease-in-out infinite; }
@@ -209,8 +178,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .audio-control,
-    .audio-status { transition: none; }
+    .audio-control { transition: none; }
     .sound-wave { animation: none !important; opacity: 1; }
   }
 </style>

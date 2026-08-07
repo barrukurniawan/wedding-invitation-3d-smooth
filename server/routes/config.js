@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import pool from '../db.js'
+import { normalizeMusicConfig } from '../services/configDefaults.js'
 
 const router = Router()
 
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
       [req.invitation.id],
     )
     if (rows.length === 0) return res.status(404).json({ error: { code: 'CONFIG_NOT_FOUND', message: 'Konfigurasi tidak ditemukan.' } })
-    const row = rows[0]
+    const row = normalizeMusicConfig(rows[0])
     row.id = Number(row.id)
     row.gallery_photos = typeof row.gallery_photos === 'string' ? JSON.parse(row.gallery_photos) : row.gallery_photos
     row.wedding_date = row.wedding_date.replace(' ', 'T')
