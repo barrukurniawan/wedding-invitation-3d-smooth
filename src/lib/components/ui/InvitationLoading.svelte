@@ -23,8 +23,16 @@
       Memuat ruang interaktif.
     {/if}
   </p>
-  <div class="loading-track" role="progressbar" aria-label="Memuat undangan" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct}>
-    <div class="loading-bar" style={`width: ${Math.max(8, pct)}%`}></div>
+  <div
+    class="loading-track"
+    role="progressbar"
+    aria-label="Memuat undangan"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow={pct}
+    style={`--progress: ${pct}%`}
+  >
+    <div class="loading-bar"></div>
   </div>
 </div>
 
@@ -67,28 +75,39 @@
   }
 
   .loading-track {
-    width: min(22rem, 100%);
-    height: 0.375rem;
+    width: min(22rem, calc(100vw - 4rem));
+    height: 20px;
     margin-top: 2rem;
     overflow: hidden;
-    border: 1px solid rgba(196, 157, 91, 0.3);
+    border: 0;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.5);
+    background: repeating-linear-gradient(135deg, #ddd 0 10px, #eee 0 20px);
+    box-shadow: inset 0 1px 2px rgba(74, 53, 59, 0.12), 0 4px 12px rgba(113, 54, 69, 0.1);
   }
 
   .loading-bar {
     height: 100%;
+    width: var(--progress);
+    min-width: 0;
     border-radius: inherit;
-    background: linear-gradient(90deg, #d96b7a, #c9a45e);
+    background: repeating-linear-gradient(135deg, #f03355 0 10px, #ffa516 0 20px);
+    background-size: 200% 100%;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
     transition: width 300ms ease-out;
+    animation: stripe-shimmer 2s linear infinite;
   }
 
   @keyframes loading-pulse {
     50% { transform: scale(1.08); opacity: 0.72; }
   }
 
+  @keyframes stripe-shimmer {
+    from { background-position: 0 0; }
+    to { background-position: 40px 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .loading-mark { animation-duration: 2.5s; }
-    .loading-bar { transition: none; }
+    .loading-bar { animation: none; transition: none; }
   }
 </style>
