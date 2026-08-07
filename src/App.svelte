@@ -12,25 +12,9 @@
   import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
 
-  const CRITICAL_GLB = [
-    '/models/tamu.glb',
-    '/models/resepsionis.glb'
-  ]
-
   let World = $state<Component>()
   let lowPower = $state(false)
   let sceneReady = $state(false)
-
-  function preloadCriticalGlb() {
-    // Warm HTTP cache while Three/Threlte chunk parses; useGltf hits same URLs.
-    void Promise.allSettled(
-      CRITICAL_GLB.map((url) =>
-        fetch(url, { credentials: 'same-origin', cache: 'force-cache' }).then((r) => {
-          if (r.ok) return r.arrayBuffer()
-        })
-      )
-    )
-  }
 
   onMount(() => {
     beginRealProgress()
@@ -51,11 +35,10 @@
     }
     lowPower = matchMedia('(max-width: 768px), (pointer: coarse)').matches
 
-    // Kick World import first, then overlap GLB downloads with chunk parse.
+    // useGltf owns model fetching to avoid duplicate first-load transfers.
     void import('./lib/components/threed/World.svelte').then((module) => {
       World = module.default
     })
-    preloadCriticalGlb()
   })
 </script>
 
