@@ -19,7 +19,8 @@
     useNod = false,
     weddingSkirt = false,
     bridalVeil = false,
-    onReady
+    onReady,
+    onError
   }: {
     url: string
     position?: [number, number, number]
@@ -32,6 +33,7 @@
     weddingSkirt?: boolean
     bridalVeil?: boolean
     onReady?: () => void
+    onError?: (error: unknown) => void
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -111,6 +113,8 @@
     {#if bridalVeil}
       <BridalVeil root={scene} />
     {/if}
+  {:catch error}
+    {onError?.(error)}
   {/await}
 
   {#if weddingSkirt}

@@ -11,7 +11,7 @@
   import Confetti from './Confetti.svelte'
   import Labels from './Labels.svelte'
   import { tick, playerPos } from '../../stores/playerMovement.svelte'
-  import { setNearbyTrigger } from '../../stores/gameState.svelte'
+import { setNearbyTrigger, setSceneLoadError } from '../../stores/gameState.svelte'
   import { getNearbyTrigger } from '../../utils/interaction'
   import { bumpCriticalLoaded } from '../../stores/loadProgress.svelte'
 
@@ -90,13 +90,14 @@
     }}
   />
 {/if}
-<Player
+  <Player
   appearance={{ skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }}
   onReady={() => {
     if (playerReady) return
     playerReady = true
     bumpCriticalLoaded()
   }}
+  onError={() => setSceneLoadError('Player model failed')}
 />
 <Npcs
   {loadWeddingCouple}
@@ -105,6 +106,7 @@
     receptionistReady = true
     bumpCriticalLoaded()
   }}
+  onError={() => setSceneLoadError('NPC model failed')}
 />
 <Confetti />
 <Labels />

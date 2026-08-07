@@ -3,6 +3,7 @@ import type { ModalType, NpcData, TriggerZone } from '../constants/triggers'
 import { triggerZones } from '../constants/triggers'
 
 export const isLoaded = writable(false)
+export const sceneLoadError = writable('')
 export const activeModal = writable<ModalType>(null)
 export const nearbyTrigger = writable<TriggerZone | null>(null)
 export const activeNpcData = writable<NpcData | null>(null)
@@ -28,6 +29,10 @@ export function setNearbyTrigger(zone: TriggerZone | null) {
 
 export function setLoaded(val: boolean) {
   isLoaded.set(val)
+}
+
+export function setSceneLoadError(message: string) {
+  sceneLoadError.set(message)
 }
 
 export function setGuestName(name: string) {

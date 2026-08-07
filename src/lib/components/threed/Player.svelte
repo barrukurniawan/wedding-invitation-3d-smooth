@@ -12,12 +12,14 @@
     url = '/models/tamu.glb',
     scale = 0.62,
     appearance = {},
-    onReady
+    onReady,
+    onError
   }: {
     url?: string
     scale?: number
     appearance?: Partial<Appearance>
     onReady?: () => void
+    onError?: (error: unknown) => void
   } = $props()
 
   const gltf = untrack(() => useGltf(url))
@@ -101,5 +103,7 @@
         onReady?.()
       }}
     />
+  {:catch error}
+    {onError?.(error)}
   {/await}
 </T.Group>

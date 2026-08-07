@@ -5,10 +5,12 @@
     loadWeddingCouple = false,
     onReceptionistReady,
     onCoupleReady,
+    onError,
   }: {
     loadWeddingCouple?: boolean
     onReceptionistReady?: () => void
     onCoupleReady?: () => void
+    onError?: () => void
   } = $props()
   let coupleReadyCount = 0
 
@@ -42,6 +44,7 @@
   useNod={true}
   appearance={receptionist}
   onReady={onReceptionistReady}
+  onError={onError}
 />
 
 {#if loadWeddingCouple}
@@ -56,6 +59,7 @@
     weddingSkirt={true}
     bridalVeil={true}
     onReady={markCoupleReady}
+    onError={onError}
   />
 
   <!-- Pengantin pria (Toni) -->
@@ -67,5 +71,6 @@
     clip="Victory"
     appearance={groom}
     onReady={markCoupleReady}
+    onError={onError}
   />
 {/if}
