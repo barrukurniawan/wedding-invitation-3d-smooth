@@ -46,9 +46,9 @@
       onReady?.()
       const loadCouple = () => { loadWeddingCouple = true }
       if ('requestIdleCallback' in window) {
-        deferredCoupleHandle = window.requestIdleCallback(loadCouple, { timeout: 1200 })
+        deferredCoupleHandle = window.requestIdleCallback(loadCouple, { timeout: 350 })
       } else {
-        deferredCoupleHandle = globalThis.setTimeout(loadCouple, 500)
+        deferredCoupleHandle = globalThis.setTimeout(loadCouple, 120)
       }
     }))
   })

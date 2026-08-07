@@ -2356,7 +2356,7 @@
 
   /* ─── Main Tabs ─── */
   .owner-tabs {
-    gap: 0;
+    gap: 8px;
     margin-bottom: 16px;
     padding-bottom: 0;
     border-bottom-width: 1.5px;
@@ -2365,11 +2365,11 @@
   .tab-btn {
     padding: 10px 12px;
     font-size: 0.75rem;
-    flex: 1;
+    flex: 0 0 auto;
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
     line-height: 1.2;
-    min-width: 0;
+    min-width: max-content;
   }
 
   /* ─── Workspace Panel ─── */
