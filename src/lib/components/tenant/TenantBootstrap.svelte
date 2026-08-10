@@ -19,7 +19,6 @@
   }
 
   onMount(() => {
-    document.getElementById('startup-shell')?.remove()
     startFakeProgress()
     void bootstrap()
   })

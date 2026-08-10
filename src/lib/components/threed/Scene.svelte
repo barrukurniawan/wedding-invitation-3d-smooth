@@ -2,7 +2,7 @@
   import * as THREE from 'three'
   import { useTask, useThrelte } from '@threlte/core'
   import { SoftShadows } from '@threlte/extras'
-  import { onDestroy, onMount, type Component } from 'svelte'
+  import { onMount, type Component } from 'svelte'
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
   import Sky from './Sky.svelte'
@@ -28,10 +28,10 @@ import { setNearbyTrigger, setSceneLoadError } from '../../stores/gameState.svel
   let playerReady = $state(false)
   let receptionistReady = $state(false)
   let envCriticalReady = $state(false)
-  let loadWeddingCouple = $state(false)
+  let groomReady = $state(false)
+  let brideReady = $state(false)
   let Environment = $state<Component>()
   let readySent = false
-  let deferredCoupleHandle: number | null = null
 
   onMount(() => {
     void import('./Environment.svelte').then((module) => {
@@ -40,23 +40,11 @@ import { setNearbyTrigger, setSceneLoadError } from '../../stores/gameState.svel
   })
 
   $effect(() => {
-    if (!playerReady || !receptionistReady || !envCriticalReady || readySent) return
+    if (!playerReady || !receptionistReady || !envCriticalReady || !groomReady || !brideReady || readySent) return
     readySent = true
     requestAnimationFrame(() => requestAnimationFrame(() => {
       onReady?.()
-      const loadCouple = () => { loadWeddingCouple = true }
-      if ('requestIdleCallback' in window) {
-        deferredCoupleHandle = window.requestIdleCallback(loadCouple, { timeout: 350 })
-      } else {
-        deferredCoupleHandle = globalThis.setTimeout(loadCouple, 120)
-      }
     }))
-  })
-
-  onDestroy(() => {
-    if (deferredCoupleHandle === null) return
-    if ('cancelIdleCallback' in window) window.cancelIdleCallback(deferredCoupleHandle)
-    else clearTimeout(deferredCoupleHandle)
   })
 
   // Fallback background + fog horizon yang menyatu dengan sky dome.
@@ -90,7 +78,7 @@ import { setNearbyTrigger, setSceneLoadError } from '../../stores/gameState.svel
     }}
   />
 {/if}
-  <Player
+<Player
   appearance={{ skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }}
   onReady={() => {
     if (playerReady) return
@@ -100,10 +88,20 @@ import { setNearbyTrigger, setSceneLoadError } from '../../stores/gameState.svel
   onError={() => setSceneLoadError('Player model failed')}
 />
 <Npcs
-  {loadWeddingCouple}
+  loadWeddingCouple={true}
   onReceptionistReady={() => {
     if (receptionistReady) return
     receptionistReady = true
+    bumpCriticalLoaded()
+  }}
+  onGroomReady={() => {
+    if (groomReady) return
+    groomReady = true
+    bumpCriticalLoaded()
+  }}
+  onBrideReady={() => {
+    if (brideReady) return
+    brideReady = true
     bumpCriticalLoaded()
   }}
   onError={() => setSceneLoadError('NPC model failed')}

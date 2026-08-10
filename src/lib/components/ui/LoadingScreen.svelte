@@ -13,10 +13,6 @@
     return () => { if (timer) clearInterval(timer) }
   })
 
-  onMount(() => {
-    document.getElementById('startup-shell')?.remove()
-  })
-
 </script>
 
 {#if !$isLoaded}

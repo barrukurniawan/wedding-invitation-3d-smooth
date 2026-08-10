@@ -8,6 +8,8 @@
   import { playerPos, playerAngle, playerMoving, playerSprinting, playerSpeed } from '../../stores/playerMovement.svelte'
   import { WALK_SPEED, RUN_SPEED } from '../../constants/triggers'
 
+  import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+
   let {
     url = '/models/tamu.glb',
     scale = 0.62,
@@ -22,7 +24,7 @@
     onError?: (error: unknown) => void
   } = $props()
 
-  const gltf = untrack(() => useGltf(url))
+  const gltf = untrack(() => useGltf(url, { meshoptDecoder: MeshoptDecoder }))
   const { actions } = useGltfAnimations(() => $gltf)
 
   let group = $state<THREE.Group>()

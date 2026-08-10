@@ -2,22 +2,18 @@
   import Character from './Character.svelte'
 
   let {
-    loadWeddingCouple = false,
+    loadWeddingCouple = true,
     onReceptionistReady,
-    onCoupleReady,
+    onGroomReady,
+    onBrideReady,
     onError,
   }: {
     loadWeddingCouple?: boolean
     onReceptionistReady?: () => void
-    onCoupleReady?: () => void
+    onGroomReady?: () => void
+    onBrideReady?: () => void
     onError?: () => void
   } = $props()
-  let coupleReadyCount = 0
-
-  function markCoupleReady() {
-    coupleReadyCount += 1
-    if (coupleReadyCount === 2) onCoupleReady?.()
-  }
 
   const S = 0.62
   const STAGE_Y = 0.7
@@ -58,7 +54,7 @@
     appearance={bride}
     weddingSkirt={true}
     bridalVeil={true}
-    onReady={markCoupleReady}
+    onReady={onBrideReady}
     onError={onError}
   />
 
@@ -70,7 +66,7 @@
     scale={S}
     clip="Victory"
     appearance={groom}
-    onReady={markCoupleReady}
+    onReady={onGroomReady}
     onError={onError}
   />
 {/if}

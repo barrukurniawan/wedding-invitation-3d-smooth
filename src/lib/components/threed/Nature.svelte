@@ -1,6 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core'
   import { useGltf } from '@threlte/extras'
+  import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
   import { onDestroy, untrack } from 'svelte'
   import * as THREE from 'three'
   import { getNatureTintForUrl } from '../../constants/natureColors'
@@ -272,7 +273,7 @@
   let instancedNature: InstancedNature | undefined
   let destroyed = false
 
-  const gltf = untrack(() => useGltf(url))
+  const gltf = untrack(() => useGltf(url, { meshoptDecoder: MeshoptDecoder }))
   const nature = untrack(async () => {
     const { scene } = await gltf
     const resolvedTint = tint ?? getNatureTintForUrl(url)

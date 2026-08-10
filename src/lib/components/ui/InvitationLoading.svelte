@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+
   let {
     brideName = '',
     groomName = '',
@@ -10,6 +12,14 @@
   } = $props()
 
   const pct = $derived(Math.round(Math.max(0, Math.min(1, progress)) * 100))
+
+  onMount(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById('startup-shell')?.remove()
+      })
+    })
+  })
 </script>
 
 <div class="invitation-loading" role="status" aria-live="polite" aria-busy="true">
@@ -35,19 +45,19 @@
     background: linear-gradient(160deg, #fff8ef 0%, #fbe6d8 55%, #f3cdbf 100%);
     color: #2a1f24;
     text-align: center;
-    font-family: Outfit, 'Segoe UI', system-ui, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   .loading-mark {
     color: #c44565;
-    font: 600 0.9rem/1 'Playfair Display', Georgia, serif;
+    font: 600 0.9rem/1 Georgia, 'Times New Roman', serif;
     letter-spacing: 0.18em;
   }
 
   h1 {
     margin: 1rem 0 0;
     color: #713645;
-    font: 600 clamp(1.6rem, 6vw, 2.2rem)/1.05 'Playfair Display', Georgia, serif;
+    font: 600 clamp(1.6rem, 6vw, 2.2rem)/1.05 Georgia, 'Times New Roman', serif;
   }
 
   p {

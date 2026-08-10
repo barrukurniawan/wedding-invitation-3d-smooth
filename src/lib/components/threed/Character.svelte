@@ -8,6 +8,8 @@
   import { createWaveClip, createNodClip } from '../../utils/waveAnimation'
   import BridalVeil from './BridalVeil.svelte'
 
+  import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+
   let {
     url,
     position = [0, 0, 0],
@@ -36,7 +38,7 @@
     onError?: (error: unknown) => void
   } = $props()
 
-  const gltf = untrack(() => useGltf(url))
+  const gltf = untrack(() => useGltf(url, { meshoptDecoder: MeshoptDecoder }))
   const { actions } = useGltfAnimations(() => $gltf)
 
   let group = $state<THREE.Group>()
