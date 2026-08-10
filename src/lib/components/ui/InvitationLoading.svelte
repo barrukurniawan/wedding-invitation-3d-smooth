@@ -10,29 +10,14 @@
   } = $props()
 
   const pct = $derived(Math.round(Math.max(0, Math.min(1, progress)) * 100))
-  const couple = $derived(brideName && groomName ? `${brideName.toUpperCase()} & ${groomName.toUpperCase()}` : '')
 </script>
 
 <div class="invitation-loading" role="status" aria-live="polite" aria-busy="true">
   <div class="loading-mark" aria-hidden="true">MARRYME</div>
   <h1>Menyiapkan undangan</h1>
-  <p>
-    {#if couple}
-      Memuat undangan pernikahan {couple}.
-    {:else}
-      Memuat ruang interaktif.
-    {/if}
-  </p>
-  <div
-    class="loading-track"
-    role="progressbar"
-    aria-label="Memuat undangan"
-    aria-valuemin="0"
-    aria-valuemax="100"
-    aria-valuenow={pct}
-    style={`--progress: ${pct}%`}
-  >
-    <div class="loading-bar"></div>
+  <p>Memuat ruang interaktif.</p>
+  <div class="loading-track" role="progressbar" aria-label="Memuat undangan" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct}>
+    <div class="loading-bar" style={`width: ${Math.max(6, pct)}%`}></div>
   </div>
 </div>
 
@@ -75,33 +60,22 @@
 
   .loading-track {
     width: min(22rem, calc(100vw - 4rem));
-    height: 20px;
+    height: 0.3rem;
     margin-top: 2rem;
     overflow: hidden;
-    border: 0;
     border-radius: 999px;
-    background: repeating-linear-gradient(135deg, #ddd 0 10px, #eee 0 20px);
-    box-shadow: inset 0 1px 2px rgba(74, 53, 59, 0.12), 0 4px 12px rgba(113, 54, 69, 0.1);
+    background: rgba(113, 54, 69, 0.14);
   }
 
   .loading-bar {
     height: 100%;
-    width: var(--progress);
     min-width: 0;
     border-radius: inherit;
-    background: repeating-linear-gradient(135deg, #f03355 0 10px, #ffa516 0 20px);
-    background-size: 200% 100%;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    background: #d96b7a;
     transition: width 300ms ease-out;
-    animation: stripe-shimmer 2s linear infinite;
-  }
-
-  @keyframes stripe-shimmer {
-    from { background-position: 0 0; }
-    to { background-position: 40px 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .loading-bar { animation: none; transition: none; }
+    .loading-bar { transition: none; }
   }
 </style>
