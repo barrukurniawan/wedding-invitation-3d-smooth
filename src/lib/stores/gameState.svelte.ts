@@ -11,6 +11,9 @@ export const confettiActive = writable(false)
 export const guestName = writable('Tamu Undangan')
 export const playerLabel = writable('')
 
+export const guestGender = writable<'male' | 'female'>('male')
+export const hasStarted = writable(false)
+
 export function openModal(type: ModalType, npc?: NpcData) {
   activeModal.set(type)
   activeNpcData.set(npc ?? null)
@@ -41,6 +44,14 @@ export function setGuestName(name: string) {
 
 export function setPlayerLabel(name: string) {
   playerLabel.set(name.trim())
+}
+
+export function setGuestGender(gender: 'male' | 'female') {
+  guestGender.set(gender)
+}
+
+export function setHasStarted(val: boolean) {
+  hasStarted.set(val)
 }
 
 export { triggerZones }

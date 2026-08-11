@@ -88,4 +88,5 @@
   @media (prefers-reduced-motion: reduce) {
     .loading-bar { transition: none; }
   }
+
 </style>

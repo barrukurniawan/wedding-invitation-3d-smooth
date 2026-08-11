@@ -40,15 +40,19 @@ export function applyAppearance(root: THREE.Object3D, overrides: Partial<Appeara
       if (!(mat instanceof THREE.MeshStandardMaterial) && !(mat instanceof THREE.MeshBasicMaterial)) continue
       const name = mat.name
       const normalizedName = name.toLowerCase()
+      // Skip materials that already have a texture map (e.g. batik on kebaya)
+      const hasTexture = 'map' in mat && (mat as THREE.MeshStandardMaterial).map != null
       let target: THREE.Color | null = null
       if (name === 'Face' || normalizedName.includes('eye') || normalizedName.includes('brow')) target = new THREE.Color('#000000')
       else if (name === 'Skin') target = new THREE.Color(cfg.skin!)
-      else if (name === 'Shirt' || name === 'Clothes') target = new THREE.Color(cfg.clothes!)
+      else if (name === 'Shirt' || name === 'Clothes' || name === 'Main') {
+        target = new THREE.Color(cfg.clothes!)
+      }
       else if (name === 'DarkClothes') target = new THREE.Color(cfg.darkClothes!)
       else if (name === 'Band') target = new THREE.Color(cfg.band!)
       else if (name === 'Black') target = new THREE.Color(cfg.black!)
       else if (name === 'Details') target = new THREE.Color(cfg.details!)
-      else if (name === 'Pants') target = new THREE.Color(cfg.pants!)
+      else if (name === 'Pants' || name === 'Skirt') target = new THREE.Color(cfg.pants!)
       else if (name === 'Belt') target = new THREE.Color(cfg.shoes!)
       else if (name === 'Hair') target = new THREE.Color(cfg.hair!)
       else if (name === 'Hat') target = new THREE.Color(cfg.hat!)

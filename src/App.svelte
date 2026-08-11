@@ -8,7 +8,7 @@
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
   import WeddingHero from './lib/components/ui/WeddingHero.svelte'
-  import { setLoaded, setGuestName, setPlayerLabel } from './lib/stores/gameState.svelte'
+  import { setLoaded, setGuestName, setPlayerLabel, hasStarted } from './lib/stores/gameState.svelte'
   import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
 
@@ -61,13 +61,17 @@
     {/each}
   </div>
 
-  <WeddingHero />
-  <InteractionHint />
+  {#if $hasStarted}
+    <WeddingHero />
+    <InteractionHint />
+    <MobileControls />
+    <AudioPlayer {sceneReady} />
+  {/if}
+
   <NpcDialog />
   <GuestbookModal />
   <WeddingStageModal />
-  <MobileControls />
-  <AudioPlayer {sceneReady} />
+  
   <LoadingScreen />
 </div>
 

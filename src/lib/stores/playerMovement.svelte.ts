@@ -38,20 +38,26 @@ if (browser) {
 // Current velocity in units / second (accelerated & decelerated toward input).
 const vel = { x: 0, z: 0 }
 
+import { get } from 'svelte/store'
+import { hasStarted } from './gameState.svelte'
+
 export function tick(delta: number) {
   // Clamp delta so a long frame (e.g. tab refocus) cannot teleport the player.
   const dt = Math.min(delta, 0.05)
+  const canMove = get(hasStarted)
 
   let ix = 0
   let iz = 0
 
-  if (keys['KeyW'] || keys['ArrowUp']) iz -= 1
-  if (keys['KeyS'] || keys['ArrowDown']) iz += 1
-  if (keys['KeyA'] || keys['ArrowLeft']) ix -= 1
-  if (keys['KeyD'] || keys['ArrowRight']) ix += 1
+  if (canMove) {
+    if (keys['KeyW'] || keys['ArrowUp']) iz -= 1
+    if (keys['KeyS'] || keys['ArrowDown']) iz += 1
+    if (keys['KeyA'] || keys['ArrowLeft']) ix -= 1
+    if (keys['KeyD'] || keys['ArrowRight']) ix += 1
 
-  ix += joystickDelta.x
-  iz += joystickDelta.z
+    ix += joystickDelta.x
+    iz += joystickDelta.z
+  }
 
   const raw = Math.sqrt(ix * ix + iz * iz)
   const inputMag = Math.min(1, raw)
