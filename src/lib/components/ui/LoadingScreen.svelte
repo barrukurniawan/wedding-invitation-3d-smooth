@@ -4,7 +4,6 @@
   import { loadProgress } from '../../stores/loadProgress.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
   import InvitationLoading from './InvitationLoading.svelte'
-  import WelcomeScreen from './WelcomeScreen.svelte'
 
   let elapsed = $state(0)
   let timer: ReturnType<typeof setInterval> | null = null
@@ -30,8 +29,6 @@
       progress={$loadProgress}
     />
   {/if}
-{:else if !$hasStarted}
-  <WelcomeScreen />
 {/if}
 
 <style>

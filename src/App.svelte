@@ -8,7 +8,7 @@
   import LoadingScreen from './lib/components/ui/LoadingScreen.svelte'
   import AudioPlayer from './lib/components/ui/AudioPlayer.svelte'
   import WeddingHero from './lib/components/ui/WeddingHero.svelte'
-  import { setLoaded, setGuestName, setPlayerLabel, hasStarted } from './lib/stores/gameState.svelte'
+  import { setLoaded, setGuestName, setPlayerLabel, hasStarted, setGuestGender, setHasStarted } from './lib/stores/gameState.svelte'
   import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
 
@@ -30,6 +30,14 @@
         setGuestName(titleCased)
         setPlayerLabel(titleCased)
       }
+      
+      // Auto gender selection
+      const g = params.get('g')
+      if (g === 'f') {
+        setGuestGender('female')
+      } else {
+        setGuestGender('male')
+      }
     } catch {
       // Malformed percent-encoding — keep default guest name.
     }
@@ -44,7 +52,7 @@
 
 <div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
-    <World {lowPower} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true) }} />
+    <World {lowPower} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true); setHasStarted(true) }} />
   {/if}
 
   <!-- 2D Label Overlay -->
