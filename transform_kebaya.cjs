@@ -304,7 +304,104 @@ gltf.materials[4].pbrMetallicRoughness.baseColorFactor = [
 
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 4: Save
+// STEP 4: Add Necklace (Details)
+// ═══════════════════════════════════════════════════════════════
+
+const neckVCount = 32;
+const neckPos = new Float32Array(neckVCount * 3);
+const neckNorm = new Float32Array(neckVCount * 3);
+const neckJ = new Uint8Array(neckVCount * 4);
+const neckW = new Float32Array(neckVCount * 4);
+const neckIdx = new Uint16Array((neckVCount - 2) * 3);
+
+// Create a thick V-shaped necklace (like a flattened torus dropping down in front)
+const neckCenterY = 1.62; // Neck height
+const chestY = 1.48;     // Chest height
+const neckR = 0.08;
+const chestZ = 0.12;
+
+for (let i = 0; i < neckVCount; i++) {
+  const t = i / (neckVCount - 1);
+  const angle = Math.PI * 1.2 * (t - 0.5); // from -0.6PI to 0.6PI (front to back-sides)
+  
+  // Drop down at the front (angle = 0)
+  const drop = Math.cos(angle * 1.5); 
+  const y = neckCenterY - drop * (neckCenterY - chestY);
+  const z = Math.cos(angle) * neckR + drop * chestZ;
+  const x = Math.sin(angle) * neckR * 1.2;
+  
+  // Make it a thick ribbon by pairing vertices
+  const thickness = i % 2 === 0 ? 0.015 : -0.015;
+  const ny = Math.cos(angle);
+  const nz = Math.sin(angle);
+  
+  neckPos[i*3] = x;
+  neckPos[i*3+1] = y + (thickness * ny);
+  neckPos[i*3+2] = z + (thickness * nz);
+  
+  neckNorm[i*3] = x; neckNorm[i*3+1] = ny; neckNorm[i*3+2] = nz; // rough outward normal
+  
+  // Weights: blend Neck (6) and Torso (5)
+  neckJ[i*4] = 6; neckJ[i*4+1] = 5; neckJ[i*4+2] = 0; neckJ[i*4+3] = 0;
+  neckW[i*4] = 1 - drop*0.5; neckW[i*4+1] = drop*0.5; neckW[i*4+2] = 0; neckW[i*4+3] = 0;
+}
+
+let nTriI = 0;
+for (let i = 0; i < neckVCount - 2; i += 2) {
+  neckIdx[nTriI++] = i; neckIdx[nTriI++] = i+1; neckIdx[nTriI++] = i+2;
+  neckIdx[nTriI++] = i+1; neckIdx[nTriI++] = i+3; neckIdx[nTriI++] = i+2;
+}
+
+const nPosC = appendData(neckPos);
+const nNormC = appendData(neckNorm);
+const nJC = appendData(neckJ);
+const nWC = appendData(neckW);
+const nIdxC = appendData(neckIdx);
+
+const nBvStart = gltf.bufferViews.length;
+gltf.bufferViews.push(
+  { buffer: 0, byteOffset: nPosC.offset, byteLength: nPosC.length, target: 34962 },
+  { buffer: 0, byteOffset: nNormC.offset, byteLength: nNormC.length, target: 34962 },
+  { buffer: 0, byteOffset: nJC.offset, byteLength: nJC.length, target: 34962 },
+  { buffer: 0, byteOffset: nWC.offset, byteLength: nWC.length, target: 34962 },
+  { buffer: 0, byteOffset: nIdxC.offset, byteLength: nIdxC.length, target: 34963 }
+);
+
+const nAccStart = gltf.accessors.length;
+gltf.accessors.push(
+  { bufferView: nBvStart, componentType: 5126, count: neckVCount, type: 'VEC3', min: [-0.2, 1.4, -0.2], max: [0.2, 1.7, 0.2] },
+  { bufferView: nBvStart+1, componentType: 5126, count: neckVCount, type: 'VEC3' },
+  { bufferView: nBvStart+2, componentType: 5121, count: neckVCount, type: 'VEC4' },
+  { bufferView: nBvStart+3, componentType: 5126, count: neckVCount, type: 'VEC4' },
+  { bufferView: nBvStart+4, componentType: 5123, count: neckIdx.length, type: 'SCALAR' }
+);
+
+// Add Details material
+const detailsMatIdx = gltf.materials.length;
+gltf.materials.push({
+  name: "Details",
+  pbrMetallicRoughness: {
+    baseColorFactor: [srgbToLinear(0xd4), srgbToLinear(0xaf), srgbToLinear(0x37), 1],
+    metallicFactor: 0.8,
+    roughnessFactor: 0.3
+  }
+});
+
+// Add Details primitive to mesh
+gltf.meshes[0].primitives.push({
+  attributes: {
+    POSITION: nAccStart,
+    NORMAL: nAccStart+1,
+    JOINTS_0: nAccStart+2,
+    WEIGHTS_0: nAccStart+3
+  },
+  indices: nAccStart+4,
+  material: detailsMatIdx
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 5: Save
 // ═══════════════════════════════════════════════════════════════
 
 const fullBuffer = Buffer.concat(allChunks);

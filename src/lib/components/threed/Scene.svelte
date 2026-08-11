@@ -82,7 +82,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   <Player
     url={$guestGender === 'female' ? '/models/tamu-wanita.glb' : '/models/tamu.glb'}
     appearance={$guestGender === 'female' 
-      ? { skin: '#f0c8a0', hair: '#1a1a1a', black: '#5c3a1b', pants: '#5c3a1b', clothes: (import.meta.env.VITE_FEMALE_JACKET_COLOR as string) || '#0077be', details: '#d4af37', shoes: '#1a1a1a' } 
+      ? { skin: '#f0c8a0', hair: '#e5c965', black: '#5c3a1b', pants: '#5c3a1b', clothes: (import.meta.env.VITE_FEMALE_JACKET_COLOR as string) || '#0077be', details: '#d4af37', shoes: '#1a1a1a' } 
       : { skin: '#f0c8a0', hair: '#1a1a1a', black: '#1a1a1a', shirt: '#ffffff', details: '#d4af37', shoes: '#1a1a1a' }
     }
     onReady={() => {
