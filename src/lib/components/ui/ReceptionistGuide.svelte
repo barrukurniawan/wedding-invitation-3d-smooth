@@ -1,11 +1,12 @@
 <script lang="ts">
   import { nearbyTrigger, activeModal, hasStarted } from '../../stores/gameState.svelte'
-  import { playerPos } from '../../stores/playerMovement.svelte'
-  import { receptionistScreenPos } from '../../stores/receptionistGuide.svelte'
   import { fade } from 'svelte/transition'
+  import { onMount } from 'svelte'
 
-  // Sembunyikan setelah berhasil buka dialog resepsionis
+  // Sembunyikan setelah berhasil buka dialog resepsionis.
+  // State ini hanya berubah 1x → aman dipakai Svelte reactivity.
   let hasInteracted = $state(false)
+  let mounted = $state(false)
 
   $effect(() => {
     if ($nearbyTrigger?.id === 'receptionist' && $activeModal) {
@@ -13,71 +14,69 @@
     }
   })
 
-  const dist = $derived(Math.hypot(4.9 - playerPos.x, -10 - playerPos.z))
-  const showGuide = $derived($hasStarted && !hasInteracted && !$activeModal && dist > 5)
-  const pos = $derived($receptionistScreenPos)
+  // showGuide hanya dievaluasi saat $hasStarted / $activeModal / hasInteracted berubah
+  // (bukan per frame). Jarak ke resepsionis dicek di loop JS di bawah.
+  const showGuide = $derived($hasStarted && !hasInteracted && !$activeModal)
 
-  // Hitung sudut panah dari tengah layar
-  let screenW = $state(window.innerWidth)
-  let screenH = $state(window.innerHeight)
+  // Interval 200ms (5fps) untuk cek jarak — cukup untuk show/hide logic
+  let isNear = $state(false)
+  let checkInterval: ReturnType<typeof setInterval>
 
-  function onResize() {
-    screenW = window.innerWidth
-    screenH = window.innerHeight
-  }
-
-  import { onMount } from 'svelte'
   onMount(() => {
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    mounted = true
+    // Import playerPos tanpa reaktivitas Svelte (plain object)
+    import('../../stores/playerMovement.svelte').then(({ playerPos }) => {
+      checkInterval = setInterval(() => {
+        const dist = Math.hypot(4.9 - playerPos.x, -10 - playerPos.z)
+        isNear = dist <= 5
+      }, 200)
+    })
+    return () => clearInterval(checkInterval)
   })
 
-  const arrowAngle = $derived(() => {
-    if (!pos) return 0
-    const cx = screenW / 2
-    const cy = screenH / 2
-    return Math.atan2(pos.y - cy, pos.x - cx) * (180 / Math.PI) + 90
-  })
+  // Komponen tampil saat: mulai, belum interact, belum dekat, tidak ada modal
+  const visible = $derived(showGuide && mounted && !isNear)
 </script>
 
-{#if showGuide && pos}
-  <!-- Glow beacon di posisi resepsionis -->
-  {#if pos.visible}
-    <div
-      class="receptionist-beacon pointer-events-none absolute"
-      style="left: {pos.x}px; top: {pos.y - 60}px;"
-      transition:fade={{ duration: 300 }}
-    >
-      <div class="glow-ring ring-1"></div>
-      <div class="glow-ring ring-2"></div>
-      <div class="glow-ring ring-3"></div>
-      <div class="beacon-dot"></div>
-      <div class="beacon-label">Resepsionis</div>
-    </div>
-  {/if}
+{#if visible}
+  <!--
+    Beacon: posisinya diupdate langsung oleh Labels.svelte useTask via DOM.
+    Svelte hanya bertanggung jawab untuk mount/unmount (jarang terjadi).
+  -->
+  <div
+    id="receptionist-guide-beacon"
+    class="receptionist-beacon pointer-events-none absolute"
+    transition:fade={{ duration: 300 }}
+  >
+    <div class="glow-ring ring-1"></div>
+    <div class="glow-ring ring-2"></div>
+    <div class="glow-ring ring-3"></div>
+    <div class="beacon-dot"></div>
+    <div class="beacon-label">Resepsionis</div>
+  </div>
 
-  <!-- Panah pengarah jika resepsionis di luar layar -->
-  {#if !pos.visible}
-    <div
-      class="direction-arrow pointer-events-none absolute"
-      style="
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) rotate({arrowAngle()}deg) translateY(-38vmin);
-      "
-      transition:fade={{ duration: 300 }}
-    >
-      <svg viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 4L32 36H4L18 4Z" fill="#c9a45e" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
-      </svg>
-      <span>Resepsionis</span>
-    </div>
-  {/if}
+  <!--
+    Arrow: hanya muncul jika resepsionis off-screen.
+    Rotasinya diupdate langsung oleh Labels.svelte via DOM.
+  -->
+  <div
+    id="receptionist-guide-arrow"
+    class="direction-arrow pointer-events-none absolute"
+    style="display: none; left: 50%; top: 50%;"
+    transition:fade={{ duration: 300 }}
+  >
+    <svg viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 4L32 36H4L18 4Z" fill="#c9a45e" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+    </svg>
+    <span>Resepsionis</span>
+  </div>
 {/if}
 
 <style>
   .receptionist-beacon {
+    /* transform di-set per frame oleh Labels.svelte secara langsung */
     transform: translate(-50%, -50%);
+    will-change: transform;
   }
 
   .glow-ring {
@@ -88,6 +87,7 @@
     left: 50%;
     top: 50%;
     animation: beacon-pulse 2.2s infinite ease-out;
+    will-change: opacity, transform;
   }
 
   .ring-1 { width: 36px;  height: 36px;  animation-delay: 0s;    }
@@ -134,6 +134,8 @@
     align-items: center;
     gap: 0.3rem;
     animation: arrow-bob 1.4s ease-in-out infinite;
+    will-change: transform;
+    transform-origin: 50% 50%;
   }
 
   .direction-arrow svg {

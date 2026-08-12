@@ -5,7 +5,6 @@
   import { playerLabel } from '../../stores/gameState.svelte'
   import { playerMoving, playerPos } from '../../stores/playerMovement.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
-  import { receptionistScreenPos } from '../../stores/receptionistGuide.svelte'
 
   const { camera, renderer } = useThrelte()
   const _v3 = new THREE.Vector3()
@@ -110,12 +109,31 @@
       lastLength = activeLabels.length
     }
 
-    // Kalkulasi posisi screen resepsionis untuk guide overlay
+    // Kalkulasi posisi screen resepsionis → update DOM langsung (zero-overhead, tanpa Svelte store)
     _v3.set(4.9, 2.45, -10)
     _v3.project(cam)
     const rx = (_v3.x * 0.5 + 0.5) * w
     const ry = (-_v3.y * 0.5 + 0.5) * h
     const rVisible = _v3.z < 1 && rx > -50 && rx < w + 50 && ry > -50 && ry < h + 50
-    receptionistScreenPos.set({ x: rx, y: ry, visible: rVisible })
+
+    const beaconEl = document.getElementById('receptionist-guide-beacon')
+    if (beaconEl) {
+      beaconEl.style.left = rx + 'px'
+      beaconEl.style.top = (ry - 60) + 'px'
+      beaconEl.style.display = rVisible ? '' : 'none'
+    }
+
+    const arrowEl = document.getElementById('receptionist-guide-arrow')
+    if (arrowEl) {
+      if (!rVisible) {
+        const cx = w / 2
+        const cy = h / 2
+        const angle = Math.atan2(ry - cy, rx - cx) * (180 / Math.PI) + 90
+        arrowEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translateY(-38vmin)`
+        arrowEl.style.display = 'flex'
+      } else {
+        arrowEl.style.display = 'none'
+      }
+    }
   })
 </script>
