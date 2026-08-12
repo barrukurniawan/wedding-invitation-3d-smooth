@@ -11,6 +11,7 @@
   import { setLoaded, setGuestName, setPlayerLabel, hasStarted, setGuestGender, setHasStarted } from './lib/stores/gameState.svelte'
   import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
+  import ReceptionistGuide from './lib/components/ui/ReceptionistGuide.svelte'
 
   let World = $state<Component>()
   let lowPower = $state(false)
@@ -75,6 +76,7 @@
     <InteractionHint />
     <MobileControls />
     <AudioPlayer {sceneReady} />
+    <ReceptionistGuide />
   {/if}
 
   <NpcDialog />

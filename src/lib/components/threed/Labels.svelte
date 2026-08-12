@@ -5,6 +5,7 @@
   import { playerLabel } from '../../stores/gameState.svelte'
   import { playerMoving, playerPos } from '../../stores/playerMovement.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
+  import { receptionistScreenPos } from '../../stores/receptionistGuide.svelte'
 
   const { camera, renderer } = useThrelte()
   const _v3 = new THREE.Vector3()
@@ -21,22 +22,29 @@
     return LABEL_BASE_OPACITY + (1 - LABEL_BASE_OPACITY) * (1 - (distance - LABEL_FULL) / (LABEL_MAX - LABEL_FULL))
   }
 
-  // Simpan string statis di luar loop untuk mencegah memory leak (GC spikes) tiap frame
-  let parsedDefs: any[] = []
-  
-  $effect(() => {
+  function buildParsedDefs() {
     const bride = $weddingConfig.bride_name || 'Kia'
     const groom = $weddingConfig.groom_name || 'Toni'
-    parsedDefs = labelDefs.map(def => ({
+    return labelDefs.map(def => ({
       ...def,
       parsedText: def.text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
     }))
+  }
+
+  // Inisialisasi langsung (sinkron) supaya tersedia saat useTask pertama kali jalan
+  let parsedDefs: any[] = buildParsedDefs()
+  
+  $effect(() => {
+    // Re-parse saat nama mempelai berubah
+    parsedDefs = buildParsedDefs()
+    // Reset lastLength supaya store di-update ulang
+    lastLength = -1
   })
 
   // Re-use objects (mencegah alokasi memori tiap milidetik)
   const activeLabels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
   const labelPool: Record<string, any> = {}
-  let lastLength = 0;
+  let lastLength = -1; // -1 = force update pertama kali
 
   useTask(() => {
     const cam = camera.current
@@ -101,5 +109,13 @@
       screenLabels.set([...activeLabels])
       lastLength = activeLabels.length
     }
+
+    // Kalkulasi posisi screen resepsionis untuk guide overlay
+    _v3.set(4.9, 2.45, -10)
+    _v3.project(cam)
+    const rx = (_v3.x * 0.5 + 0.5) * w
+    const ry = (-_v3.y * 0.5 + 0.5) * h
+    const rVisible = _v3.z < 1 && rx > -50 && rx < w + 50 && ry > -50 && ry < h + 50
+    receptionistScreenPos.set({ x: rx, y: ry, visible: rVisible })
   })
 </script>
