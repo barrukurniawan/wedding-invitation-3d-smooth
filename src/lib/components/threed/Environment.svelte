@@ -48,11 +48,11 @@
     if (typeof win.requestIdleCallback === 'function') {
       win.requestIdleCallback(() => {
         showDecor = true
-      }, { timeout: 500 })
+      }, { timeout: 100 })
     } else {
       setTimeout(() => {
         showDecor = true
-      }, 120)
+      }, 60)
     }
   })
 
