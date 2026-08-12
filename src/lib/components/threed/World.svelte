@@ -11,6 +11,6 @@
   } = $props()
 </script>
 
-<Canvas shadows={!lowPower} dpr={lowPower ? 1.25 : [1, 1.5]}>
+<Canvas dpr={lowPower ? 1.25 : [1, 1.5]}>
   <Scene {lowPower} {onReady} />
 </Canvas>

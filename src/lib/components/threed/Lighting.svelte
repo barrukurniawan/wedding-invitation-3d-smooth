@@ -1,8 +1,6 @@
 <script lang="ts">
   import { T } from '@threlte/core'
 
-  let { shadows = true }: { shadows?: boolean } = $props()
-
   // Pencahayaan hangat ala Summer Afternoon (sore hari)
   // HemisphereLight: langit hangat / tanah hijau lembut
   // DirectionalLight: matahari sore, soft shadow
@@ -20,5 +18,4 @@
 <T.DirectionalLight
   position={[-12, 20, 8]}
   intensity={2.0}
-  castShadow={shadows}
 />

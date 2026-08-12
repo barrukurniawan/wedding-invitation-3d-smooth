@@ -1,7 +1,6 @@
 <script lang="ts">
   import * as THREE from 'three'
   import { useTask, useThrelte } from '@threlte/core'
-  import { SoftShadows } from '@threlte/extras'
   import { onMount, type Component } from 'svelte'
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
@@ -59,13 +58,9 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   })
 </script>
 
-{#if !lowPower}
-  <SoftShadows size={28} samples={12} focus={0.6} />
-{/if}
-
 <CameraRig />
 <Sky {lowPower} />
-<Lighting shadows={!lowPower} />
+<Lighting />
 {#if Environment}
   <Environment
     {lowPower}
