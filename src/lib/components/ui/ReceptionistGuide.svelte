@@ -40,22 +40,6 @@
 
 {#if visible}
   <!--
-    Beacon: posisinya diupdate langsung oleh Labels.svelte useTask via DOM.
-    Svelte hanya bertanggung jawab untuk mount/unmount (jarang terjadi).
-  -->
-  <div
-    id="receptionist-guide-beacon"
-    class="receptionist-beacon pointer-events-none absolute"
-    transition:fade={{ duration: 300 }}
-  >
-    <div class="glow-ring ring-1"></div>
-    <div class="glow-ring ring-2"></div>
-    <div class="glow-ring ring-3"></div>
-    <div class="beacon-dot"></div>
-    <div class="beacon-label">Resepsionis</div>
-  </div>
-
-  <!--
     Arrow: hanya muncul jika resepsionis off-screen.
     Rotasinya diupdate langsung oleh Labels.svelte via DOM.
   -->
@@ -73,61 +57,6 @@
 {/if}
 
 <style>
-  .receptionist-beacon {
-    /* transform di-set per frame oleh Labels.svelte secara langsung */
-    transform: translate(-50%, -50%);
-    will-change: transform;
-  }
-
-  .glow-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 2.5px solid rgba(201, 164, 94, 0.75);
-    transform: translate(-50%, -50%);
-    left: 50%;
-    top: 50%;
-    animation: beacon-pulse 2.2s infinite ease-out;
-    will-change: opacity, transform;
-  }
-
-  .ring-1 { width: 36px;  height: 36px;  animation-delay: 0s;    }
-  .ring-2 { width: 65px;  height: 65px;  animation-delay: 0.6s;  }
-  .ring-3 { width: 95px;  height: 95px;  animation-delay: 1.2s;  }
-
-  @keyframes beacon-pulse {
-    0%   { opacity: 0.85; transform: translate(-50%, -50%) scale(0.4); }
-    100% { opacity: 0;    transform: translate(-50%, -50%) scale(1);   }
-  }
-
-  .beacon-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #c9a45e;
-    box-shadow: 0 0 14px 5px rgba(201, 164, 94, 0.75);
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .beacon-label {
-    position: absolute;
-    top: calc(50% + 22px);
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    font: 700 0.72rem/1 Outfit, sans-serif;
-    color: #fff8ef;
-    background: rgba(91, 42, 54, 0.88);
-    border: 1px solid rgba(201, 164, 94, 0.5);
-    padding: 0.22rem 0.6rem;
-    border-radius: 0.55rem;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    letter-spacing: 0.05em;
-  }
-
   .direction-arrow {
     display: flex;
     flex-direction: column;

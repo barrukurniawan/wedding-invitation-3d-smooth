@@ -116,13 +116,6 @@
     const ry = (-_v3.y * 0.5 + 0.5) * h
     const rVisible = _v3.z < 1 && rx > -50 && rx < w + 50 && ry > -50 && ry < h + 50
 
-    const beaconEl = document.getElementById('receptionist-guide-beacon')
-    if (beaconEl) {
-      beaconEl.style.left = rx + 'px'
-      beaconEl.style.top = (ry - 60) + 'px'
-      beaconEl.style.display = rVisible ? '' : 'none'
-    }
-
     const arrowEl = document.getElementById('receptionist-guide-arrow')
     if (arrowEl) {
       if (!rVisible) {
