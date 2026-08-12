@@ -1,6 +1,8 @@
 <script lang="ts">
   import { nearbyTrigger, activeModal, openModal } from '../../stores/gameState.svelte'
   import { joystickDelta, playerMoving } from '../../stores/playerMovement.svelte'
+  import { scale } from 'svelte/transition'
+  import { backOut } from 'svelte/easing'
 
   let knobOffset = $state({ x: 0, y: 0 })
   let joystickCenter = { x: 0, y: 0 }
@@ -66,7 +68,7 @@
   </div>
 
   {#if $nearbyTrigger && !$activeModal}
-    <div class="action-slot pointer-events-auto">
+    <div class="action-slot pointer-events-auto" transition:scale={{ duration: 400, easing: backOut, start: 0.5 }}>
       <button
         class="open-action flex items-center justify-center"
         onclick={interact}
@@ -166,17 +168,24 @@
     min-height: 3.4rem;
     flex-direction: column;
     gap: 0.15rem;
-    border: 1px solid var(--hud-edge);
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 1.2rem;
-    background: var(--hud-ivory-strong);
-    box-shadow: inset 0 1px 0 #fff, var(--hud-shadow);
+    background: var(--hud-gold); /* Lebih mencolok dari ivory */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), var(--hud-shadow);
     padding: 0.48rem 0.75rem 0.42rem;
-    color: var(--hud-maroon);
+    color: #fff;
     font: 650 0.68rem/1 Outfit, sans-serif;
     letter-spacing: 0.04em;
     transition: transform 160ms ease, background 160ms ease;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
+    animation: cta-pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+  }
+
+  @keyframes cta-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(201, 164, 94, 0.7), inset 0 1px 0 rgba(255,255,255,0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(201, 164, 94, 0), inset 0 1px 0 rgba(255,255,255,0.4); }
+    100% { box-shadow: 0 0 0 0 rgba(201, 164, 94, 0), inset 0 1px 0 rgba(255,255,255,0.4); }
   }
 
   .open-action svg {
@@ -186,7 +195,7 @@
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 1.55;
+    stroke-width: 1.75;
   }
 
   .open-action:active { transform: scale(0.96); }

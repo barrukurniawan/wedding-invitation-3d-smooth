@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { fade } from 'svelte/transition'
+  import { fade, scale } from 'svelte/transition'
+  import { backOut } from 'svelte/easing'
   import { nearbyTrigger, activeModal, openModal } from '../../stores/gameState.svelte'
   import { playerMoving } from '../../stores/playerMovement.svelte'
 
@@ -71,6 +72,7 @@
 {#if showInteractionHint}
   <div
     class="desktop-hint absolute bottom-28 left-1/2 z-40 hidden -translate-x-1/2 cursor-pointer select-none items-center gap-3 md:flex"
+    transition:scale={{ duration: 400, easing: backOut, start: 0.8 }}
     role="button"
     tabindex="0"
     onclick={interact}
