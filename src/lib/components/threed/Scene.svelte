@@ -28,8 +28,6 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   let playerReady = $state(false)
   let receptionistReady = $state(false)
   let envCriticalReady = $state(false)
-  let groomReady = $state(false)
-  let brideReady = $state(false)
   let Environment = $state<Component>()
   let readySent = false
 
@@ -40,7 +38,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   })
 
   $effect(() => {
-    if (!playerReady || !receptionistReady || !envCriticalReady || !groomReady || !brideReady || readySent) return
+    if (!playerReady || !receptionistReady || !envCriticalReady || readySent) return
     readySent = true
     requestAnimationFrame(() => requestAnimationFrame(() => {
       onReady?.()
@@ -101,14 +99,10 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
     bumpCriticalLoaded()
   }}
   onGroomReady={() => {
-    if (groomReady) return
-    groomReady = true
-    bumpCriticalLoaded()
+    // Non-critical: loads in background, does not block loading screen
   }}
   onBrideReady={() => {
-    if (brideReady) return
-    brideReady = true
-    bumpCriticalLoaded()
+    // Non-critical: loads in background, does not block loading screen
   }}
   onError={() => setSceneLoadError('NPC model failed')}
 />
