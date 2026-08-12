@@ -106,6 +106,7 @@ export interface InvitationContact {
   id: string
   name: string
   phone: string
+  gender: 'm' | 'f'
   created_at: string
   updated_at: string
 }
@@ -448,10 +449,10 @@ export function getMyContacts() {
   return request<{ contacts: InvitationContact[]; limit: number }>('/my/contacts')
 }
 
-export function createMyContact(name: string, phone: string) {
+export function createMyContact(name: string, phone: string, gender: 'm' | 'f' = 'm') {
   return request<{ contact: InvitationContact }>('/my/contacts', {
     method: 'POST',
-    body: JSON.stringify({ name, phone }),
+    body: JSON.stringify({ name, phone, gender }),
   })
 }
 

@@ -10,6 +10,7 @@ const MAX_CONTACTS = 100
 const contactSchema = z.object({
   name: z.string().trim().min(1, 'Nama penerima wajib diisi.').max(255),
   phone: z.string().trim().min(1, 'Nomor WhatsApp wajib diisi.').max(32),
+  gender: z.enum(['m', 'f']).default('m'),
 }).strict()
 
 async function ownerInvitation(userId) {
@@ -22,6 +23,7 @@ function serialize(row) {
     id: row.id,
     name: row.name,
     phone: row.phone,
+    gender: row.gender,
     created_at: String(row.created_at).replace(' ', 'T'),
     updated_at: String(row.updated_at).replace(' ', 'T'),
   }
@@ -31,7 +33,7 @@ router.get('/', requireUser, async (req, res, next) => {
   try {
     const invitation = await ownerInvitation(req.user.id)
     if (!invitation) return res.status(404).json({ error: { code: 'INVITATION_NOT_FOUND', message: 'Undangan belum dibuat.' } })
-    const [rows] = await pool.query('SELECT id, name, phone, created_at, updated_at FROM invitation_contacts WHERE invitation_id = ? ORDER BY created_at ASC, id ASC', [invitation.id])
+    const [rows] = await pool.query('SELECT id, name, phone, gender, created_at, updated_at FROM invitation_contacts WHERE invitation_id = ? ORDER BY created_at ASC, id ASC', [invitation.id])
     res.json({ contacts: rows.map(serialize), limit: MAX_CONTACTS })
   } catch (error) {
     if (error?.code === 'ER_NO_SUCH_TABLE') {
@@ -52,8 +54,8 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
     const [countRows] = await pool.query('SELECT COUNT(*) AS total FROM invitation_contacts WHERE invitation_id = ?', [invitation.id])
     if (Number(countRows[0].total) >= MAX_CONTACTS) return res.status(409).json({ error: { code: 'CONTACT_LIMIT_REACHED', message: 'Maksimal 100 nomor undangan.' } })
     const id = randomUUID()
-    await pool.query('INSERT INTO invitation_contacts (id, invitation_id, name, phone) VALUES (?, ?, ?, ?)', [id, invitation.id, parsed.data.name, phone])
-    const [rows] = await pool.query('SELECT id, name, phone, created_at, updated_at FROM invitation_contacts WHERE id = ?', [id])
+    await pool.query('INSERT INTO invitation_contacts (id, invitation_id, name, phone, gender) VALUES (?, ?, ?, ?, ?)', [id, invitation.id, parsed.data.name, phone, parsed.data.gender])
+    const [rows] = await pool.query('SELECT id, name, phone, gender, created_at, updated_at FROM invitation_contacts WHERE id = ?', [id])
     res.status(201).json({ contact: serialize(rows[0]) })
   } catch (error) {
     if (error?.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: { code: 'PHONE_EXISTS', message: 'Nomor WhatsApp sudah ada di daftar.' } })

@@ -11,6 +11,7 @@
   let error = $state('')
   let nameInput = $state('')
   let phoneInput = $state('')
+  let genderInput = $state<'m'|'f'>('m')
   let template = $state('Assalamualaikum Warahmatullahi Wabarakatuh. Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan dunia 3D kami di sini:\n{link}\n\nKami tunggu kehadiranmu!')
   let selected = $state<string[]>([])
   let opened = $state<string[]>([])
@@ -37,10 +38,11 @@
     saving = true
     error = ''
     try {
-      const result = await createMyContact(nameInput, phoneInput)
+      const result = await createMyContact(nameInput, phoneInput, genderInput)
       contacts = [...contacts, result.contact]
       nameInput = ''
       phoneInput = ''
+      genderInput = 'm'
     } catch (err) {
       error = err instanceof ApiError ? err.message : 'Kontak belum dapat ditambahkan.'
     } finally { saving = false }
@@ -60,6 +62,11 @@
       : 'pernikahan kami'
     const personalizedUrl = new URL(invitation.public_url.replace(/\/+$/, ''))
     personalizedUrl.searchParams.set('send', contact.name.trim())
+    if (contact.gender === 'f') {
+      personalizedUrl.searchParams.set('g', 'f')
+    } else {
+      personalizedUrl.searchParams.set('g', 'm')
+    }
     personalizedUrl.search = personalizedUrl.searchParams.toString().replace(/\+/g, '%20')
     const personalizedLink = personalizedUrl.toString().replace(/\/?\?send=/, '?send=')
     return template.replaceAll('{nama}', contact.name).replaceAll('{mempelai}', couple).replaceAll('{link}', personalizedLink)
@@ -124,6 +131,13 @@
       <form class="contact-form" onsubmit={addContact}>
         <label><span>Nama penerima</span><input bind:value={nameInput} placeholder="Contoh: Kurniawan Uwo" maxlength="255" aria-label="Nama penerima" /></label>
         <label><span>Nomor WhatsApp</span><input bind:value={phoneInput} placeholder="Contoh: 0812 3456 7890" maxlength="32" inputmode="tel" aria-label="Nomor WhatsApp" /></label>
+        <label class="gender-group">
+          <span>Karakter</span>
+          <div class="gender-toggle">
+            <button type="button" class:active={genderInput === 'm'} onclick={() => genderInput = 'm'}>Pria</button>
+            <button type="button" class:active={genderInput === 'f'} onclick={() => genderInput = 'f'}>Wanita</button>
+          </div>
+        </label>
         <button type="submit" disabled={saving || contacts.length >= limit}>{saving ? 'Menambahkan...' : '+ Tambah Nomor'}</button>
       </form>
     </section>
@@ -153,7 +167,11 @@
           <div class="contact-row">
             <input class="contact-checkbox" type="checkbox" checked={selected.includes(contact.id)} onchange={() => toggleSelected(contact.id)} aria-label={`Pilih ${contact.name}`} />
             <span class="contact-avatar" aria-hidden="true">{contact.name.trim().charAt(0).toUpperCase()}</span>
-            <div class="contact-detail"><strong>{contact.name}</strong><span>+{contact.phone}</span>{#if opened.includes(contact.id)}<em>Chat dibuka</em>{/if}</div>
+            <div class="contact-detail">
+              <strong>{contact.name} <span class="gender-icon" title={contact.gender === 'f' ? 'Wanita' : 'Pria'}>{contact.gender === 'f' ? '🚺' : '🚹'}</span></strong>
+              <span>+{contact.phone}</span>
+              {#if opened.includes(contact.id)}<em>Chat dibuka</em>{/if}
+            </div>
             <div class="contact-actions"><button type="button" class="whatsapp-button" aria-label={`Buka chat WhatsApp ${contact.name}`} title="Buka Chat WhatsApp" onclick={() => openChat(contact)}>WA</button><button type="button" class="delete-contact" aria-label={`Hapus penerima ${contact.name}`} title="Hapus penerima" onclick={() => void removeContact(contact.id)}>×</button></div>
           </div>
         {/each}
@@ -194,13 +212,19 @@
   .section-count { color: var(--muted, #777); font-size: .75rem; white-space: nowrap; }
   .contact-count, .sender-muted { color: var(--muted, #777); font-size: .82rem; }
   .sender-notice { margin-bottom: 20px; padding: 14px 18px; border-radius: 12px; background: #f5f1e9; color: #665b4c; font-size: .88rem; line-height: 1.5; border: 1px solid #eaddcf; }
-  .contact-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 14px; }
+  .contact-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; align-items: end; gap: 14px; }
   .contact-form label { display: flex; flex-direction: column; gap: 8px; min-width: 0; color: #554f4f; font-size: .8rem; font-weight: 600; }
   .contact-form input, .template-box textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 10px; padding: 12px 14px; background: #faf9f8; color: inherit; font: inherit; transition: border-color 0.2s; }
   .contact-form input:focus, .template-box textarea:focus { outline: none; border-color: #a35c5c; background: #fff; }
-  .contact-form button, .bulk-button { border: 0; border-radius: 10px; padding: 12px 20px; background: #2d2525; color: white; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-  .contact-form button:hover, .bulk-button:hover { background: #1a1515; }
+  .contact-form button { border: 0; border-radius: 10px; padding: 12px 20px; background: #c44565; color: white; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .contact-form button:hover { background: #a33853; }
+  .bulk-button { border: 0; border-radius: 10px; padding: 12px 20px; background: #2d2525; color: white; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .bulk-button:hover { background: #1a1515; }
   button:disabled { opacity: .45; cursor: not-allowed; }
+  .gender-toggle { display: flex; background: #faf9f8; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; height: 42px; box-sizing: border-box; }
+  .gender-toggle button { flex: 1; border: none; background: transparent; padding: 0 16px; font-weight: 600; font-size: .8rem; color: #777; cursor: pointer; transition: all 0.2s; border-radius: 0; white-space: nowrap; }
+  .gender-toggle button:hover { background: #f0ebe8; }
+  .gender-toggle button.active { background: #2d2525; color: white; }
   .template-box { display: grid; gap: 7px; }
   .template-box small { color: var(--muted, #777); }
   .bulk-toolbar { justify-content: space-between; }
@@ -208,11 +232,12 @@
   .select-all { display: inline-flex; align-items: center; gap: 8px; color: var(--muted, #777); font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
   .select-all input, .contact-checkbox { width: 16px; height: 16px; margin: 0; accent-color: #8f5e68; }
   .contact-list { display: grid; gap: 10px; margin-top: 20px; }
-  .contact-row { display: grid; grid-template-columns: 18px 34px minmax(0, 1fr) auto; align-items: center; min-width: 0; padding: 12px 14px; border: 1px solid #e8e4e1; border-radius: 12px; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
+  .contact-row { display: grid; grid-template-columns: 18px 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #e8e4e1; border-radius: 12px; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
   .contact-row:hover { border-color: #d8d4d1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
   .contact-avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #f4e6e8; color: #8f5e68; font-size: .78rem; font-weight: 800; }
   .contact-detail { min-width: 0; display: grid; gap: 3px; padding-left: 10px; }
   .contact-detail strong { min-width: 0; overflow: hidden; color: #2d2525; font-size: 0.95rem; font-weight: 700; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+  .gender-icon { margin-left: 4px; font-size: 0.9em; vertical-align: baseline; }
   .contact-detail span { color: #665b4c; font-size: .85rem; }
   .contact-detail em { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #e8f5ed; color: #168447; font-size: .7rem; font-style: normal; font-weight: 600; margin-top: 2px; }
   .contact-actions { display: flex; align-items: center; gap: 6px; margin-left: 14px; }
