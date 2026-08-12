@@ -5,6 +5,13 @@
   <meta charset="utf-8" />
   <link rel="icon" href="%sveltekit.assets%/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js');
+      });
+    }
+  </script>
   <meta property="og:title" content="MarryMe | Undangan Pernikahan 3D" />
   <meta property="og:description" content="Buat dan bagikan undangan pernikahan 3D interaktif Anda." />
   <meta property="og:type" content="website" />
