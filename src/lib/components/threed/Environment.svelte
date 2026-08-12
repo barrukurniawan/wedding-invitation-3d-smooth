@@ -202,11 +202,11 @@
     { position: [-1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? 0 : Math.PI },
     { position: [1.52, 0.018, z] as [number, number, number], rotationY: i % 2 === 0 ? Math.PI : 0 }
   ])
-  const aisleFlowerBushes = Array.from({ length: 15 }, (_, i) => 7.5 - i * 1.4).flatMap((z, i) => [
+  const aisleFlowerBushes = Array.from({ length: 8 }, (_, i) => 7.5 - i * 2.8).flatMap((z, i) => [
     { position: [-2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 },
     { position: [2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 }
   ])
-  const aisleCommonBushes = Array.from({ length: 14 }, (_, i) => 7.5 - i * 1.4 - 0.7).flatMap((z, i) => [
+  const aisleCommonBushes = Array.from({ length: 7 }, (_, i) => 7.5 - i * 2.8 - 0.7).flatMap((z, i) => [
     { position: [-2.55, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? -0.2 : 0.2, scale: 0.85 },
     { position: [2.55, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? -0.2 : 0.2, scale: 0.85 }
   ])
