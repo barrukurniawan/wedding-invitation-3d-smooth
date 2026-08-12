@@ -36,6 +36,7 @@
   // Re-use objects (mencegah alokasi memori tiap milidetik)
   const activeLabels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
   const labelPool: Record<string, any> = {}
+  let lastLength = 0;
 
   useTask(() => {
     const cam = camera.current
@@ -64,11 +65,11 @@
         obj = { id: def.id, text: def.parsedText, x, y, behind, opacity, objective: def.objective ?? false }
         labelPool[def.id] = obj
       } else {
-        obj.text = def.parsedText
-        obj.x = x
-        obj.y = y
-        obj.behind = behind
-        obj.opacity = opacity
+        const el = document.getElementById('label-' + def.id)
+        if (el) {
+          el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
+          el.style.opacity = behind ? '0' : opacity.toString()
+        }
       }
       activeLabels.push(obj)
     }
@@ -85,14 +86,20 @@
         obj = { id: 'player', text: $playerLabel, x, y, behind, opacity: 1, objective: false }
         labelPool['player'] = obj
       } else {
-        obj.text = $playerLabel
-        obj.x = x
-        obj.y = y
-        obj.behind = behind
+        const el = document.getElementById('label-player')
+        if (el) {
+          el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
+          el.style.opacity = behind ? '0' : '1'
+        }
       }
       activeLabels.push(obj)
     }
 
-    screenLabels.set([...activeLabels])
+    // Hanya update Svelte store jika jumlah label berubah (misal saat inisialisasi)
+    // Selebihnya, DOM di-update langsung via native JS di atas!
+    if (activeLabels.length !== lastLength) {
+      screenLabels.set([...activeLabels])
+      lastLength = activeLabels.length
+    }
   })
 </script>
