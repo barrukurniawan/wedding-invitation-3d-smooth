@@ -113,17 +113,26 @@
         applyAppearance(ref, appearance)
         onReady?.()
       }}
-      onclick={(e: any) => {
-        e.stopPropagation()
-        onClick?.()
-      }}
-      onpointerenter={() => {
-        if (onClick) document.body.style.cursor = 'pointer'
-      }}
-      onpointerleave={() => {
-        if (onClick) document.body.style.cursor = 'default'
-      }}
     />
+    {#if onClick}
+      <!-- Invisible Hitbox for cheap raycasting -->
+      <T.Mesh
+        position={[0, 0.9, 0]}
+        onclick={(e: any) => {
+          e.stopPropagation()
+          onClick()
+        }}
+        onpointerenter={() => {
+          document.body.style.cursor = 'pointer'
+        }}
+        onpointerleave={() => {
+          document.body.style.cursor = 'default'
+        }}
+      >
+        <T.CylinderGeometry args={[0.5, 0.5, 1.8, 8]} />
+        <T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </T.Mesh>
+    {/if}
     {#if bridalVeil}
       <BridalVeil root={scene} />
     {/if}
