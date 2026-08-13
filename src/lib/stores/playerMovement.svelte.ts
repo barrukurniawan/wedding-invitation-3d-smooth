@@ -123,7 +123,7 @@ export function tick(delta: number) {
   playerSpeed.value = speed
   const moving = speed > 0.05
   playerMoving.set(moving)
-  playerSprinting.set(moving && sprinting)
+  playerSprinting.set(moving && sprinting && canSprint)
 
   playerPos.y = groundHeightAt(playerPos.x, playerPos.z)
 }
