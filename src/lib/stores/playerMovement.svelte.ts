@@ -72,10 +72,11 @@ export function tick(delta: number) {
   const dirX = hasInput ? ix / raw : 0
   const dirZ = hasInput ? iz / raw : 0
 
-  // Larang sprint di zona sakral (karpet merah, ramp, dan pelaminan).
-  // Deteksi dilakukan dengan 3 perbandingan aritmatika — overhead nol.
+  // Kecepatan bersifat BINARY: jalan penuh atau lari penuh.
+  // inputMag TIDAK dipakai untuk skala kecepatan supaya tidak slow-motion.
+  // Arah tetap analog (bisa diagonal presisi), tapi speed selalu penuh saat ada input.
   const canSprint = !isInWalkOnlyZone(playerPos.x, playerPos.z)
-  const targetSpeed = (sprinting && canSprint ? RUN_SPEED : WALK_SPEED) * inputMag
+  const targetSpeed = !hasInput ? 0 : (sprinting && canSprint ? RUN_SPEED : WALK_SPEED)
   const tvx = dirX * targetSpeed
   const tvz = dirZ * targetSpeed
 
