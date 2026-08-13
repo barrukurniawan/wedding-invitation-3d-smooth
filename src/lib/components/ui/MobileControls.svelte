@@ -111,7 +111,6 @@
 
   .action-slot {
     flex: 0 0 auto;
-    margin-bottom: 12vh; /* Naikkan posisi tombol agar lebih terlihat */
   }
 
   .joystick {
@@ -196,12 +195,12 @@
     min-height: 3.5rem;
     flex-direction: column;
     gap: 0.15rem;
-    border: 2px solid rgba(255,255,255,0.8);
+    border: 2px solid #FFF8D6;
     border-radius: 1.2rem;
-    background: #FFD700; /* Kuning cerah seperti emoji 👆 */
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 24px rgba(255, 215, 0, 0.5);
+    background: #F6C928; /* Kuning madu yang hangat & tidak menyilaukan */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 24px rgba(246, 201, 40, 0.45);
     padding: 0.48rem 0.75rem 0.42rem;
-    color: #4a353b; /* Teks gelap agar kontras dengan background kuning cerah */
+    color: #5B3A24; /* Coklat gelap agar harmonis dengan tone pastel */
     font: 700 0.72rem/1 Outfit, sans-serif;
     letter-spacing: 0.04em;
     transition: transform 160ms ease, background 160ms ease;
@@ -210,10 +209,15 @@
     animation: cta-pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
   }
 
+  .open-action:active { 
+    transform: scale(0.96); 
+    background: #E8B719; /* Kuning hover/tekan */
+  }
+
   @keyframes cta-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.6); }
-    70% { box-shadow: 0 0 0 18px rgba(255, 215, 0, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
+    0% { box-shadow: 0 0 0 0 rgba(246, 201, 40, 0.7), inset 0 1px 0 rgba(255,255,255,0.6); }
+    70% { box-shadow: 0 0 0 18px rgba(246, 201, 40, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
+    100% { box-shadow: 0 0 0 0 rgba(246, 201, 40, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
   }
 
   .open-action svg {
