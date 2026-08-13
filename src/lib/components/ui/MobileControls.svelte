@@ -105,9 +105,13 @@
       max(1rem, env(safe-area-inset-left));
   }
 
-  .joystick,
+  .joystick {
+    flex: 0 0 auto;
+  }
+
   .action-slot {
     flex: 0 0 auto;
+    margin-bottom: 12vh; /* Naikkan posisi tombol agar lebih terlihat */
   }
 
   .joystick {
@@ -188,17 +192,17 @@
   }
 
   .open-action {
-    min-width: 4.7rem;
-    min-height: 3.4rem;
+    min-width: 4.8rem;
+    min-height: 3.5rem;
     flex-direction: column;
     gap: 0.15rem;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.8);
     border-radius: 1.2rem;
-    background: var(--hud-gold); /* Lebih mencolok dari ivory */
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), var(--hud-shadow);
+    background: #FFD700; /* Kuning cerah seperti emoji 👆 */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 24px rgba(255, 215, 0, 0.5);
     padding: 0.48rem 0.75rem 0.42rem;
-    color: #fff;
-    font: 650 0.68rem/1 Outfit, sans-serif;
+    color: #4a353b; /* Teks gelap agar kontras dengan background kuning cerah */
+    font: 700 0.72rem/1 Outfit, sans-serif;
     letter-spacing: 0.04em;
     transition: transform 160ms ease, background 160ms ease;
     -webkit-backdrop-filter: blur(16px);
@@ -207,9 +211,9 @@
   }
 
   @keyframes cta-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(201, 164, 94, 0.7), inset 0 1px 0 rgba(255,255,255,0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(201, 164, 94, 0), inset 0 1px 0 rgba(255,255,255,0.4); }
-    100% { box-shadow: 0 0 0 0 rgba(201, 164, 94, 0), inset 0 1px 0 rgba(255,255,255,0.4); }
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.6); }
+    70% { box-shadow: 0 0 0 18px rgba(255, 215, 0, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0), inset 0 1px 0 rgba(255,255,255,0.6); }
   }
 
   .open-action svg {
