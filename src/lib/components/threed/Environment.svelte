@@ -8,7 +8,7 @@
   import HangingLights from './HangingLights.svelte'
   import { setOccluderGroup } from '../../stores/cameraOccluders.svelte'
   import { lightPoles } from '../../constants/triggers'
-  import { isLoaded } from '../../stores/gameState.svelte'
+  import { isLoaded, nearbyTrigger, openModal } from '../../stores/gameState.svelte'
 
   let {
     lowPower = false,
@@ -798,7 +798,17 @@
 </T.Group>
 
 <!-- Mailbox / Guestbook -->
-<T.Group position={[-5, 0, -10]}>
+<T.Group
+  position={[-5, 0, -10]}
+  onclick={(e: any) => {
+    e.stopPropagation()
+    if ($nearbyTrigger?.id === 'mailbox') {
+      openModal($nearbyTrigger.action, $nearbyTrigger.npcData)
+    }
+  }}
+  onpointerenter={() => { document.body.style.cursor = 'pointer' }}
+  onpointerleave={() => { document.body.style.cursor = 'default' }}
+>
   <T.Mesh position={[0, 0.72, 0]} castShadow>
     <T.CylinderGeometry args={[0.09, 0.11, 1.44, 8]} />
     <T.MeshToonMaterial color="#72503d" gradientMap={gradient} />

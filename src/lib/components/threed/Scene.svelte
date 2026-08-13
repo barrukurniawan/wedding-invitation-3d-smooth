@@ -1,7 +1,10 @@
 <script lang="ts">
   import * as THREE from 'three'
   import { useTask, useThrelte } from '@threlte/core'
+  import { interactivity } from '@threlte/extras'
   import { onMount, type Component } from 'svelte'
+
+  interactivity()
   import CameraRig from './CameraRig.svelte'
   import Lighting from './Lighting.svelte'
   import Sky from './Sky.svelte'

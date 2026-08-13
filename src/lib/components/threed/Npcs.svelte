@@ -1,5 +1,6 @@
 <script lang="ts">
   import Character from './Character.svelte'
+  import { nearbyTrigger, openModal } from '../../stores/gameState.svelte'
 
   let {
     loadWeddingCouple = true,
@@ -41,6 +42,11 @@
   appearance={receptionist}
   onReady={onReceptionistReady}
   onError={onError}
+  onClick={() => {
+    if ($nearbyTrigger?.id === 'receptionist') {
+      openModal($nearbyTrigger.action, $nearbyTrigger.npcData)
+    }
+  }}
 />
 
 {#if loadWeddingCouple}
@@ -56,6 +62,11 @@
     bridalVeil={true}
     onReady={onBrideReady}
     onError={onError}
+    onClick={() => {
+      if ($nearbyTrigger?.id === 'weddingStage') {
+        openModal($nearbyTrigger.action, $nearbyTrigger.npcData)
+      }
+    }}
   />
 
   <!-- Pengantin pria (Toni) -->
@@ -68,5 +79,10 @@
     appearance={groom}
     onReady={onGroomReady}
     onError={onError}
+    onClick={() => {
+      if ($nearbyTrigger?.id === 'weddingStage') {
+        openModal($nearbyTrigger.action, $nearbyTrigger.npcData)
+      }
+    }}
   />
 {/if}

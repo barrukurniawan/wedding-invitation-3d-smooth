@@ -22,7 +22,8 @@
     weddingSkirt = false,
     bridalVeil = false,
     onReady,
-    onError
+    onError,
+    onClick
   }: {
     url: string
     position?: [number, number, number]
@@ -36,6 +37,7 @@
     bridalVeil?: boolean
     onReady?: () => void
     onError?: (error: unknown) => void
+    onClick?: () => void
   } = $props()
 
   const gltf = untrack(() => useGltf(url, { meshoptDecoder: MeshoptDecoder }))
@@ -110,6 +112,16 @@
       oncreate={(ref) => {
         applyAppearance(ref, appearance)
         onReady?.()
+      }}
+      onclick={(e: any) => {
+        e.stopPropagation()
+        onClick?.()
+      }}
+      onpointerenter={() => {
+        if (onClick) document.body.style.cursor = 'pointer'
+      }}
+      onpointerleave={() => {
+        if (onClick) document.body.style.cursor = 'default'
       }}
     />
     {#if bridalVeil}
