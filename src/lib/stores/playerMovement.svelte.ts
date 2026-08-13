@@ -23,9 +23,11 @@ export const playerAngle = { value: Math.PI }
 export const playerSpeed = { value: 0 }
 export const playerMoving = writable(false)
 export const playerSprinting = writable(false)
+export const tutorialJoystickDone = writable(false)
 export const joystickDelta = { x: 0, z: 0 }
 
 const keys: Record<string, boolean> = {}
+let distanceWalked = 0
 
 if (browser) {
   window.addEventListener('keydown', (e) => {
@@ -118,6 +120,13 @@ export function tick(delta: number) {
   if (hasInput) {
     const targetAngle = Math.atan2(dirX, dirZ)
     playerAngle.value = dampAngle(playerAngle.value, targetAngle, ROT_LAMBDA, dt)
+  }
+
+  if (speed > 0.05 && !get(tutorialJoystickDone)) {
+    distanceWalked += speed * dt
+    if (distanceWalked > 2.0) {
+      tutorialJoystickDone.set(true)
+    }
   }
 
   playerSpeed.value = speed

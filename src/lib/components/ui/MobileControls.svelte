@@ -1,7 +1,7 @@
 <script lang="ts">
   import { nearbyTrigger, activeModal, openModal } from '../../stores/gameState.svelte'
-  import { joystickDelta, playerMoving } from '../../stores/playerMovement.svelte'
-  import { scale } from 'svelte/transition'
+  import { joystickDelta, playerMoving, tutorialJoystickDone } from '../../stores/playerMovement.svelte'
+  import { scale, fade } from 'svelte/transition'
   import { backOut } from 'svelte/easing'
 
   let knobOffset = $state({ x: 0, y: 0 })
@@ -57,6 +57,11 @@
   >
     {#if !$playerMoving}
       <span class="movement-cue" aria-hidden="true">Geser untuk bergerak</span>
+    {/if}
+    {#if !$tutorialJoystickDone}
+      <div class="hand-tutorial pointer-events-none" aria-hidden="true" transition:fade={{ duration: 400 }}>
+        👆
+      </div>
     {/if}
     <span class="joystick-axis axis-x" aria-hidden="true"></span>
     <span class="joystick-axis axis-y" aria-hidden="true"></span>
@@ -135,6 +140,25 @@
     inset: 0.72rem;
     border: 1px solid rgba(113, 54, 69, 0.12);
     border-radius: 50%;
+  }
+
+  .hand-tutorial {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 2.2rem;
+    line-height: 1;
+    z-index: 10;
+    transform-origin: center center;
+    animation: hand-drag 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(62, 34, 41, 0.4));
+  }
+
+  @keyframes hand-drag {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    15% { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
+    70% { transform: translate(-50%, -140%) scale(0.9); opacity: 1; }
+    100% { transform: translate(-50%, -140%) scale(1); opacity: 0; }
   }
 
   .joystick-axis {
