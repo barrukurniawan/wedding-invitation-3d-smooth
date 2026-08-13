@@ -5,7 +5,7 @@ import {
   STAGE,
   STAGE_ENTRY_HALF_WIDTH,
   RAMP,
-  CARPET_WALK_ZONE,
+  RUN_ZONE_MIN_X,
   HALF_WORLD,
   PLAYER_RADIUS,
   WALK_SPEED,
@@ -167,12 +167,8 @@ function canMoveTo(x: number, z: number) {
   return true
 }
 function isInWalkOnlyZone(x: number, z: number): boolean {
-  // Stage / pelaminan
-  if (x > STAGE.minX && x < STAGE.maxX && z > STAGE.minZ && z < STAGE.maxZ) return true
-  // Ramp / tangga menuju pelaminan
-  if (Math.abs(x) <= STAGE_ENTRY_HALF_WIDTH && z >= RAMP.minZ && z <= RAMP.maxZ) return true
-  // Karpet merah di tengah
-  if (x > CARPET_WALK_ZONE.minX && x < CARPET_WALK_ZONE.maxX &&
-      z > CARPET_WALK_ZONE.minZ && z < CARPET_WALK_ZONE.maxZ) return true
-  return false
+  // Hanya area pepohonan sisi luar yang boleh berlari
+  if (Math.abs(x) >= RUN_ZONE_MIN_X) return false
+  // Seluruh venue = walk-only
+  return true
 }
