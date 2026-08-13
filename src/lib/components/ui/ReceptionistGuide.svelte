@@ -92,6 +92,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .glow-ring, .direction-arrow { animation: none; }
+    .direction-arrow { animation: none; }
   }
 </style>

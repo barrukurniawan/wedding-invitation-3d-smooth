@@ -112,6 +112,14 @@ export const STAGE = {
 export const STAGE_ENTRY_HALF_WIDTH = 1.45
 export const RAMP = { minZ: -15.8, maxZ: -14.7, height: STAGE.height }
 
+// Walk-only zone: karpet merah di tengah — berlari di sini terasa tidak sopan
+export const CARPET_WALK_ZONE = {
+  minX: -1.8,
+  maxX: 1.8,
+  minZ: -14.7,
+  maxZ: -5.0
+}
+
 export const HALF_WORLD = 18
 export const PLAYER_RADIUS = 0.42
 
