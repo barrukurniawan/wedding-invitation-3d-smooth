@@ -14,6 +14,8 @@
     logout,
     rejectInvitation,
     updateAdminConfig,
+    uploadAdminPhoto,
+    uploadAdminMusic,
     type AdminInvitation,
     type GuestbookEntry,
     type GuestbookStats,
@@ -29,6 +31,7 @@
   let config = $state<WeddingConfig | null>(null)
   let saving = $state(false)
   let savedMsg = $state('')
+  let uploading = $state(false)
 
   let entries = $state<GuestbookEntry[]>([])
   let adminInvitations = $state<AdminInvitation[]>([])
@@ -186,6 +189,49 @@
     config.gallery_photos = config.gallery_photos.filter((_, i) => i !== idx)
   }
 
+  async function handleFileUpload(e: Event, type: 'photo' | 'music'): Promise<string | null> {
+    const input = e.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return null
+    uploading = true
+    savedMsg = ''
+    try {
+      if (type === 'photo') {
+        const res = await uploadAdminPhoto(input.files[0])
+        return res.photo_url
+      } else {
+        const res = await uploadAdminMusic(input.files[0])
+        if (config) config.bgm_title = res.bgm_title
+        return res.bgm_url
+      }
+    } catch (error) {
+      savedMsg = error instanceof ApiError ? `Gagal upload: ${error.message}` : 'Gagal mengunggah file'
+      return null
+    } finally {
+      uploading = false
+      input.value = '' // reset input
+    }
+  }
+
+  async function uploadMainPhoto(e: Event) {
+    const url = await handleFileUpload(e, 'photo')
+    if (url && config) config.wedding_photo = url
+  }
+  
+  async function uploadQrisPhoto(e: Event) {
+    const url = await handleFileUpload(e, 'photo')
+    if (url && config) config.qris_image = url
+  }
+
+  async function uploadGalleryPhoto(e: Event) {
+    const url = await handleFileUpload(e, 'photo')
+    if (url && config) config.gallery_photos = [...(config.gallery_photos || []), url]
+  }
+
+  async function uploadBgm(e: Event) {
+    const url = await handleFileUpload(e, 'music')
+    if (url && config) config.bgm_url = url
+  }
+
   function fmtDate(ts: string): string {
     if (!ts) return '-'
     return new Date(ts).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -300,13 +346,42 @@
             <div><label for="groom-name" class={labelClass}>Nama Mempelai Pria</label><input id="groom-name" bind:value={config.groom_name} class={inputClass} /></div>
             <div><label for="bride-parents" class={labelClass}>Orangtua Wanita</label><input id="bride-parents" bind:value={config.bride_parents} class={inputClass} /></div>
             <div><label for="groom-parents" class={labelClass}>Orangtua Pria</label><input id="groom-parents" bind:value={config.groom_parents} class={inputClass} /></div>
-            <div class="col-span-2"><label for="wedding-photo" class={labelClass}>Foto Utama Pernikahan (URL)</label><input id="wedding-photo" bind:value={config.wedding_photo} class={inputClass} placeholder="https://..." /></div>
+            
+            <div class="col-span-2">
+              <label class={labelClass}>Foto Utama Pernikahan</label>
+              <div class="flex gap-4 items-center">
+                {#if config.wedding_photo}
+                  <img src={config.wedding_photo} alt="Foto Utama" class="h-24 w-24 object-cover rounded-xl border border-stone-700" />
+                {/if}
+                <div class="flex-1">
+                  <input type="file" accept="image/*" onchange={uploadMainPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer" />
+                  <p class="mt-1 text-xs text-stone-500">Maks. 2MB (JPG/PNG/WebP)</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-span-2"><label for="quote" class={labelClass}>Ayat / Quotes Pembuka</label><textarea id="quote" bind:value={config.quote} class="{inputClass} min-h-24 resize-y" placeholder="Maha suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan..."></textarea></div>
           </div>
 
         {:else if activeTab === 'acara'}
           <h2 class="text-lg font-semibold text-rose-300">Detail Acara</h2>
           <div class="mt-4 space-y-4">
             <div><label for="wedding-date" class={labelClass}>Tanggal Pernikahan (untuk countdown)</label><input id="wedding-date" type="datetime-local" bind:value={config.wedding_date} class={inputClass} /></div>
+            
+            <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Musik Backsound (Auto-Play)</p>
+              <div class="mt-2 grid grid-cols-2 gap-3">
+                <div><label for="bgm-title" class={labelClass}>Judul Lagu</label><input id="bgm-title" bind:value={config.bgm_title} class={inputClass} placeholder="Misal: Marry You" /></div>
+                <div>
+                  <label class={labelClass}>File MP3</label>
+                  <input type="file" accept="audio/mp3,audio/mpeg" onchange={uploadBgm} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-700 file:text-white hover:file:bg-stone-600 cursor-pointer" />
+                </div>
+              </div>
+              {#if config.bgm_url}
+                <p class="mt-2 text-xs text-green-400">✅ File aktif: {config.bgm_url}</p>
+              {/if}
+            </div>
+
             <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
               <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Akad Nikah</p>
               <div class="mt-2 grid grid-cols-3 gap-3">
@@ -328,7 +403,18 @@
         {:else if activeTab === 'pembayaran'}
           <h2 class="text-lg font-semibold text-rose-300">Pembayaran & Amplop</h2>
           <div class="mt-4 space-y-4">
-            <div><label for="qris-image" class={labelClass}>QRIS Image (URL)</label><input id="qris-image" bind:value={config.qris_image} class={inputClass} placeholder="https://..." /></div>
+            <div>
+              <label class={labelClass}>QRIS Image</label>
+              <div class="flex gap-4 items-center">
+                {#if config.qris_image}
+                  <img src={config.qris_image} alt="QRIS" class="h-24 w-24 object-cover rounded-xl border border-stone-700" />
+                {/if}
+                <div class="flex-1">
+                  <input type="file" accept="image/*" onchange={uploadQrisPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-700 file:text-white hover:file:bg-stone-600 cursor-pointer" />
+                  <p class="mt-1 text-xs text-stone-500">Maks. 2MB (JPG/PNG/WebP)</p>
+                </div>
+              </div>
+            </div>
             <div class="grid grid-cols-3 gap-4">
               <div><label for="bank-name" class={labelClass}>Bank</label><input id="bank-name" bind:value={config.bank_name} class={inputClass} /></div>
               <div><label for="bank-account" class={labelClass}>No. Rekening</label><input id="bank-account" bind:value={config.bank_account} class={inputClass} /></div>
@@ -345,9 +431,9 @@
 
         {:else if activeTab === 'galeri'}
           <h2 class="text-lg font-semibold text-rose-300">Galeri Foto</h2>
-          <div class="mt-4 flex gap-2">
-            <input bind:value={newPhotoUrl} placeholder="URL foto..." class="flex-1 {inputClass}" />
-            <button class="rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-500" onclick={addPhoto}>Tambah</button>
+          <div class="mt-4">
+            <input type="file" accept="image/*" onchange={uploadGalleryPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer" />
+            <p class="mt-1 text-xs text-stone-500">Pilih foto satu per satu untuk diunggah (Maks 2MB per foto).</p>
           </div>
           <div class="mt-4 grid grid-cols-3 gap-3">
             {#each config.gallery_photos as photo, i}
@@ -405,8 +491,8 @@
       <!-- Save button -->
       {#if activeTab !== 'verifikasi' && activeTab !== 'ucapan' && activeTab !== 'statistik' && activeTab !== 'keamanan'}
         <div class="mt-4 flex items-center gap-3">
-          <button class="rounded-lg bg-rose-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-rose-500" onclick={save} disabled={saving}>
-            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+          <button class="rounded-lg bg-rose-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50" onclick={save} disabled={saving || uploading}>
+            {saving ? 'Menyimpan...' : uploading ? 'Mengunggah...' : 'Simpan Perubahan'}
           </button>
           {#if savedMsg}<span class="text-sm {savedMsg === 'Tersimpan!' ? 'text-green-400' : 'text-red-400'}">{savedMsg}</span>{/if}
         </div>

@@ -311,4 +311,23 @@ router.post('/invitations/:id/reject', requireAdmin, async (req, res, next) => {
   }
 })
 
+import { uploadPhoto, uploadMusic, multerErrorHandler } from './upload.js'
+
+router.post('/upload/photo', requireAdmin, uploadPhoto.single('file'), multerErrorHandler, (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'Tidak ada file yang diunggah.' } })
+  }
+  const photo_url = `/api/public/photos/${req.file.filename}`
+  res.json({ photo_url })
+})
+
+router.post('/upload/music', requireAdmin, uploadMusic.single('file'), multerErrorHandler, (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'Tidak ada file yang diunggah.' } })
+  }
+  const bgm_url = `/api/public/music/${req.file.filename}`
+  const bgm_title = req.file.originalname.replace(/\.[^/.]+$/, '')
+  res.json({ bgm_url, bgm_title })
+})
+
 export default router

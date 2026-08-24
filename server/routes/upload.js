@@ -15,7 +15,7 @@ const router = Router()
 const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 // ── Helper: multer error → JSON ───────────────────────────────────────────────
-function multerErrorHandler(err, req, res, next) {
+export const multerErrorHandler = (err, req, res, next) => {
   if (err?.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ error: { code: 'FILE_TOO_LARGE', message: 'Ukuran foto maksimal 2 MB.' } })
   }
@@ -50,7 +50,7 @@ const PHOTOS_DIR  = path.join(process.cwd(), 'uploads', 'photos')
 const MUSIC_DIR   = path.join(process.cwd(), 'uploads', 'music')
 
 const uploadProof = makeUploader(PROOFS_DIR, 'proof', 5 * 1024 * 1024)
-const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo', 2 * 1024 * 1024)
+export const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo', 2 * 1024 * 1024)
 
 function makeMusicUploader(dir, prefix) {
   fs.mkdirSync(dir, { recursive: true })
@@ -70,7 +70,7 @@ function makeMusicUploader(dir, prefix) {
   })
 }
 
-const uploadMusic = makeMusicUploader(MUSIC_DIR, 'music')
+export const uploadMusic = makeMusicUploader(MUSIC_DIR, 'music')
 
 function isSafeMusicFilename(filename) {
   return filename === path.basename(filename) && /^music_[a-zA-Z0-9_-]+\.mp3$/.test(filename)

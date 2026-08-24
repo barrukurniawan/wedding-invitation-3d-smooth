@@ -324,7 +324,25 @@ export function getAdminInvitations() {
 }
 
 export function getAdminInvitation(id: number) {
-  return request<AdminInvitation>(`/admin/invitations/${id}`)
+  return request<AdminInvitation>(`/api/admin/invitations/${id}`)
+}
+
+export async function uploadAdminPhoto(file: File): Promise<{ photo_url: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request<{ photo_url: string }>('/admin/upload/photo', {
+    method: 'POST',
+    body: formData as any,
+  })
+}
+
+export async function uploadAdminMusic(file: File): Promise<{ bgm_url: string; bgm_title: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request<{ bgm_url: string; bgm_title: string }>('/admin/upload/music', {
+    method: 'POST',
+    body: formData as any,
+  })
 }
 
 export function activateInvitation(id: number) {
