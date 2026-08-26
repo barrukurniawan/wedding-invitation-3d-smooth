@@ -3,7 +3,6 @@
   import {
     activateInvitation,
     ApiError,
-    changeAdminPassword,
     deleteAdminGuestbookEntry,
     getAdminConfig,
     getAdminGuestbook,
@@ -21,6 +20,32 @@
     type GuestbookStats,
     type WeddingConfig,
   } from '$lib/api-client'
+  import { inputClass } from '$lib/components/admin/styles'
+  import MonitoringTab from '$lib/components/admin/MonitoringTab.svelte'
+  import VerificationTab from '$lib/components/admin/VerificationTab.svelte'
+  import CoupleTab from '$lib/components/admin/CoupleTab.svelte'
+  import EventsTab from '$lib/components/admin/EventsTab.svelte'
+  import PaymentTab from '$lib/components/admin/PaymentTab.svelte'
+  import LocationTab from '$lib/components/admin/LocationTab.svelte'
+  import GalleryTab from '$lib/components/admin/GalleryTab.svelte'
+  import GuestbookTab from '$lib/components/admin/GuestbookTab.svelte'
+  import StatsTab from '$lib/components/admin/StatsTab.svelte'
+  import SecurityTab from '$lib/components/admin/SecurityTab.svelte'
+
+  const TABS = [
+    ['monitoring', 'Monitoring'],
+    ['verifikasi', 'Verifikasi Undangan'],
+    ['pengantin', 'Pengantin'],
+    ['acara', 'Acara'],
+    ['pembayaran', 'Pembayaran'],
+    ['lokasi', 'Lokasi'],
+    ['galeri', 'Galeri'],
+    ['ucapan', 'Ucapan'],
+    ['statistik', 'Statistik'],
+    ['keamanan', 'Keamanan'],
+  ] as const
+
+  type TabId = (typeof TABS)[number][0]
 
   let loggedIn = $state(false)
   let loadingSession = $state(true)
@@ -37,15 +62,9 @@
   let adminInvitations = $state<AdminInvitation[]>([])
   let loadingInvitations = $state(false)
   let verifyingId = $state<number | null>(null)
-  let activeTab = $state<'verifikasi' | 'pengantin' | 'acara' | 'pembayaran' | 'lokasi' | 'galeri' | 'ucapan' | 'statistik' | 'keamanan'>('verifikasi')
+  let activeTab = $state<TabId>('monitoring')
 
   let stats = $state<GuestbookStats>({ total: 0, hadir: 0, ragu: 0, tidakHadir: 0 })
-  let currentPassword = $state('')
-  let newPassword = $state('')
-  let passwordMsg = $state('')
-  let changingPassword = $state(false)
-
-  let newPhotoUrl = $state('')
 
   onMount(async () => {
     try {
@@ -152,21 +171,6 @@
     }
   }
 
-  async function changePassword() {
-    passwordMsg = ''
-    changingPassword = true
-    try {
-      await changeAdminPassword(currentPassword, newPassword)
-      currentPassword = ''
-      newPassword = ''
-      passwordMsg = 'Password berhasil diubah.'
-    } catch (error) {
-      passwordMsg = error instanceof ApiError ? error.message : 'Password gagal diubah.'
-    } finally {
-      changingPassword = false
-    }
-  }
-
   async function signOut() {
     try {
       await logout()
@@ -176,12 +180,6 @@
       entries = []
       passwordInput = ''
     }
-  }
-
-  function addPhoto() {
-    if (!config || !newPhotoUrl) return
-    config.gallery_photos = [...(config.gallery_photos || []), newPhotoUrl]
-    newPhotoUrl = ''
   }
 
   function removePhoto(idx: number) {
@@ -216,7 +214,7 @@
     const url = await handleFileUpload(e, 'photo')
     if (url && config) config.wedding_photo = url
   }
-  
+
   async function uploadQrisPhoto(e: Event) {
     const url = await handleFileUpload(e, 'photo')
     if (url && config) config.qris_image = url
@@ -232,13 +230,7 @@
     if (url && config) config.bgm_url = url
   }
 
-  function fmtDate(ts: string): string {
-    if (!ts) return '-'
-    return new Date(ts).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
-
-  const inputClass = 'w-full rounded-lg border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-rose-500'
-  const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-stone-400'
+  const hasSaveButton = $derived(!['monitoring', 'verifikasi', 'ucapan', 'statistik', 'keamanan'].includes(activeTab))
 </script>
 
 <svelte:head><title>Admin — Wedding Dashboard</title></svelte:head>
@@ -266,236 +258,46 @@
 
       <!-- Tabs -->
       <div class="mt-4 flex flex-wrap gap-2">
-        {#each [['verifikasi','Verifikasi Undangan'],['pengantin','Pengantin'],['acara','Acara'],['pembayaran','Pembayaran'],['lokasi','Lokasi'],['galeri','Galeri'],['ucapan','Ucapan'],['statistik','Statistik'],['keamanan','Keamanan']] as [id,label]}
-          <button class="rounded-lg px-3 py-1.5 text-xs font-medium transition {activeTab === id ? 'bg-rose-600 text-white' : 'bg-stone-900 text-stone-400 hover:text-stone-200'}" onclick={() => (activeTab = id as typeof activeTab)}>{label}</button>
+        {#each TABS as [id, label] (id)}
+          <button class="rounded-lg px-3 py-1.5 text-xs font-medium transition {activeTab === id ? 'bg-rose-600 text-white' : 'bg-stone-900 text-stone-400 hover:text-stone-200'}" onclick={() => (activeTab = id)}>{label}</button>
         {/each}
       </div>
 
       <!-- Content -->
       <div class="mt-6 rounded-2xl border border-stone-800 bg-stone-900 p-5">
-        {#if activeTab === 'verifikasi'}
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-rose-300">Verifikasi Undangan Pasangan</h2>
-            <button class="text-xs text-rose-400 hover:text-rose-300" onclick={loadAdminInvitations}>Refresh</button>
-          </div>
-          {#if loadingInvitations}
-            <p class="mt-4 text-center text-sm text-stone-500">Memuat daftar undangan...</p>
-          {:else}
-            <div class="mt-4 space-y-4">
-              {#each adminInvitations as inv}
-                <div class="rounded-xl border {inv.status === 'pending_verification' ? 'border-yellow-600/60 bg-yellow-950/20' : 'border-stone-800 bg-stone-950'} p-4">
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-base font-bold text-white">{inv.slug}.marryme.web.id</span>
-                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold {inv.status === 'active' ? 'bg-green-800/60 text-green-300' : inv.status === 'pending_verification' ? 'bg-yellow-800/60 text-yellow-300' : 'bg-stone-800 text-stone-400'}">
-                          {inv.status}
-                        </span>
-                      </div>
-                      <p class="mt-1 text-xs text-stone-400">
-                        Pemilik: <strong class="text-stone-200">{inv.user_display_name || inv.user_email || 'User'}</strong> ({inv.user_email})
-                      </p>
-                      {#if inv.bride_name || inv.groom_name}
-                        <p class="text-xs text-rose-400 font-medium">Pasangan: {inv.bride_name || '—'} & {inv.groom_name || '—'}</p>
-                      {/if}
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                      {#if inv.status !== 'active'}
-                        <button
-                          class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-500 disabled:opacity-50"
-                          disabled={verifyingId === inv.id}
-                          onclick={() => handleActivate(inv.id)}
-                        >
-                          Aktifkan
-                        </button>
-                      {/if}
-                      {#if inv.status === 'pending_verification'}
-                        <button
-                          class="rounded-lg bg-red-600/80 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
-                          disabled={verifyingId === inv.id}
-                          onclick={() => handleReject(inv.id)}
-                        >
-                          Tolak
-                        </button>
-                      {/if}
-                    </div>
-                  </div>
-
-                  {#if inv.payment_proof_url}
-                    <div class="mt-3 rounded-lg border border-stone-800 bg-stone-900 p-3">
-                      <p class="text-xs text-stone-400">Bukti Transfer (dikirim {fmtDate(inv.payment_submitted_at || '')}):</p>
-                      <a href={inv.payment_proof_url} target="_blank" rel="noreferrer" class="mt-2 inline-block">
-                        <img src={inv.payment_proof_url} alt="Bukti Transfer {inv.slug}" class="max-h-48 max-w-full rounded-lg border border-stone-700 object-contain" />
-                      </a>
-                    </div>
-                  {:else}
-                    <p class="mt-2 text-xs text-stone-500 italic">Belum ada bukti transfer diunggah.</p>
-                  {/if}
-                </div>
-              {:else}
-                <p class="py-8 text-center text-sm text-stone-500">Belum ada pendaftaran undangan.</p>
-              {/each}
-            </div>
-          {/if}
-
+        {#if activeTab === 'monitoring'}
+          <MonitoringTab />
+        {:else if activeTab === 'verifikasi'}
+          <VerificationTab invitations={adminInvitations} loading={loadingInvitations} verifyingId={verifyingId} onActivate={handleActivate} onReject={handleReject} onRefresh={loadAdminInvitations} />
         {:else if activeTab === 'pengantin'}
-          <h2 class="text-lg font-semibold text-rose-300">Data Pengantin</h2>
-          <div class="mt-4 grid grid-cols-2 gap-4">
-            <div><label for="bride-name" class={labelClass}>Nama Mempelai Wanita</label><input id="bride-name" bind:value={config.bride_name} class={inputClass} /></div>
-            <div><label for="groom-name" class={labelClass}>Nama Mempelai Pria</label><input id="groom-name" bind:value={config.groom_name} class={inputClass} /></div>
-            <div><label for="bride-parents" class={labelClass}>Orangtua Wanita</label><input id="bride-parents" bind:value={config.bride_parents} class={inputClass} /></div>
-            <div><label for="groom-parents" class={labelClass}>Orangtua Pria</label><input id="groom-parents" bind:value={config.groom_parents} class={inputClass} /></div>
-            
-            <div class="col-span-2">
-              <label class={labelClass}>Foto Utama Pernikahan</label>
-              <div class="flex gap-4 items-center">
-                {#if config.wedding_photo}
-                  <img src={config.wedding_photo} alt="Foto Utama" class="h-24 w-24 object-cover rounded-xl border border-stone-700" />
-                {/if}
-                <div class="flex-1">
-                  <input type="file" accept="image/*" onchange={uploadMainPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer" />
-                  <p class="mt-1 text-xs text-stone-500">Maks. 2MB (JPG/PNG/WebP)</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-span-2"><label for="quote" class={labelClass}>Ayat / Quotes Pembuka</label><textarea id="quote" bind:value={config.quote} class="{inputClass} min-h-24 resize-y" placeholder="Maha suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan..."></textarea></div>
-          </div>
-
+          <CoupleTab {config} onUploadPhoto={uploadMainPhoto} />
         {:else if activeTab === 'acara'}
-          <h2 class="text-lg font-semibold text-rose-300">Detail Acara</h2>
-          <div class="mt-4 space-y-4">
-            <div><label for="wedding-date" class={labelClass}>Tanggal Pernikahan (untuk countdown)</label><input id="wedding-date" type="datetime-local" bind:value={config.wedding_date} class={inputClass} /></div>
-            
-            <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Musik Backsound (Auto-Play)</p>
-              <div class="mt-2 grid grid-cols-2 gap-3">
-                <div><label for="bgm-title" class={labelClass}>Judul Lagu</label><input id="bgm-title" bind:value={config.bgm_title} class={inputClass} placeholder="Misal: Marry You" /></div>
-                <div>
-                  <label class={labelClass}>File MP3</label>
-                  <input type="file" accept="audio/mp3,audio/mpeg" onchange={uploadBgm} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-700 file:text-white hover:file:bg-stone-600 cursor-pointer" />
-                </div>
-              </div>
-              {#if config.bgm_url}
-                <p class="mt-2 text-xs text-green-400">✅ File aktif: {config.bgm_url}</p>
-              {/if}
-            </div>
-
-            <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Akad Nikah</p>
-              <div class="mt-2 grid grid-cols-3 gap-3">
-                <div><label for="akad-date" class={labelClass}>Tanggal</label><input id="akad-date" bind:value={config.akad_date} class={inputClass} /></div>
-                <div><label for="akad-time" class={labelClass}>Waktu</label><input id="akad-time" bind:value={config.akad_time} class={inputClass} /></div>
-                <div><label for="akad-location" class={labelClass}>Lokasi</label><input id="akad-location" bind:value={config.akad_location} class={inputClass} /></div>
-              </div>
-            </div>
-            <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wider text-rose-300">Resepsi</p>
-              <div class="mt-2 grid grid-cols-3 gap-3">
-                <div><label for="resepsi-date" class={labelClass}>Tanggal</label><input id="resepsi-date" bind:value={config.resepsi_date} class={inputClass} /></div>
-                <div><label for="resepsi-time" class={labelClass}>Waktu</label><input id="resepsi-time" bind:value={config.resepsi_time} class={inputClass} /></div>
-                <div><label for="resepsi-location" class={labelClass}>Lokasi</label><input id="resepsi-location" bind:value={config.resepsi_location} class={inputClass} /></div>
-              </div>
-            </div>
-          </div>
-
+          <EventsTab {config} onUploadMusic={uploadBgm} />
         {:else if activeTab === 'pembayaran'}
-          <h2 class="text-lg font-semibold text-rose-300">Pembayaran & Amplop</h2>
-          <div class="mt-4 space-y-4">
-            <div>
-              <label class={labelClass}>QRIS Image</label>
-              <div class="flex gap-4 items-center">
-                {#if config.qris_image}
-                  <img src={config.qris_image} alt="QRIS" class="h-24 w-24 object-cover rounded-xl border border-stone-700" />
-                {/if}
-                <div class="flex-1">
-                  <input type="file" accept="image/*" onchange={uploadQrisPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-700 file:text-white hover:file:bg-stone-600 cursor-pointer" />
-                  <p class="mt-1 text-xs text-stone-500">Maks. 2MB (JPG/PNG/WebP)</p>
-                </div>
-              </div>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-              <div><label for="bank-name" class={labelClass}>Bank</label><input id="bank-name" bind:value={config.bank_name} class={inputClass} /></div>
-              <div><label for="bank-account" class={labelClass}>No. Rekening</label><input id="bank-account" bind:value={config.bank_account} class={inputClass} /></div>
-              <div><label for="bank-holder" class={labelClass}>Atas Nama</label><input id="bank-holder" bind:value={config.bank_holder} class={inputClass} /></div>
-            </div>
-          </div>
-
+          <PaymentTab {config} onUploadQris={uploadQrisPhoto} />
         {:else if activeTab === 'lokasi'}
-          <h2 class="text-lg font-semibold text-rose-300">Lokasi Venue</h2>
-          <div class="mt-4 space-y-4">
-            <div><label for="venue-address" class={labelClass}>Alamat Venue</label><input id="venue-address" bind:value={config.venue_address} class={inputClass} /></div>
-            <div><label for="maps-url" class={labelClass}>Google Maps URL</label><input id="maps-url" bind:value={config.maps_url} class={inputClass} placeholder="https://maps.app.goo.gl/..." /></div>
-          </div>
-
+          <LocationTab {config} />
         {:else if activeTab === 'galeri'}
-          <h2 class="text-lg font-semibold text-rose-300">Galeri Foto</h2>
-          <div class="mt-4">
-            <input type="file" accept="image/*" onchange={uploadGalleryPhoto} class="block w-full text-sm text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer" />
-            <p class="mt-1 text-xs text-stone-500">Pilih foto satu per satu untuk diunggah (Maks 2MB per foto).</p>
-          </div>
-          <div class="mt-4 grid grid-cols-3 gap-3">
-            {#each config.gallery_photos as photo, i}
-              <div class="relative">
-                <img src={photo} alt="Foto {i+1}" class="aspect-square w-full rounded-lg object-cover" />
-                <button class="absolute right-1 top-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white hover:bg-red-600" onclick={() => removePhoto(i)}>✕</button>
-              </div>
-            {:else}
-              <p class="col-span-3 text-center text-sm text-stone-500 py-8">Belum ada foto. Tambahkan URL foto di atas.</p>
-            {/each}
-          </div>
-
+          <GalleryTab {config} onUploadPhoto={uploadGalleryPhoto} onRemovePhoto={removePhoto} />
         {:else if activeTab === 'ucapan'}
-          <h2 class="text-lg font-semibold text-rose-300">Ucapan Tamu</h2>
-          <button class="mt-2 text-xs text-rose-400 hover:text-rose-300" onclick={() => Promise.all([loadEntries(), loadStats()])}>Refresh</button>
-          <div class="mt-4 space-y-3 max-h-[500px] overflow-y-auto">
-            {#each entries as entry}
-              <div class="rounded-xl border border-stone-800 bg-stone-950 p-3">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <span class="text-sm font-semibold text-white">{entry.name}</span>
-                    <span class="ml-2 rounded-full px-2 py-0.5 text-xs {entry.attendance === 'Hadir' ? 'bg-green-800/50 text-green-300' : entry.attendance === 'Ragu-ragu' ? 'bg-yellow-800/50 text-yellow-300' : 'bg-red-800/50 text-red-300'}">{entry.attendance}</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs text-stone-600">{fmtDate(entry.created_at || '')}</span>
-                    <button class="rounded-lg bg-red-800/50 px-2 py-1 text-xs text-red-300 hover:bg-red-700" onclick={() => removeEntry(entry.id!)}>Hapus</button>
-                  </div>
-                </div>
-                <p class="mt-2 text-sm text-stone-300">{entry.message}</p>
-              </div>
-            {:else}
-              <p class="text-center text-sm text-stone-500 py-8">Belum ada ucapan.</p>
-            {/each}
-          </div>
-
+          <GuestbookTab {entries} onRefresh={() => Promise.all([loadEntries(), loadStats()])} onDelete={removeEntry} />
         {:else if activeTab === 'statistik'}
-          <h2 class="text-lg font-semibold text-rose-300">Statistik</h2>
-          <div class="mt-4 grid grid-cols-4 gap-4">
-            <div class="rounded-xl border border-stone-800 bg-stone-950 p-4 text-center"><p class="text-2xl font-bold text-white">{stats.total}</p><p class="text-xs text-stone-400">Total</p></div>
-            <div class="rounded-xl border border-green-800/50 bg-green-900/20 p-4 text-center"><p class="text-2xl font-bold text-green-400">{stats.hadir}</p><p class="text-xs text-stone-400">Hadir</p></div>
-            <div class="rounded-xl border border-yellow-800/50 bg-yellow-900/20 p-4 text-center"><p class="text-2xl font-bold text-yellow-400">{stats.ragu}</p><p class="text-xs text-stone-400">Ragu</p></div>
-            <div class="rounded-xl border border-red-800/50 bg-red-900/20 p-4 text-center"><p class="text-2xl font-bold text-red-400">{stats.tidakHadir}</p><p class="text-xs text-stone-400">Tidak Hadir</p></div>
-          </div>
+          <StatsTab {stats} />
         {:else if activeTab === 'keamanan'}
-          <h2 class="text-lg font-semibold text-rose-300">Ganti Password Admin</h2>
-          <form class="mt-4 max-w-sm space-y-3" onsubmit={(event) => { event.preventDefault(); changePassword() }}>
-            <div><label for="current-password" class={labelClass}>Password Saat Ini</label><input id="current-password" bind:value={currentPassword} autocomplete="current-password" type="password" required class={inputClass} /></div>
-            <div><label for="new-password" class={labelClass}>Password Baru</label><input id="new-password" bind:value={newPassword} autocomplete="new-password" type="password" minlength="12" required class={inputClass} /></div>
-            <button class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60" disabled={changingPassword}>{changingPassword ? 'Mengubah...' : 'Ubah Password'}</button>
-            {#if passwordMsg}<p class="text-xs {passwordMsg.includes('berhasil') ? 'text-green-400' : 'text-red-400'}">{passwordMsg}</p>{/if}
-          </form>
+          <SecurityTab />
         {/if}
       </div>
 
       <!-- Save button -->
-      {#if activeTab !== 'verifikasi' && activeTab !== 'ucapan' && activeTab !== 'statistik' && activeTab !== 'keamanan'}
+      {#if hasSaveButton}
         <div class="mt-4 flex items-center gap-3">
           <button class="rounded-lg bg-rose-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50" onclick={save} disabled={saving || uploading}>
             {saving ? 'Menyimpan...' : uploading ? 'Mengunggah...' : 'Simpan Perubahan'}
           </button>
           {#if savedMsg}<span class="text-sm {savedMsg === 'Tersimpan!' ? 'text-green-400' : 'text-red-400'}">{savedMsg}</span>{/if}
         </div>
+      {:else if savedMsg && (activeTab === 'verifikasi')}
+        <p class="mt-4 text-sm text-red-400">{savedMsg}</p>
       {/if}
     {:else}
       <p class="mt-20 text-center text-stone-500">Memuat...</p>

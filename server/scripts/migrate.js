@@ -15,6 +15,7 @@ const migrations = [
   '008_invitation_contacts.sql',
   '009_music_metadata.sql',
   '010_invitation_contacts_gender.sql',
+  '011_visitor_events.sql',
 ]
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDirectory = process.env.MIGRATIONS_DIR

@@ -477,3 +477,31 @@ export function createMyContact(name: string, phone: string, gender: 'm' | 'f' =
 export function deleteMyContact(id: string) {
   return request<void>(`/my/contacts/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
+
+export interface AnalyticsSummary {
+  users: { total: number; new30d: number }
+  tenants: { total: number; active: number; pending: number; draft: number; suspended: number }
+  payments: { receivedCount: number; pendingCount: number; amountReceived: number }
+  rsvps: { total: number; hadir: number; ragu: number; tidakHadir: number }
+}
+
+export interface VisitorSeriesPoint {
+  date: string
+  views: number
+  uniques: number
+}
+
+export interface AnalyticsVisitors {
+  series: VisitorSeriesPoint[]
+  topSlugs: { slug: string; views: number; uniques: number }[]
+  topPaths: { path: string; views: number }[]
+  recentUsers: { displayName: string; email: string | null; createdAt: string }[]
+}
+
+export function getAnalyticsSummary() {
+  return request<AnalyticsSummary>('/admin/analytics/summary')
+}
+
+export function getAnalyticsVisitors(days: 7 | 30 = 7) {
+  return request<AnalyticsVisitors>(`/admin/analytics/visitors?days=${days}`)
+}

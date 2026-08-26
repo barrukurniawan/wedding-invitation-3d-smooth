@@ -15,6 +15,7 @@ import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
+import trackRoutes from './routes/track.js'
 import pool from './db.js'
 import { attachHostContext, requirePublicInvitation, requireRootHost } from './middleware/tenant.js'
 
@@ -39,6 +40,7 @@ app.get('/api/health', (req, res) => {
 
 
 app.use('/api', attachHostContext)
+app.use('/api/track', trackRoutes)
 app.get('/api/public/photos/:filename', servePublicPhoto)
 app.get('/api/my/photos/:filename', servePublicPhoto)
 app.get('/api/public/music/:filename', servePublicMusic)

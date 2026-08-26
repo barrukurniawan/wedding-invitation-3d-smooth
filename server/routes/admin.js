@@ -127,6 +127,117 @@ router.get('/stats', requireAdmin, async (req, res, next) => {
   }
 })
 
+router.get('/analytics/summary', requireAdmin, async (req, res, next) => {
+  try {
+    const [usersResult, tenantsResult, paymentsResult, rsvpsResult] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*) AS total,
+           COALESCE(SUM(created_at >= UTC_TIMESTAMP() - INTERVAL 30 DAY), 0) AS new30d
+         FROM users WHERE status <> 'deleted'`,
+      ),
+      pool.query(
+        `SELECT COUNT(*) AS total,
+           COALESCE(SUM(status = 'active'), 0) AS active,
+           COALESCE(SUM(status = 'pending_verification'), 0) AS pending,
+           COALESCE(SUM(status IN ('draft', 'awaiting_payment')), 0) AS draft,
+           COALESCE(SUM(status = 'suspended'), 0) AS suspended
+         FROM invitations WHERE deleted_at IS NULL`,
+      ),
+      pool.query(
+        `SELECT COALESCE(SUM(status = 'received'), 0) AS receivedCount,
+           COALESCE(SUM(status IN ('created', 'pending')), 0) AS pendingCount,
+           COALESCE(SUM(CASE WHEN status = 'received' THEN amount ELSE 0 END), 0) AS amountReceived
+         FROM payments`,
+      ),
+      pool.query(
+        `SELECT COUNT(*) AS total,
+           COALESCE(SUM(attendance = 'Hadir'), 0) AS hadir,
+           COALESCE(SUM(attendance = 'Ragu-ragu'), 0) AS ragu,
+           COALESCE(SUM(attendance = 'Tidak Hadir'), 0) AS tidakHadir
+         FROM guestbook_entries WHERE status <> 'deleted'`,
+      ),
+    ])
+    const users = usersResult[0][0] || { total: 0, new30d: 0 }
+    res.json({
+      users: { total: Number(users.total) || 0, new30d: Number(users.new30d) || 0 },
+      tenants: {
+        total: Number(tenantsResult[0]?.[0]?.total) || 0,
+        active: Number(tenantsResult[0]?.[0]?.active) || 0,
+        pending: Number(tenantsResult[0]?.[0]?.pending) || 0,
+        draft: Number(tenantsResult[0]?.[0]?.draft) || 0,
+        suspended: Number(tenantsResult[0]?.[0]?.suspended) || 0,
+      },
+      payments: {
+        receivedCount: Number(paymentsResult[0]?.[0]?.receivedCount) || 0,
+        pendingCount: Number(paymentsResult[0]?.[0]?.pendingCount) || 0,
+        amountReceived: Number(paymentsResult[0]?.[0]?.amountReceived) || 0,
+      },
+      rsvps: {
+        total: Number(rsvpsResult[0]?.[0]?.total) || 0,
+        hadir: Number(rsvpsResult[0]?.[0]?.hadir) || 0,
+        ragu: Number(rsvpsResult[0]?.[0]?.ragu) || 0,
+        tidakHadir: Number(rsvpsResult[0]?.[0]?.tidakHadir) || 0,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/analytics/visitors', requireAdmin, async (req, res, next) => {
+  const parsed = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) }).safeParse(req.query)
+  if (!parsed.success) return invalid(res, parsed.error)
+  const days = parsed.data.days
+  try {
+    const [seriesResult, slugResult, pathResult, recentResult] = await Promise.all([
+      pool.query(
+        `SELECT DATE(CONVERT_TZ(created_at, '+00:00', '+07:00')) AS d,
+           COUNT(*) AS views, COUNT(DISTINCT visit_id) AS uniques
+         FROM visitor_events
+         WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY
+         GROUP BY d ORDER BY d`,
+        [days],
+      ),
+      pool.query(
+        `SELECT slug, COUNT(*) AS views, COUNT(DISTINCT visit_id) AS uniques
+         FROM visitor_events
+         WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY AND slug IS NOT NULL
+         GROUP BY slug ORDER BY views DESC LIMIT 10`,
+        [days],
+      ),
+      pool.query(
+        `SELECT path, COUNT(*) AS views
+         FROM visitor_events
+         WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY
+         GROUP BY path ORDER BY views DESC LIMIT 10`,
+        [days],
+      ),
+      pool.query(
+        `SELECT display_name, email, created_at
+         FROM users WHERE status <> 'deleted'
+         ORDER BY created_at DESC, id DESC LIMIT 8`,
+      ),
+    ])
+    const toDay = (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10))
+    const toIso = (value) => {
+      const normalized = value instanceof Date ? value.toISOString() : String(value).replace(' ', 'T')
+      return normalized.slice(0, 19)
+    }
+    res.json({
+      series: seriesResult[0].map((r) => ({ date: toDay(r.d), views: Number(r.views), uniques: Number(r.uniques) })),
+      topSlugs: slugResult[0].map((r) => ({ slug: r.slug, views: Number(r.views), uniques: Number(r.uniques) })),
+      topPaths: pathResult[0].map((r) => ({ path: r.path, views: Number(r.views) })),
+      recentUsers: recentResult[0].map((r) => ({
+        displayName: r.display_name,
+        email: r.email,
+        createdAt: toIso(r.created_at),
+      })),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.delete('/guestbook/:id', requireAdmin, async (req, res, next) => {
   if (!z.string().uuid().safeParse(req.params.id).success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID buku tamu tidak valid.' } })
   try {

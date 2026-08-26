@@ -4,11 +4,13 @@
   import TenantBootstrap from '$lib/components/tenant/TenantBootstrap.svelte'
   import TenantStateScreen from '$lib/components/tenant/TenantStateScreen.svelte'
   import { classifyBrowserHost, type HostContext } from '$lib/routing/host'
+  import { trackVisit } from '$lib/utils/trackVisit'
 
   let hostContext = $state<HostContext | null>(null)
 
   onMount(() => {
     hostContext = classifyBrowserHost(window.location.hostname)
+    trackVisit()
   })
 </script>
 
