@@ -12,3 +12,9 @@ server/.env.docker
 !server/.env.example
 !server/.env.docker.example
 .kilo/
+.kiro/
+.continue/
+deploy-docker-vps.md
+patch*.cjs
+patch*.js
+*.backup*

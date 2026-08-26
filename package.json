@@ -8,6 +8,7 @@
     "build": "vite build",
     "models:runtime": "node scripts/trim-model-animations.mjs",
     "preview": "vite preview",
+    "test": "npm --prefix server test",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
