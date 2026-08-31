@@ -43,7 +43,9 @@
   // Re-use objects (mencegah alokasi memori tiap milidetik)
   const activeLabels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
   const labelPool: Record<string, any> = {}
+  const labelElements: Record<string, HTMLElement> = {}
   let lastLength = -1; // -1 = force update pertama kali
+  let elementsCached = false
 
   useTask(() => {
     const cam = camera.current
@@ -51,6 +53,16 @@
     if (!cam || !r) return
     const w = r.domElement.clientWidth
     const h = r.domElement.clientHeight
+    
+    // Cache DOM elements once
+    if (!elementsCached) {
+      for (const def of parsedDefs) {
+        labelElements[def.id] = document.getElementById('label-' + def.id)!
+      }
+      labelElements['player'] = document.getElementById('label-player')!
+      labelElements['receptionist-guide-arrow'] = document.getElementById('receptionist-guide-arrow')!
+      elementsCached = true
+    }
     
     activeLabels.length = 0 // Kosongkan array tanpa membuang referensinya
 
@@ -72,7 +84,7 @@
         obj = { id: def.id, text: def.parsedText, x, y, behind, opacity, objective: def.objective ?? false }
         labelPool[def.id] = obj
       } else {
-        const el = document.getElementById('label-' + def.id)
+        const el = labelElements[def.id]
         if (el) {
           el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
           el.style.opacity = behind ? '0' : opacity.toString()
@@ -93,7 +105,7 @@
         obj = { id: 'player', text: $playerLabel, x, y, behind, opacity: 1, objective: false }
         labelPool['player'] = obj
       } else {
-        const el = document.getElementById('label-player')
+        const el = labelElements['player']
         if (el) {
           el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
           el.style.opacity = behind ? '0' : '1'
@@ -116,7 +128,7 @@
     const ry = (-_v3.y * 0.5 + 0.5) * h
     const rVisible = _v3.z < 1 && rx > -50 && rx < w + 50 && ry > -50 && ry < h + 50
 
-    const arrowEl = document.getElementById('receptionist-guide-arrow')
+    const arrowEl = labelElements['receptionist-guide-arrow']
     if (arrowEl) {
       if (!rVisible) {
         const cx = w / 2

@@ -305,30 +305,42 @@
     const instanceScale = new THREE.Vector3()
     const rotationEuler = new THREE.Euler()
 
-    prepared.traverse((obj) => {
-      const source = obj as THREE.Mesh
-      if (!source.isMesh || source instanceof THREE.SkinnedMesh) return
+    // Frustum culling optimization: split instances into chunks of max 100
+    // so bounding spheres are tighter and Three.js frustum culling is more effective
+    const CHUNK_SIZE = 100
+    const numChunks = Math.ceil(instances.length / CHUNK_SIZE)
 
-      const mesh = new THREE.InstancedMesh(source.geometry, source.material, instances.length)
-      mesh.name = `${source.name || 'nature'}-instances`
-      mesh.castShadow = false
-      mesh.receiveShadow = false
+    for (let chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
+      const start = chunkIdx * CHUNK_SIZE
+      const end = Math.min(start + CHUNK_SIZE, instances.length)
+      const chunkInstances = instances.slice(start, end)
 
-      instances.forEach((instance, index) => {
-        const resolvedScale = (instance.scale ?? 1) * scale
-        position.fromArray(instance.position)
-        rotation.setFromEuler(rotationEuler.set(0, instance.rotationY ?? 0, 0))
-        instanceScale.setScalar(resolvedScale)
-        transform.compose(position, rotation, instanceScale)
-        transform.multiply(source.matrixWorld)
-        mesh.setMatrixAt(index, transform)
+      prepared.traverse((obj) => {
+        const source = obj as THREE.Mesh
+        if (!source.isMesh || source instanceof THREE.SkinnedMesh) return
+
+        const mesh = new THREE.InstancedMesh(source.geometry, source.material, chunkInstances.length)
+        mesh.name = `${source.name || 'nature'}-instances-${chunkIdx}`
+        mesh.castShadow = false
+        mesh.receiveShadow = false
+        mesh.frustumCulled = true // enable frustum culling (default, but explicit)
+
+        chunkInstances.forEach((instance, index) => {
+          const resolvedScale = (instance.scale ?? 1) * scale
+          position.fromArray(instance.position)
+          rotation.setFromEuler(rotationEuler.set(0, instance.rotationY ?? 0, 0))
+          instanceScale.setScalar(resolvedScale)
+          transform.compose(position, rotation, instanceScale)
+          transform.multiply(source.matrixWorld)
+          mesh.setMatrixAt(index, transform)
+        })
+
+        mesh.instanceMatrix.needsUpdate = true
+        mesh.computeBoundingBox()
+        mesh.computeBoundingSphere()
+        meshes.push(mesh)
       })
-
-      mesh.instanceMatrix.needsUpdate = true
-      mesh.computeBoundingBox()
-      mesh.computeBoundingSphere()
-      meshes.push(mesh)
-    })
+    }
 
     const dispose = () => {
       for (const mesh of meshes) {

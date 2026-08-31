@@ -4,7 +4,8 @@
   import { confettiActive } from '../../stores/gameState.svelte'
   import { flowerColors } from '../../constants/triggers'
 
-  const COUNT = 72
+  let { lowPower = false }: { lowPower?: boolean } = $props()
+  const COUNT = $derived(lowPower ? 40 : 72)
   const geo = new THREE.BoxGeometry(0.12, 0.18, 0.03)
 
   interface P { px: number; py: number; pz: number; vx: number; vy: number; vz: number; rx: number; ry: number; rz: number; spin: number }
@@ -26,15 +27,22 @@
     p.spin = (Math.random() - 0.5) * 0.15
   }
 
-  for (let i = 0; i < COUNT; i++) {
-    const p: P = { px: 0, py: 0, pz: 0, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, rz: 0, spin: 0 }
-    spawn(p)
-    particles.push(p)
-    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(flowerColors[i % flowerColors.length]) }))
-    m.castShadow = false
-    group.add(m)
-    meshes.push(m)
-  }
+  // Initialize particles after COUNT is resolved
+  let initialized = false
+
+  useTask(() => {
+    if (initialized) return
+    initialized = true
+    for (let i = 0; i < COUNT; i++) {
+      const p: P = { px: 0, py: 0, pz: 0, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, rz: 0, spin: 0 }
+      spawn(p)
+      particles.push(p)
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(flowerColors[i % flowerColors.length]) }))
+      m.castShadow = false
+      group.add(m)
+      meshes.push(m)
+    }
+  })
 
   useTask(() => {
     const active = $confettiActive

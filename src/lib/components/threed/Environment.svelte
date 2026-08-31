@@ -553,45 +553,45 @@
 </script>
 
 <!-- Ground: rumput kiri -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -12]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -12]}>
   <T.PlaneGeometry args={[23.4, 44]} />
   <T.MeshToonMaterial color="#ffffff" map={pinkGradientLeft} gradientMap={gradient} />
 </T.Mesh>
 <!-- Ground: rumput tengah (hijau muda, di bawah jalan) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -12]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -12]}>
   <T.PlaneGeometry args={[7.2, 44]} />
   <T.MeshToonMaterial color="#a3c98f" gradientMap={gradient} />
 </T.Mesh>
 <!-- Ground: rumput kanan -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -12]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -12]}>
   <T.PlaneGeometry args={[23.4, 44]} />
   <T.MeshToonMaterial color="#ffffff" map={pinkGradientRight} gradientMap={gradient} />
 </T.Mesh>
 <!-- Jalur batu pucat di tengah (lebih terang dari rumput, di bawah karpet) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.02, -10]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.02, -10]}>
   <T.PlaneGeometry args={[7.2, 40]} />
   <T.MeshToonMaterial color="#e6d2a2" gradientMap={gradient} />
 </T.Mesh>
 <!-- Side walk kiri-kanan (batu pucat sedikit lebih gelap dari jalur tengah) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-2.55, -0.015, -10]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[-2.55, -0.015, -10]}>
   <T.PlaneGeometry args={[1.3, 40]} />
   <T.MeshToonMaterial color="#d8c290" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[2.55, -0.015, -10]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[2.55, -0.015, -10]}>
   <T.PlaneGeometry args={[1.3, 40]} />
   <T.MeshToonMaterial color="#d8c290" gradientMap={gradient} />
 </T.Mesh>
 <!-- Karpet merah menuju pelaminan (lebih sempit & elegan) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.005, -8]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.005, -8]}>
   <T.PlaneGeometry args={[2.0, 36]} />
   <T.MeshToonMaterial color="#b91c3c" gradientMap={gradient} />
 </T.Mesh>
 <!-- Garis tepi karpet (emas champagne) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-1.03, 0.01, -8]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[-1.03, 0.01, -8]}>
   <T.PlaneGeometry args={[0.06, 36]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[1.03, 0.01, -8]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[1.03, 0.01, -8]}>
   <T.PlaneGeometry args={[0.06, 36]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
@@ -609,23 +609,23 @@
   </T.Group>
 {/each}
 <!-- Landing carpet persegi panjang di kaki tangga (mengganti oval) — dusty rose + border emas -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.012, -14.9]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.012, -14.9]}>
   <T.PlaneGeometry args={[4.0, 1.6]} />
   <T.MeshToonMaterial color="#c97f93" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[-2.0, 0.014, -14.9]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[-2.0, 0.014, -14.9]}>
   <T.PlaneGeometry args={[0.07, 1.6]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[2.0, 0.014, -14.9]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[2.0, 0.014, -14.9]}>
   <T.PlaneGeometry args={[0.07, 1.6]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.014, -14.1]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.014, -14.1]}>
   <T.PlaneGeometry args={[4.0, 0.07]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.014, -15.7]} receiveShadow>
+<T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.014, -15.7]}>
   <T.PlaneGeometry args={[4.0, 0.07]} />
   <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
 </T.Mesh>
@@ -830,22 +830,22 @@
 <!-- Wedding Stage — berlapis: sub-base, lantai, trim, anak tangga, runner, backdrop ber-frame -->
 <T.Group position={[0, 0, -18]}>
   <!-- Sub-base lebih gelap & sedikit lebih besar dari lantai -->
-  <T.Mesh position={[0, 0.15, -0.05]} castShadow receiveShadow>
+  <T.Mesh position={[0, 0.15, -0.05]}>
     <T.BoxGeometry args={[10.9, 0.3, 5.1]} />
     <T.MeshToonMaterial color="#6b2a3a" gradientMap={gradient} />
   </T.Mesh>
   <!-- Lantai utama (burgundy lembut, top = 0.7 menyam STAGE.height) -->
-  <T.Mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+  <T.Mesh position={[0, 0.35, 0]}>
     <T.BoxGeometry args={[10.5, 0.7, 4.8]} />
     <T.MeshToonMaterial color="#9c3a52" gradientMap={gradient} />
   </T.Mesh>
   <!-- Trim lantai ivory -->
-  <T.Mesh position={[0, 0.73, 0]} receiveShadow>
+  <T.Mesh position={[0, 0.73, 0]}>
     <T.BoxGeometry args={[10.2, 0.06, 4.5]} />
     <T.MeshToonMaterial color="#fff0dc" gradientMap={gradient} />
   </T.Mesh>
   <!-- Skirt emas di sisi depan panggung -->
-  <T.Mesh position={[0, 0.35, 2.43]} castShadow>
+  <T.Mesh position={[0, 0.35, 2.43]}>
     <T.BoxGeometry args={[10.5, 0.5, 0.06]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
@@ -853,29 +853,29 @@
        Ramp: world z -15.8 (y=0.7) → -14.7 (y=0); local z 2.2→3.3.
        Tiap step: tinggi 0.23, kedalaman 0.37, lebar 3.5. -->
   <!-- Step 3: sedikit di atas lantai panggung agar bidang yang overlap tidak z-fighting. -->
-  <T.Mesh position={[0, 0.595, 2.38]} castShadow receiveShadow>
+  <T.Mesh position={[0, 0.595, 2.38]}>
     <T.BoxGeometry args={[3.5, 0.23, 0.37]} />
     <T.MeshToonMaterial color="#fff0dc" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.712, 2.38]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.712, 2.38]}>
     <T.PlaneGeometry args={[1.5, 0.37]} />
     <T.MeshToonMaterial color="#9c2a40" gradientMap={gradient} />
   </T.Mesh>
   <!-- Step 2 (tengah, top = 0.47) -->
-  <T.Mesh position={[0, 0.355, 2.75]} castShadow receiveShadow>
+  <T.Mesh position={[0, 0.355, 2.75]}>
     <T.BoxGeometry args={[3.5, 0.23, 0.37]} />
     <T.MeshToonMaterial color="#fff0dc" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.472, 2.75]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.472, 2.75]}>
     <T.PlaneGeometry args={[1.5, 0.37]} />
     <T.MeshToonMaterial color="#9c2a40" gradientMap={gradient} />
   </T.Mesh>
   <!-- Step 1 (terbawah, top = 0.23, menyentuh tanah) -->
-  <T.Mesh position={[0, 0.115, 3.12]} castShadow receiveShadow>
+  <T.Mesh position={[0, 0.115, 3.12]}>
     <T.BoxGeometry args={[3.5, 0.23, 0.37]} />
     <T.MeshToonMaterial color="#fff0dc" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.232, 3.12]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.232, 3.12]}>
     <T.PlaneGeometry args={[1.5, 0.37]} />
     <T.MeshToonMaterial color="#9c2a40" gradientMap={gradient} />
   </T.Mesh>
@@ -893,37 +893,37 @@
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
   <!-- Runner karpet merah di atas panggung + tepi emas -->
-  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.715, -0.1]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, 0.715, -0.1]}>
     <T.PlaneGeometry args={[2.2, 4.4]} />
     <T.MeshToonMaterial color="#9c2a40" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[-1.1, 0.72, -0.1]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[-1.1, 0.72, -0.1]}>
     <T.PlaneGeometry args={[0.06, 4.4]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh rotation.x={-Math.PI / 2} position={[1.1, 0.72, -0.1]} receiveShadow>
+  <T.Mesh rotation.x={-Math.PI / 2} position={[1.1, 0.72, -0.1]}>
     <T.PlaneGeometry args={[0.06, 4.4]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
   <!-- Backdrop ber-frame & drapery (kedalaman nyata) -->
-  <T.Mesh position={[0, 2.5, -2.35]} castShadow>
+  <T.Mesh position={[0, 2.5, -2.35]}>
     <T.BoxGeometry args={[9.4, 4.8, 0.1]} />
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh position={[0, 2.5, -2.2]} receiveShadow>
+  <T.Mesh position={[0, 2.5, -2.2]}>
     <T.BoxGeometry args={[9.0, 4.5, 0.16]} />
     <T.MeshToonMaterial color="#f7efe0" gradientMap={gradient} />
   </T.Mesh>
   <!-- Drapery samping (dusty rose) + valance atas -->
-  <T.Mesh position={[-3.7, 2.4, -2.05]} castShadow>
+  <T.Mesh position={[-3.7, 2.4, -2.05]}>
     <T.BoxGeometry args={[1.1, 4.0, 0.12]} />
     <T.MeshToonMaterial color="#d96b7a" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh position={[3.7, 2.4, -2.05]} castShadow>
+  <T.Mesh position={[3.7, 2.4, -2.05]}>
     <T.BoxGeometry args={[1.1, 4.0, 0.12]} />
     <T.MeshToonMaterial color="#d96b7a" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh position={[0, 4.6, -2.05]} castShadow>
+  <T.Mesh position={[0, 4.6, -2.05]}>
     <T.BoxGeometry args={[6.4, 0.45, 0.14]} />
     <T.MeshToonMaterial color="#d96b7a" gradientMap={gradient} />
   </T.Mesh>
@@ -941,10 +941,10 @@
     <T.MeshToonMaterial color="#e8c98a" gradientMap={gradient} />
   </T.Mesh>
   <!-- Simbol cinta berlapis di tengah lingkaran utama. -->
-  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.82]} scale={[1.18, 1.18, 1]} castShadow>
+  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.82]} scale={[1.18, 1.18, 1]}>
     <T.MeshToonMaterial color="#d9b77b" gradientMap={gradient} />
   </T.Mesh>
-  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.79]} scale={[0.98, 0.98, 1]} castShadow>
+  <T.Mesh geometry={backdropHeartGeo} position={[0, 3.12, -1.79]} scale={[0.98, 0.98, 1]}>
     <T.MeshToonMaterial color="#c95778" gradientMap={gradient} />
   </T.Mesh>
   <T.Mesh geometry={backdropHeartGeo} position={[0, 3.16, -1.76]} scale={[0.5, 0.5, 1]}>
@@ -958,7 +958,6 @@
       position={[leaf[0], leaf[1], -1.8]}
       rotation.z={leaf[2]}
       scale={[1.45, 0.58, 0.42]}
-      castShadow
     />
   {/each}
   <!-- Bunga berlapis pada bagian atas, bawah, dan lingkaran samping. -->
@@ -970,7 +969,6 @@
           position={[Math.cos(angle) * 0.15, Math.sin(angle) * 0.15, 0]}
           rotation.z={angle}
           scale={[1.18, 0.76, 0.48]}
-          castShadow
         >
           <T.MeshToonMaterial color={backdropFlowerColors[i % backdropFlowerColors.length]} gradientMap={gradient} />
         </T.Mesh>
@@ -1006,7 +1004,6 @@
           position={[leaf[0], leaf[1], leaf[2]]}
           rotation.z={leaf[3]}
           scale={[0.55, 1.35, 0.38]}
-          castShadow
         />
       {/each}
       {#each bouquetBlooms as bloom}
@@ -1017,12 +1014,11 @@
               position={[Math.cos(angle) * 0.2, Math.sin(angle) * 0.2, 0]}
               scale={[1.25, 0.72, 0.5]}
               rotation.z={angle}
-              castShadow
             >
               <T.MeshToonMaterial color={bloom.color} gradientMap={gradient} />
             </T.Mesh>
           {/each}
-          <T.Mesh geometry={bouquetCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.12]} castShadow />
+          <T.Mesh geometry={bouquetCenterGeo} material={bouquetCenterMat} position={[0, 0, 0.12]} />
         </T.Group>
       {/each}
     </T.Group>
@@ -1030,11 +1026,11 @@
 
   {#each chairs as chair, i}
     <T.Group position={[chair[0], chair[1], chair[2]]} rotation.y={chair[3]}>
-      <T.Mesh position={[0, -0.21, 0]} castShadow>
+      <T.Mesh position={[0, -0.21, 0]}>
         <T.BoxGeometry args={[0.62, 0.12, 0.62]} />
         <T.MeshToonMaterial color="#fff5df" gradientMap={gradient} />
       </T.Mesh>
-      <T.Mesh position={[0, 0.13, 0.26]} castShadow>
+      <T.Mesh position={[0, 0.13, 0.26]}>
         <T.BoxGeometry args={[0.62, 0.67, 0.1]} />
         <T.MeshToonMaterial color="#d68a9b" gradientMap={gradient} />
       </T.Mesh>
@@ -1055,9 +1051,9 @@
 {#each poleHooks as pole}
   <T.Group position={pole.position}>
     <!-- Pole_Base -->
-    <T.Mesh geometry={poleBaseGeo} material={poleBaseMat} position={[0, 0.08, 0]} castShadow receiveShadow />
+    <T.Mesh geometry={poleBaseGeo} material={poleBaseMat} position={[0, 0.08, 0]} />
     <!-- Pole_Shaft -->
-    <T.Mesh geometry={poleShaftGeo} material={poleShaftMat} position={[0, 1.99, 0]} castShadow receiveShadow />
+    <T.Mesh geometry={poleShaftGeo} material={poleShaftMat} position={[0, 1.99, 0]} />
     <!-- Gold trim band -->
     <T.Mesh geometry={poleTrimGeo} material={poleTrimMat} position={[0, 3.62, 0]} />
     <!-- Pole_Bracket (extends toward path center) -->
@@ -1071,12 +1067,12 @@
 <T.Group position={[0, 0, ARCH_Z]}>
   {#each [-ARCH_POST_X, ARCH_POST_X] as px}
     <!-- Base lebar -->
-    <T.Mesh position={[px, 0.12, 0]} castShadow>
+    <T.Mesh position={[px, 0.12, 0]}>
       <T.BoxGeometry args={[0.5, 0.24, 0.5]} />
       <T.MeshToonMaterial color="#e8dcc4" gradientMap={gradient} />
     </T.Mesh>
     <!-- Tiang vertikal ivory -->
-    <T.Mesh position={[px, 2.0, 0]} castShadow>
+    <T.Mesh position={[px, 2.0, 0]}>
       <T.BoxGeometry args={[0.28, 3.6, 0.28]} />
       <T.MeshToonMaterial color="#fff3dd" gradientMap={gradient} />
     </T.Mesh>
@@ -1096,7 +1092,7 @@
     </T.Mesh>
   {/each}
   <!-- Crossbar atas (menghubungkan kedua tiang) -->
-  <T.Mesh position={[0, ARCH_TOP_Y + 0.1, 0]} castShadow>
+  <T.Mesh position={[0, ARCH_TOP_Y + 0.1, 0]}>
     <T.BoxGeometry args={[ARCH_POST_X * 2 + 0.4, 0.22, 0.28]} />
     <T.MeshToonMaterial color="#fff3dd" gradientMap={gradient} />
   </T.Mesh>

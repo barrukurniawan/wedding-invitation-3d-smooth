@@ -63,7 +63,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
 
 <CameraRig />
 <Sky {lowPower} />
-<Lighting />
+<Lighting {lowPower} />
 {#if Environment}
   <Environment
     {lowPower}
@@ -104,5 +104,5 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   }}
   onError={() => setSceneLoadError('NPC model failed')}
 />
-<Confetti />
+<Confetti {lowPower} />
 <Labels />

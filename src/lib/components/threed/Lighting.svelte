@@ -1,10 +1,17 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { T } from '@threlte/core'
+  import * as THREE from 'three'
 
-  // Pencahayaan hangat ala Summer Afternoon (sore hari)
-  // HemisphereLight: langit hangat / tanah hijau lembut
-  // DirectionalLight: matahari sore, soft shadow
-  // AmbientLight: fill hangat rendah
+  let { lowPower = false }: { lowPower?: boolean } = $props()
+
+  let shadowMapSize = $state(512)
+  let enableShadow = $state(!lowPower)
+
+  onMount(() => {
+    // Only enable shadows on desktop (non-lowPower)
+    enableShadow = !lowPower
+  })
 </script>
 
 <T.HemisphereLight
@@ -18,4 +25,14 @@
 <T.DirectionalLight
   position={[-12, 20, 8]}
   intensity={2.0}
+  castShadow={enableShadow}
+  shadow.mapSize={shadowMapSize}
+  shadow.camera.near={0.5}
+  shadow.camera.far={50}
+  shadow.camera.left={-20}
+  shadow.camera.right={20}
+  shadow.camera.top={20}
+  shadow.camera.bottom={-20}
+  shadow.bias={-0.0005}
+  shadow.normalBias={0.02}
 />
