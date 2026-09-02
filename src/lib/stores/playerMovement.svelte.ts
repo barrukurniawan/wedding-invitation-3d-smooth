@@ -28,6 +28,8 @@ export const joystickDelta = { x: 0, z: 0 }
 
 const keys: Record<string, boolean> = {}
 let distanceWalked = 0
+let lastMoving = false
+let lastSprinting = false
 
 if (browser) {
   window.addEventListener('keydown', (e) => {
@@ -133,8 +135,15 @@ export function tick(delta: number) {
 
   playerSpeed.value = speed
   const moving = speed > 0.05
-  playerMoving.set(moving)
-  playerSprinting.set(moving && sprinting && canSprint)
+  if (lastMoving !== moving) {
+    lastMoving = moving
+    playerMoving.set(moving)
+  }
+  const sprintingNow = moving && sprinting && canSprint
+  if (lastSprinting !== sprintingNow) {
+    lastSprinting = sprintingNow
+    playerSprinting.set(sprintingNow)
+  }
 
   playerPos.y = groundHeightAt(playerPos.x, playerPos.z)
 }

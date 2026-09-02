@@ -60,11 +60,13 @@
     camPos.y = damp(camPos.y, desired.y, CAM_LAMBDA, dt)
     camPos.z = damp(camPos.z, desired.z, CAM_LAMBDA, dt)
 
-    lookTarget.set(
-      playerPos.x,
-      playerPos.y + LOOK_OFFSET,
-      playerPos.z - (isMobile ? MOBILE_LOOK_AHEAD : 0)
-    )
+    const targetLookX = playerPos.x
+    const targetLookY = playerPos.y + LOOK_OFFSET
+    const targetLookZ = playerPos.z - (isMobile ? MOBILE_LOOK_AHEAD : 0)
+
+    lookTarget.x = damp(lookTarget.x, targetLookX, CAM_LAMBDA, dt)
+    lookTarget.y = damp(lookTarget.y, targetLookY, CAM_LAMBDA, dt)
+    lookTarget.z = damp(lookTarget.z, targetLookZ, CAM_LAMBDA, dt)
 
     // Spring-arm collision: tarik kamera mendekat bila ada penghalang antara
     // look target dan posisi kamera. Hanya menembak grup PROXY occluder (~6
