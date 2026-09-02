@@ -9,43 +9,65 @@
   const { camera, renderer } = useThrelte()
   const _v3 = new THREE.Vector3()
 
-  // Label hanya terbaca saat mendekat; semakin jauh semakin memudar lalu hilang
-  // supaya dunia tidak terlihat seperti scene editor yang penuh penanda.
-  const LABEL_FULL = 9 // jarak di mana label tampil penuh
-  const LABEL_MAX = 15 // jarak di mana label mulai memakai opacity dasar
-  const LABEL_BASE_OPACITY = 0.34
-
-  function opacityFor(distance: number): number {
-    if (distance <= LABEL_FULL) return 1
-    if (distance >= LABEL_MAX) return LABEL_BASE_OPACITY
-    return LABEL_BASE_OPACITY + (1 - LABEL_BASE_OPACITY) * (1 - (distance - LABEL_FULL) / (LABEL_MAX - LABEL_FULL))
+  function opacityFor(distance: number, fullDist = 8, maxDist = 15): number {
+    if (distance <= fullDist) return 1
+    if (distance >= maxDist) return 0
+    return (maxDist - distance) / (maxDist - fullDist)
   }
 
   function buildParsedDefs() {
-    const bride = $weddingConfig.bride_name || 'Kia'
-    const groom = $weddingConfig.groom_name || 'Toni'
+    const bride = $weddingConfig.bride_name || 'Kia Anindya'
+    const groom = $weddingConfig.groom_name || 'Toni Pratama'
     return labelDefs.map(def => ({
       ...def,
       parsedText: def.text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
     }))
   }
 
-  // Inisialisasi langsung (sinkron) supaya tersedia saat useTask pertama kali jalan
-  let parsedDefs: any[] = buildParsedDefs()
-  
+  let parsedDefs = buildParsedDefs()
+
+  // Inisialisasi screenLabels store HANYA saat konfigurasi/nama berubah
+  // sehingga Svelte merender elemen DOM sekali saja, tanpa re-render per frame.
   $effect(() => {
-    // Re-parse saat nama mempelai berubah
     parsedDefs = buildParsedDefs()
-    // Reset lastLength supaya store di-update ulang
-    lastLength = -1
+    const initial = parsedDefs.map(def => ({
+      id: def.id,
+      text: def.parsedText,
+      x: -9999,
+      y: -9999,
+      behind: false,
+      opacity: 0,
+      objective: def.objective ?? false
+    }))
+    if ($playerLabel) {
+      initial.push({
+        id: 'player',
+        text: $playerLabel,
+        x: -9999,
+        y: -9999,
+        behind: false,
+        opacity: 0,
+        objective: false
+      })
+    }
+    screenLabels.set(initial)
+
+    // Reset DOM cache agar re-bind jika DOM dibuat ulang
+    for (const key in labelElements) {
+      delete labelElements[key]
+    }
   })
 
-  // Re-use objects (mencegah alokasi memori tiap milidetik)
-  const activeLabels: { id: string; text: string; x: number; y: number; behind: boolean; opacity: number; objective: boolean }[] = []
-  const labelPool: Record<string, any> = {}
-  const labelElements: Record<string, HTMLElement> = {}
-  let lastLength = -1; // -1 = force update pertama kali
-  let elementsCached = false
+  // Fast DOM element cache (referensi DOM langsung, lookup O(1) tanpa memicu DOM query berulang)
+  const labelElements: Record<string, HTMLElement | null> = {}
+
+  function getElement(id: string): HTMLElement | null {
+    const existing = labelElements[id]
+    if (existing && existing.isConnected) return existing
+    const el = document.getElementById('label-' + id)
+    if (el) labelElements[id] = el
+    return el
+  }
 
   useTask(() => {
     const cam = camera.current
@@ -53,82 +75,72 @@
     if (!cam || !r) return
     const w = r.domElement.clientWidth
     const h = r.domElement.clientHeight
-    
-    // Cache DOM elements once
-    if (!elementsCached) {
-      for (const def of parsedDefs) {
-        labelElements[def.id] = document.getElementById('label-' + def.id)!
-      }
-      labelElements['player'] = document.getElementById('label-player')!
-      labelElements['receptionist-guide-arrow'] = document.getElementById('receptionist-guide-arrow')!
-      elementsCached = true
-    }
-    
-    activeLabels.length = 0 // Kosongkan array tanpa membuang referensinya
+
+    const moving = $playerMoving
 
     for (let i = 0; i < parsedDefs.length; i++) {
       const def = parsedDefs[i]
+      const el = getElement(def.id)
+      if (!el) continue
+
       const dist = Math.hypot(def.world[0] - playerPos.x, def.world[2] - playerPos.z)
-      const opacity = def.showBeforeMove || $playerMoving ? opacityFor(dist) : 0
-      
-      if (opacity <= 0) continue
-      
+      const isCouple = def.id === 'bride' || def.id === 'groom'
+      const opacity = def.showBeforeMove || moving
+        ? opacityFor(dist, isCouple ? 7 : 8, isCouple ? 12 : 16)
+        : 0
+
+      if (opacity <= 0) {
+        if (el.style.opacity !== '0') el.style.opacity = '0'
+        continue
+      }
+
       _v3.set(def.world[0], def.world[1], def.world[2])
       _v3.project(cam)
-      const behind = _v3.z > 1
+
+      // Di belakang kamera (z > 1 dalam NDC space)
+      if (_v3.z > 1) {
+        if (el.style.opacity !== '0') el.style.opacity = '0'
+        continue
+      }
+
       const x = (_v3.x * 0.5 + 0.5) * w
       const y = (-_v3.y * 0.5 + 0.5) * h
-      
-      let obj = labelPool[def.id]
-      if (!obj) {
-        obj = { id: def.id, text: def.parsedText, x, y, behind, opacity, objective: def.objective ?? false }
-        labelPool[def.id] = obj
-      } else {
-        const el = labelElements[def.id]
-        if (el) {
-          el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
-          el.style.opacity = behind ? '0' : opacity.toString()
-        }
-      }
-      activeLabels.push(obj)
+
+      el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
+      const opStr = opacity.toString()
+      if (el.style.opacity !== opStr) el.style.opacity = opStr
     }
 
+    // Player label (jika ada)
     if ($playerLabel) {
-      _v3.set(playerPos.x, playerPos.y + 2.35, playerPos.z)
-      _v3.project(cam)
-      const behind = _v3.z > 1
-      const x = (_v3.x * 0.5 + 0.5) * w
-      const y = (-_v3.y * 0.5 + 0.5) * h
-      
-      let obj = labelPool['player']
-      if (!obj) {
-        obj = { id: 'player', text: $playerLabel, x, y, behind, opacity: 1, objective: false }
-        labelPool['player'] = obj
-      } else {
-        const el = labelElements['player']
-        if (el) {
+      const el = getElement('player')
+      if (el) {
+        _v3.set(playerPos.x, playerPos.y + 2.35, playerPos.z)
+        _v3.project(cam)
+        if (_v3.z > 1) {
+          if (el.style.opacity !== '0') el.style.opacity = '0'
+        } else {
+          const x = (_v3.x * 0.5 + 0.5) * w
+          const y = (-_v3.y * 0.5 + 0.5) * h
           el.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 100%), 0)`
-          el.style.opacity = behind ? '0' : '1'
+          if (el.style.opacity !== '1') el.style.opacity = '1'
         }
       }
-      activeLabels.push(obj)
     }
 
-    // Hanya update Svelte store jika jumlah label berubah (misal saat inisialisasi)
-    // Selebihnya, DOM di-update langsung via native JS di atas!
-    if (activeLabels.length !== lastLength) {
-      screenLabels.set([...activeLabels])
-      lastLength = activeLabels.length
-    }
-
-    // Kalkulasi posisi screen resepsionis → update DOM langsung (zero-overhead, tanpa Svelte store)
+    // Kalkulasi posisi screen resepsionis untuk guide arrow
     _v3.set(4.9, 2.45, -10)
     _v3.project(cam)
     const rx = (_v3.x * 0.5 + 0.5) * w
     const ry = (-_v3.y * 0.5 + 0.5) * h
     const rVisible = _v3.z < 1 && rx > -50 && rx < w + 50 && ry > -50 && ry < h + 50
 
-    const arrowEl = labelElements['receptionist-guide-arrow']
+    let arrowEl = labelElements['receptionist-guide-arrow']
+    if (!arrowEl || !arrowEl.isConnected) {
+      arrowEl = document.getElementById('receptionist-guide-arrow')
+      if (arrowEl) labelElements['receptionist-guide-arrow'] = arrowEl
+    }
+
     if (arrowEl) {
       if (!rVisible) {
         const cx = w / 2

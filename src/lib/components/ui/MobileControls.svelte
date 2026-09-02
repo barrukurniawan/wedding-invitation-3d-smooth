@@ -8,19 +8,27 @@
   let joystickCenter = { x: 0, y: 0 }
   let maxDistance = 32
 
-  function handleTouchStart(e: TouchEvent) {
-    e.preventDefault()
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  let isDragging = false
+
+  function handlePointerDown(e: PointerEvent) {
+    isDragging = true
+    const target = e.currentTarget as HTMLElement
+    try { target.setPointerCapture?.(e.pointerId) } catch {}
+    const rect = target.getBoundingClientRect()
     joystickCenter.x = rect.left + rect.width / 2
     joystickCenter.y = rect.top + rect.height / 2
     maxDistance = rect.width * 0.3
+    updateJoystick(e.clientX, e.clientY)
   }
 
-  function handleTouchMove(e: TouchEvent) {
-    e.preventDefault()
-    const touch = e.touches[0]
-    let dx = touch.clientX - joystickCenter.x
-    let dy = touch.clientY - joystickCenter.y
+  function handlePointerMove(e: PointerEvent) {
+    if (!isDragging) return
+    updateJoystick(e.clientX, e.clientY)
+  }
+
+  function updateJoystick(clientX: number, clientY: number) {
+    let dx = clientX - joystickCenter.x
+    let dy = clientY - joystickCenter.y
     const distance = Math.sqrt(dx * dx + dy * dy)
     if (distance > maxDistance) {
       dx = (dx / distance) * maxDistance
@@ -32,8 +40,9 @@
     joystickDelta.z = dy / maxDistance
   }
 
-  function handleTouchEnd(e: TouchEvent) {
-    e.preventDefault()
+  function handlePointerUp(e: PointerEvent) {
+    isDragging = false
+    try { (e.currentTarget as HTMLElement)?.releasePointerCapture?.(e.pointerId) } catch {}
     knobOffset.x = 0
     knobOffset.y = 0
     joystickDelta.x = 0
@@ -50,10 +59,10 @@
     class="joystick pointer-events-auto relative flex touch-none items-center justify-center rounded-full"
     role="application"
     aria-label="Joystick gerak"
-    ontouchstart={handleTouchStart}
-    ontouchmove={handleTouchMove}
-    ontouchend={handleTouchEnd}
-    ontouchcancel={handleTouchEnd}
+    onpointerdown={handlePointerDown}
+    onpointermove={handlePointerMove}
+    onpointerup={handlePointerUp}
+    onpointercancel={handlePointerUp}
   >
     {#if !$playerMoving}
       <span class="movement-cue" aria-hidden="true">Geser untuk bergerak</span>

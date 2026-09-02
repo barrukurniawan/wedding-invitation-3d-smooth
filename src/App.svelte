@@ -62,8 +62,8 @@
       <div
         id="label-{label.id}"
         class:objective-label={label.objective}
-        class="world-label absolute top-0 left-0 transition-opacity duration-200"
-        style="transform: translate3d(calc({label.x}px - 50%), calc({label.y}px - 100%), 0); opacity: {label.behind ? 0 : label.opacity}"
+        class="world-label absolute top-0 left-0"
+        style="opacity: 0"
       >
         {#if label.objective}<span aria-hidden="true">&#9670;</span>{/if}
         {label.text}

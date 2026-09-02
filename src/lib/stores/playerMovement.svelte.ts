@@ -31,10 +31,12 @@ let distanceWalked = 0
 
 if (browser) {
   window.addEventListener('keydown', (e) => {
-    keys[e.code] = true
+    if (e.code) keys[e.code] = true
+    if (e.key) keys[e.key] = true
   })
   window.addEventListener('keyup', (e) => {
-    keys[e.code] = false
+    if (e.code) keys[e.code] = false
+    if (e.key) keys[e.key] = false
   })
 }
 
