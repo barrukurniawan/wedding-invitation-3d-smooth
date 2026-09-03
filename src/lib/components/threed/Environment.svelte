@@ -12,9 +12,11 @@
 
   let {
     lowPower = false,
+    renderQuality = 'desktop',
     onReady
   }: {
     lowPower?: boolean
+    renderQuality?: 'mobile' | 'desktop' | 'desktop-retina'
     onReady?: () => void
   } = $props()
 
@@ -26,7 +28,7 @@
   const gradient = getToonGradient()
   // lowPower: thinner vegetation density (less instance work after reveal)
   const sparseTrees = <T,>(items: T[]) =>
-    items.filter((_, i) => i % (lowPower ? 12 : 8) === 0)
+    items.filter((_, i) => i % (lowPower ? 12 : renderQuality === 'desktop-retina' ? 12 : 8) === 0)
 
   // Critical path is procedural geometry only — fire after first paint frames.
   onMount(() => {
@@ -46,14 +48,14 @@
       requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
     }
     if (typeof win.requestIdleCallback === 'function') {
-      win.requestIdleCallback(() => {
-        showDecor = true
-      }, { timeout: 100 })
-    } else {
-      setTimeout(() => {
-        showDecor = true
-      }, 60)
-    }
+        win.requestIdleCallback(() => {
+          showDecor = true
+        }, { timeout: renderQuality === 'desktop-retina' ? 700 : 100 })
+      } else {
+        setTimeout(() => {
+          showDecor = true
+        }, renderQuality === 'desktop-retina' ? 700 : 60)
+      }
   })
 
   function createGroundGradient(reverse = false) {

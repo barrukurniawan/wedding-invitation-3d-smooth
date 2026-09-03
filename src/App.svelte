@@ -12,9 +12,12 @@
   import { beginRealProgress, completeProgress } from './lib/stores/loadProgress.svelte'
   import { screenLabels } from './lib/stores/labelStore.svelte'
   import ReceptionistGuide from './lib/components/ui/ReceptionistGuide.svelte'
+  import PerfDiagnostics from './lib/components/ui/PerfDiagnostics.svelte'
+  import { resolveRenderQuality } from './lib/utils/renderQuality'
 
   let World = $state<Component>()
   let lowPower = $state(false)
+  let renderQuality = $state<'mobile' | 'desktop' | 'desktop-retina'>('desktop')
   let sceneReady = $state(false)
 
   onMount(() => {
@@ -42,7 +45,8 @@
     } catch {
       // Malformed percent-encoding — keep default guest name.
     }
-    lowPower = matchMedia('(max-width: 768px), (pointer: coarse)').matches
+    renderQuality = resolveRenderQuality()
+    lowPower = renderQuality === 'mobile'
 
     // useGltf owns model fetching to avoid duplicate first-load transfers.
     void import('./lib/components/threed/World.svelte').then((module) => {
@@ -53,7 +57,7 @@
 
 <div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
-    <World {lowPower} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true); setHasStarted(true) }} />
+     <World {lowPower} {renderQuality} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true); setHasStarted(true) }} />
   {/if}
 
   <!-- 2D Label Overlay -->
@@ -84,6 +88,7 @@
   <WeddingStageModal />
   
   <LoadingScreen />
+  <PerfDiagnostics />
 </div>
 
 <style>

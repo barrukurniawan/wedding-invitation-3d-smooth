@@ -11,7 +11,8 @@
   import Player from './Player.svelte'
   import Npcs from './Npcs.svelte'
   import Confetti from './Confetti.svelte'
-  import Labels from './Labels.svelte'
+import Labels from './Labels.svelte'
+  import RenderDiagnostics from './RenderDiagnostics.svelte'
   import { tick, playerPos } from '../../stores/playerMovement.svelte'
 import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/gameState.svelte'
   import { getNearbyTrigger } from '../../utils/interaction'
@@ -21,9 +22,11 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
 
   let {
     lowPower = false,
+    renderQuality = 'desktop',
     onReady
   }: {
     lowPower?: boolean
+    renderQuality?: 'mobile' | 'desktop' | 'desktop-retina'
     onReady?: () => void
   } = $props()
 
@@ -32,6 +35,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   let envCriticalReady = $state(false)
   let Environment = $state<Component>()
   let readySent = false
+  let lastTriggerId: string | null = null
 
   onMount(() => {
     void import('./Environment.svelte').then((module) => {
@@ -57,16 +61,22 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   // Render loop utama: gerakan -> deteksi proximity
   useTask((delta: number) => {
     tick(delta)
-    setNearbyTrigger(getNearbyTrigger(playerPos.x, playerPos.z))
+    const trigger = getNearbyTrigger(playerPos.x, playerPos.z)
+    const triggerId = trigger?.id ?? null
+    if (triggerId !== lastTriggerId) {
+      lastTriggerId = triggerId
+      setNearbyTrigger(trigger)
+    }
   })
 </script>
 
 <CameraRig />
 <Sky {lowPower} />
-<Lighting {lowPower} />
+<Lighting />
 {#if Environment}
   <Environment
     {lowPower}
+    {renderQuality}
     onReady={() => {
       if (envCriticalReady) return
       envCriticalReady = true
@@ -106,3 +116,4 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
 />
 <Confetti {lowPower} />
 <Labels />
+<RenderDiagnostics />
