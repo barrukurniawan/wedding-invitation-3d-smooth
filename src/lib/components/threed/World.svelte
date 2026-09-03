@@ -6,10 +6,12 @@
   let {
     lowPower,
     renderQuality = 'desktop',
+    highResolution = false,
     onReady
   }: {
     lowPower?: boolean
     renderQuality?: 'mobile' | 'desktop' | 'desktop-retina'
+    highResolution?: boolean
     onReady?: () => void
   } = $props()
 
@@ -26,6 +28,6 @@
   })
 </script>
 
-<Canvas dpr={resolvedLowPower ? 1.25 : renderQuality === 'desktop-retina' ? 1.25 : [1, 1.25]}>
+<Canvas dpr={highResolution ? 1.5 : resolvedLowPower ? 1.25 : renderQuality === 'desktop-retina' ? 1.25 : [1, 1.25]}>
   <Scene lowPower={resolvedLowPower} {renderQuality} {onReady} />
 </Canvas>

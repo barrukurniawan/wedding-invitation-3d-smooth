@@ -13,11 +13,12 @@
   import { screenLabels } from './lib/stores/labelStore.svelte'
   import ReceptionistGuide from './lib/components/ui/ReceptionistGuide.svelte'
   import PerfDiagnostics from './lib/components/ui/PerfDiagnostics.svelte'
-  import { resolveRenderQuality } from './lib/utils/renderQuality'
+  import { highResolutionEnabled, resolveRenderQuality } from './lib/utils/renderQuality'
 
   let World = $state<Component>()
   let lowPower = $state(false)
   let renderQuality = $state<'mobile' | 'desktop' | 'desktop-retina'>('desktop')
+  let highResolution = $state(false)
   let sceneReady = $state(false)
 
   onMount(() => {
@@ -46,6 +47,7 @@
       // Malformed percent-encoding — keep default guest name.
     }
     renderQuality = resolveRenderQuality()
+    highResolution = highResolutionEnabled()
     lowPower = renderQuality === 'mobile'
 
     // useGltf owns model fetching to avoid duplicate first-load transfers.
@@ -57,7 +59,7 @@
 
 <div class="invitation-app relative h-screen h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#8ed3f7_0%,#eaf8ff_100%)]">
   {#if World}
-     <World {lowPower} {renderQuality} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true); setHasStarted(true) }} />
+     <World {lowPower} {renderQuality} {highResolution} onReady={() => { sceneReady = true; completeProgress(); setLoaded(true); setHasStarted(true) }} />
   {/if}
 
   <!-- 2D Label Overlay -->

@@ -12,3 +12,7 @@ export function resolveRenderQuality(): RenderQuality {
 export function diagnosticsEnabled() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('perf')
 }
+
+export function highResolutionEnabled() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('highress')
+}
