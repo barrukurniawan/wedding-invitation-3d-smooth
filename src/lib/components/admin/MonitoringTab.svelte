@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte'
+  import { onMount } from 'svelte'
   import { getAnalyticsSummary, getAnalyticsVisitors, type AnalyticsSummary, type AnalyticsVisitors } from '$lib/api-client'
   import StatCard from './StatCard.svelte'
   import { fmtIdr } from './format'
 
-  const POLL_MS = 20000
+  const POLL_MS = 30000
 
   let summary = $state<AnalyticsSummary | null>(null)
   let visitors = $state<AnalyticsVisitors | null>(null)
@@ -33,9 +33,11 @@
     void load()
   }
 
-  const interval = setInterval(load, POLL_MS)
-  void load()
-  onDestroy(() => clearInterval(interval))
+  onMount(() => {
+    void load()
+    const interval = setInterval(load, POLL_MS)
+    return () => clearInterval(interval)
+  })
 
   const maxViews = $derived(Math.max(1, ...(visitors?.series.map((p) => p.views) ?? [1])))
 </script>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+
   let {
     state,
     message = '',
@@ -8,6 +10,10 @@
     message?: string
     onRetry?: () => void
   } = $props()
+
+  onMount(() => {
+    document.getElementById('startup-shell')?.remove()
+  })
 
   const content = $derived.by(() => {
     if (state === 'expired') return { code: '410', title: 'Undangan telah berakhir', detail: 'Masa aktif undangan ini sudah selesai.' }

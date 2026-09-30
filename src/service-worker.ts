@@ -8,16 +8,25 @@ import { build, files, version } from '$service-worker'
 // Create a unique cache name for this deployment
 const CACHE = `wedding-cache-${version}`
 
-const ASSETS = [
-  ...build, // the app itself (js, css)
-  ...files  // everything in `static` (glb, png, etc)
+// Critical assets to pre-cache immediately (core JS/CSS, favicon)
+// Exclude heavy audio (27MB), video (7MB), documentation, and 3D models from initial batch
+const PRECACHE_ASSETS = [
+  ...build,
+  ...files.filter(
+    (file) =>
+      !file.startsWith('/audio/') &&
+      !file.startsWith('/media/') &&
+      !file.startsWith('/documentation/') &&
+      !file.endsWith('.glb') &&
+      !file.endsWith('.gltf') &&
+      !file.endsWith('.bin')
+  ),
 ]
 
 self.addEventListener('install', (event) => {
-  // Create a new cache and add all files to it
   async function addFilesToCache() {
     const cache = await caches.open(CACHE)
-    await cache.addAll(ASSETS)
+    await cache.addAll(PRECACHE_ASSETS)
   }
 
   // Force the waiting service worker to become the active service worker
@@ -41,28 +50,53 @@ self.addEventListener('fetch', (event) => {
   // Ignore non-GET requests
   if (event.request.method !== 'GET') return
 
+  const url = new URL(event.request.url)
+
+  // Never intercept API requests - let them pass straight to network
+  if (url.pathname.startsWith('/api/')) return
+
   async function respond() {
-    const url = new URL(event.request.url)
     const cache = await caches.open(CACHE)
 
-    // Serve pre-cached assets directly from the cache
-    if (ASSETS.includes(url.pathname)) {
+    // Serve pre-cached core assets directly from cache (cache-first)
+    if (PRECACHE_ASSETS.includes(url.pathname)) {
       const cachedResponse = await cache.match(event.request)
       if (cachedResponse) {
         return cachedResponse
       }
     }
 
-    // For everything else, try the network first, then fall back to cache
+    // Static assets (3D models, audio, images): cache-on-demand
+    if (
+      url.pathname.startsWith('/models/') ||
+      url.pathname.startsWith('/nature/') ||
+      url.pathname.startsWith('/audio/') ||
+      url.pathname.startsWith('/media/')
+    ) {
+      const cachedResponse = await cache.match(event.request)
+      if (cachedResponse) {
+        return cachedResponse
+      }
+
+      try {
+        const response = await fetch(event.request)
+        if (response.status === 200) {
+          cache.put(event.request, response.clone())
+        }
+        return response
+      } catch {
+        throw new Error('Offline')
+      }
+    }
+
+    // For HTML and other routes: network first, then fall back to cache
     try {
       const response = await fetch(event.request)
-      // If we got a valid response, cache it for future use
       if (response.status === 200) {
         cache.put(event.request, response.clone())
       }
       return response
     } catch {
-      // If network fails (offline), try to serve from cache
       const cachedResponse = await cache.match(event.request)
       if (cachedResponse) {
         return cachedResponse

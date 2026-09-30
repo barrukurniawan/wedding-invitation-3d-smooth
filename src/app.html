@@ -40,19 +40,6 @@
      @keyframes startup-load { from { transform: translateX(-120%); } to { transform: translateX(340%); } }
      @media (prefers-reduced-motion: reduce) { #startup-shell .bar::after { animation-duration: 2.5s; } }
   </style>
-  <!-- Preload critical 3D models: browser starts download immediately,
-       in parallel with JS parsing — eliminates the waterfall delay on mobile. -->
-  <link rel="preload" href="/models/tamu.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/tamu-wanita.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/resepsionis.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/pengantin-pria.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/pengantin-wanita.glb" as="fetch" crossorigin="anonymous" />
-  <!-- Preload aisle bush assets (visible near spawn, deferred but load early) -->
-  <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.gltf" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.bin" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Leaves_NormalTree_C.png" as="image" />
-  <link rel="preload" href="/nature/gltf/Bush_Common.gltf" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Bush_Common.bin" as="fetch" crossorigin="anonymous" />
   <!-- DNS prefetch & preconnect for Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

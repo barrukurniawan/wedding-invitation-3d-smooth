@@ -1,7 +1,12 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import '../app.css'
 
   let { children } = $props()
+
+  onMount(() => {
+    document.getElementById('startup-shell')?.remove()
+  })
 </script>
 
 <svelte:head>

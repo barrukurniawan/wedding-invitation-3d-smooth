@@ -91,8 +91,25 @@
   }
 
   async function loadDashboard() {
-    const [loadedConfig] = await Promise.all([loadConfig(), loadEntries(), loadStats(), loadAdminInvitations()])
-    config = loadedConfig
+    config = await loadConfig()
+    if (activeTab === 'verifikasi') {
+      void loadAdminInvitations()
+    } else if (activeTab === 'ucapan') {
+      void Promise.all([loadEntries(), loadStats()])
+    } else if (activeTab === 'statistik') {
+      void loadStats()
+    }
+  }
+
+  function handleTabChange(tab: TabId) {
+    activeTab = tab
+    if (tab === 'verifikasi' && adminInvitations.length === 0) {
+      void loadAdminInvitations()
+    } else if (tab === 'ucapan' && entries.length === 0) {
+      void Promise.all([loadEntries(), loadStats()])
+    } else if (tab === 'statistik' && stats.total === 0) {
+      void loadStats()
+    }
   }
 
   async function loadAdminInvitations() {
@@ -259,7 +276,7 @@
       <!-- Tabs -->
       <div class="mt-4 flex flex-wrap gap-2">
         {#each TABS as [id, label] (id)}
-          <button class="rounded-lg px-3 py-1.5 text-xs font-medium transition {activeTab === id ? 'bg-rose-600 text-white' : 'bg-stone-900 text-stone-400 hover:text-stone-200'}" onclick={() => (activeTab = id)}>{label}</button>
+          <button class="rounded-lg px-3 py-1.5 text-xs font-medium transition {activeTab === id ? 'bg-rose-600 text-white' : 'bg-stone-900 text-stone-400 hover:text-stone-200'}" onclick={() => handleTabChange(id)}>{label}</button>
         {/each}
       </div>
 
