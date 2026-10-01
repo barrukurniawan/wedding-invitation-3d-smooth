@@ -46,11 +46,11 @@
         <p class="whitespace-pre-line text-sm leading-relaxed text-[var(--ink)] md:text-base">
           {parseText($activeNpcData.messages[currentMessageIndex])}
         </p>
-        {#if currentMessageIndex === 0 && ($activeNpcData.venueAddress || $activeNpcData.mapsUrl)}
+        {#if currentMessageIndex === 0 && ($weddingConfig.venue_address || $weddingConfig.maps_url)}
           <a
-            href={$activeNpcData.mapsUrl}
-            class:opacity-60={!$activeNpcData.mapsUrl}
-            aria-disabled={!$activeNpcData.mapsUrl}
+            href={$weddingConfig.maps_url || undefined}
+            class:opacity-60={!$weddingConfig.maps_url}
+            aria-disabled={!$weddingConfig.maps_url}
             target="_blank"
             rel="noopener noreferrer"
             class="mt-4 flex items-center gap-3 rounded-xl border border-[var(--champagne)]/30 bg-white/65 px-3 py-3 text-xs text-[var(--ink)] transition hover:border-[var(--champagne)]/70 hover:bg-white"
@@ -61,9 +61,9 @@
             </svg>
             <span class="min-w-0 flex-1">
               <span class="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--deep-rose)]/60">Alamat venue</span>
-              <span class="mt-0.5 block leading-relaxed">{parseText($activeNpcData.venueAddress) || 'Alamat belum tersedia.'}</span>
+              <span class="mt-0.5 block leading-relaxed">{$weddingConfig.venue_address || 'Alamat belum tersedia.'}</span>
             </span>
-            {#if $activeNpcData.mapsUrl}<span class="ml-auto shrink-0 rounded-lg bg-[var(--deep-rose)] px-2.5 py-1.5 font-semibold text-white">Buka Maps</span>{/if}
+            {#if $weddingConfig.maps_url}<span class="ml-auto shrink-0 rounded-lg bg-[var(--deep-rose)] px-2.5 py-1.5 font-semibold text-white">Buka Maps</span>{/if}
           </a>
         {/if}
       </div>
