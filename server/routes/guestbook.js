@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import pool from '../db.js'
+import { validateGuestbookContent } from '../services/profanityFilter.js'
 
 const router = Router()
 
@@ -33,8 +34,20 @@ router.get('/', async (req, res) => {
 router.post('/', submitLimit, async (req, res) => {
   const parsed = entrySchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Data buku tamu tidak valid.' } })
+  
+  const { name, attendance, message } = parsed.data
+  const moderation = validateGuestbookContent({ name, message })
+  if (!moderation.isValid) {
+    return res.status(400).json({
+      error: {
+        code: 'PROFANITY_DETECTED',
+        message: moderation.error || 'Nama atau ucapan mengandung kata yang tidak pantas.',
+        field: moderation.field,
+      },
+    })
+  }
+
   try {
-    const { name, attendance, message } = parsed.data
     const id = randomUUID()
     await pool.query(
       `INSERT INTO guestbook_entries (id, invitation_id, name, attendance, message, status)

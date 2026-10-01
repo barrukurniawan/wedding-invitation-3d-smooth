@@ -26,10 +26,10 @@
     submitting = true
     submitError = ''
     setGuestName(form.name)
-    const saved = await submitGuestbook(form)
+    const res = await submitGuestbook(form)
     submitting = false
-    if (!saved) {
-      submitError = 'Ucapan belum dapat dikirim. Coba lagi.'
+    if (!res.success) {
+      submitError = res.error || 'Ucapan belum dapat dikirim. Coba lagi.'
       return
     }
     form = { name: '', attendance: 'Hadir', message: '' }
