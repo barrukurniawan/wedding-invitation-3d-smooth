@@ -37,11 +37,23 @@
     activeTab = 'info'
     closeModal()
   }
+  const displayAddress = $derived(
+    $weddingConfig.venue_address ||
+    $weddingConfig.resepsi_location ||
+    $weddingConfig.akad_location ||
+    ''
+  )
+
+  const effectiveMapsUrl = $derived(
+    $weddingConfig.maps_url ||
+    (displayAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}` : '')
+  )
+
   function shareWhatsApp() {
     const text = encodeURIComponent(
       `Undangan Pernikahan ${$weddingConfig.bride_name} & ${$weddingConfig.groom_name}\n` +
       `${$weddingConfig.akad_date}\n` +
-      `${$weddingConfig.venue_address || $weddingConfig.akad_location}\n\n` +
+      `${displayAddress}\n\n` +
       'Yuk hadir dan berikan doa restu!\n' +
       window.location.href
     )
@@ -84,7 +96,7 @@
             <p class="mt-2 font-mono text-lg font-semibold tracking-wide text-[var(--ink)]">{$weddingConfig.bank_account}</p>
             <p class="mt-0.5 text-xs text-[var(--ink)]/55">a/n {$weddingConfig.bank_holder}</p>
           </div>
-          {#if $weddingConfig.maps_url}<a class="block text-xs text-[var(--rose)] hover:text-[var(--champagne)]" href={$weddingConfig.maps_url} target="_blank" rel="noreferrer">Buka lokasi di Google Maps</a>{/if}
+          {#if effectiveMapsUrl}<a class="block text-xs text-[var(--rose)] hover:text-[var(--champagne)]" href={effectiveMapsUrl} target="_blank" rel="noreferrer">Buka lokasi di Google Maps</a>{/if}
         </div>
       {:else}
           <button onclick={handleClose} class="modal-icon-button absolute right-3 top-3 z-10" aria-label="Tutup">✕</button>

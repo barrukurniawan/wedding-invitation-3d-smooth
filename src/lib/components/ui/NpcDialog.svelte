@@ -20,6 +20,18 @@
     const groom = $weddingConfig.groom_name || 'Toni'
     return text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
   }
+
+  const displayAddress = $derived(
+    $weddingConfig.venue_address ||
+    $weddingConfig.resepsi_location ||
+    $weddingConfig.akad_location ||
+    ''
+  )
+
+  const effectiveMapsUrl = $derived(
+    $weddingConfig.maps_url ||
+    (displayAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}` : '')
+  )
 </script>
 
 {#if $activeModal === 'npc' && $activeNpcData}
@@ -46,11 +58,11 @@
         <p class="whitespace-pre-line text-sm leading-relaxed text-[var(--ink)] md:text-base">
           {parseText($activeNpcData.messages[currentMessageIndex])}
         </p>
-        {#if currentMessageIndex === 0 && ($weddingConfig.venue_address || $weddingConfig.maps_url)}
+        {#if currentMessageIndex === 0 && (displayAddress || effectiveMapsUrl)}
           <a
-            href={$weddingConfig.maps_url || undefined}
-            class:opacity-60={!$weddingConfig.maps_url}
-            aria-disabled={!$weddingConfig.maps_url}
+            href={effectiveMapsUrl || undefined}
+            class:opacity-60={!effectiveMapsUrl}
+            aria-disabled={!effectiveMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             class="mt-4 flex items-center gap-3 rounded-xl border border-[var(--champagne)]/30 bg-white/65 px-3 py-3 text-xs text-[var(--ink)] transition hover:border-[var(--champagne)]/70 hover:bg-white"
@@ -61,9 +73,9 @@
             </svg>
             <span class="min-w-0 flex-1">
               <span class="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--deep-rose)]/60">Alamat venue</span>
-              <span class="mt-0.5 block leading-relaxed">{$weddingConfig.venue_address || 'Alamat belum tersedia.'}</span>
+              <span class="mt-0.5 block leading-relaxed">{displayAddress || 'Alamat belum tersedia.'}</span>
             </span>
-            {#if $weddingConfig.maps_url}<span class="ml-auto shrink-0 rounded-lg bg-[var(--deep-rose)] px-2.5 py-1.5 font-semibold text-white">Buka Maps</span>{/if}
+            {#if effectiveMapsUrl}<span class="ml-auto shrink-0 rounded-lg bg-[var(--deep-rose)] px-2.5 py-1.5 font-semibold text-white">Buka Maps</span>{/if}
           </a>
         {/if}
       </div>
