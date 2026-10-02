@@ -35,6 +35,7 @@ const configSchema = z.object({
   gallery_photos: z.array(text(2048)).max(30),
   bgm_url: text(2048),
   bgm_title: text(255),
+  preset: z.enum(['3d_summer', '2d_garden']),
 }).partial().strict()
 
 function invalid(res, error) {

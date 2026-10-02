@@ -16,6 +16,7 @@ const createSchema = z.object({
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal resepsi tidak valid.',
   ).optional(),
+  preset: z.enum(['3d_summer', '2d_garden']).optional(),
 }).strict()
 
 function serializeInvitation(row) {
@@ -108,6 +109,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
   const receptionMysql = toMysqlDateTime(receptionIso)
   const brideName = parsed.data.bride_name || 'Mempelai Wanita'
   const groomName = parsed.data.groom_name || 'Mempelai Pria'
+  const preset = parsed.data.preset || '3d_summer'
   const connection = await pool.getConnection()
 
   try {
@@ -156,14 +158,14 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
          invitation_id, bride_name, groom_name, bride_parents, groom_parents,
          wedding_photo, wedding_date, akad_date, akad_time, akad_location,
          resepsi_date, resepsi_time, resepsi_location, qris_image, bank_name,
-         bank_account, bank_holder, maps_url, venue_address, gallery_photos, quote
+         bank_account, bank_holder, maps_url, venue_address, gallery_photos, quote, preset
        ) VALUES (
          ?, ?, ?, 'Bpk. ... & Ibu. ...', 'Bpk. ... & Ibu. ...',
          '', ?, 'Tanggal akad segera diumumkan', '08:00 - 10:00 WIB', 'Kediaman Mempelai Wanita',
          'Tanggal resepsi segera diumumkan', '11:00 - 14:00 WIB', 'Gedung Serbaguna', '', 'BCA',
-         '', ?, '', '', CAST('[]' AS JSON), ''
+         '', ?, '', '', CAST('[]' AS JSON), '', ?
        )`,
-      [invitationId, brideName, groomName, receptionMysql, groomName],
+      [invitationId, brideName, groomName, receptionMysql, groomName, preset],
     )
 
     if (isFreeManualPackage()) {

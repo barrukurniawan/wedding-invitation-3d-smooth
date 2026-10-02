@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, type Component } from 'svelte'
-  import { configError, configStatus, loadConfig } from '../../stores/weddingConfig.svelte'
+  import { configError, configStatus, loadConfig, weddingConfig } from '../../stores/weddingConfig.svelte'
   import TenantStateScreen from './TenantStateScreen.svelte'
   import InvitationLoading from '../ui/InvitationLoading.svelte'
   import { loadProgress, startFakeProgress, stopFakeProgress } from '../../stores/loadProgress.svelte'
@@ -8,14 +8,18 @@
   let InvitationApp = $state<Component>()
 
   async function bootstrap() {
-    const appPromise = import('../../../App.svelte')
     await loadConfig()
     if ($configStatus !== 'ready') {
       stopFakeProgress()
       return
     }
-    const module = await appPromise
-    InvitationApp = module.default
+    if ($weddingConfig?.preset === '2d_garden') {
+      const module = await import('../twod/Garden2DApp.svelte')
+      InvitationApp = module.default
+    } else {
+      const module = await import('../../../App.svelte')
+      InvitationApp = module.default
+    }
   }
 
   onMount(() => {

@@ -22,6 +22,7 @@ export interface WeddingConfig {
   quote: string
   bgm_url?: string
   bgm_title?: string
+  preset?: '3d_summer' | '2d_garden'
   updated_at: string
 }
 
@@ -145,6 +146,7 @@ export const defaultConfig: WeddingConfig = {
   quote: '',
   bgm_url: '/audio/Marry%20You.mp3',
   bgm_title: 'Marry You',
+  preset: '3d_summer',
   updated_at: '',
 }
 
@@ -292,6 +294,7 @@ export function createInvitation(input: {
   bride_name?: string
   groom_name?: string
   reception_at?: string
+  preset?: '3d_summer' | '2d_garden'
 }) {
   return request<{ invitation: OwnerInvitation }>('/invitations', {
     method: 'POST',

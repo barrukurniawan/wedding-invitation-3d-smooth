@@ -37,6 +37,7 @@
   let slugInput = $state('')
   let brideInput = $state('')
   let groomInput = $state('')
+  let onboardingPreset = $state<'3d_summer' | '2d_garden'>('3d_summer')
   const slugPattern = '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
@@ -46,6 +47,10 @@
   let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan' | 'kirim'>('edit')
   let ownerTabs = $state<HTMLElement | null>(null)
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
+
+  // Landing Page Preset Catalog State
+  let activePresetTab = $state<'both' | '3d' | '2d'>('both')
+  let previewDevicePreset = $state<'3d' | '2d'>('3d')
 
   // Config & Payment & Guestbook State
   let myConfig = $state<WeddingConfig | null>(null)
@@ -196,6 +201,7 @@
         slug: slugInput.trim().toLowerCase(),
         bride_name: brideInput.trim() || undefined,
         groom_name: groomInput.trim() || undefined,
+        preset: onboardingPreset,
       })
       invitation = result.invitation
       slugInput = ''
@@ -371,25 +377,186 @@
         <p class="eyebrow">Mulai perjalanan kalian</p>
         <h1 id="journey-title"><span class="title-lead">Buat undangan yang terasa seperti</span> <em>dunia kalian sendiri</em></h1>
         <p class="lead">
-          Pengalaman berkesan & tak terlupakan dengan dunia 3 dimensi
+          Desain terpopuler kami di dunia fantasi..
         </p>
 
-        <figure class="preview">
-          <div class="preview-window">
-            <img
-              src="/documentation/example_show.png"
-              alt="Contoh dunia undangan pernikahan 3D MarryMe"
-            />
-            <div class="preview-shine" aria-hidden="true"></div>
+        <!-- Showcase 2 Preset Katalog -->
+        <div class="preset-catalog" aria-label="Katalog Desain Undangan MarryMe">
+          <div class="preset-tabs" role="tablist" aria-label="Pilih tampilan preset">
+            <button
+              type="button"
+              role="tab"
+              class="preset-tab-btn"
+              class:active={activePresetTab === 'both'}
+              onclick={() => activePresetTab = 'both'}
+              aria-selected={activePresetTab === 'both'}
+            >
+              <span>Semua Preset (2)</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="preset-tab-btn"
+              class:active={activePresetTab === '3d'}
+              onclick={() => activePresetTab = '3d'}
+              aria-selected={activePresetTab === '3d'}
+            >
+              <span class="preset-tab-icon">🧱</span>
+              <span>3D Island</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="preset-tab-btn"
+              class:active={activePresetTab === '2d'}
+              onclick={() => activePresetTab = '2d'}
+              aria-selected={activePresetTab === '2d'}
+            >
+              <span class="preset-tab-icon">👾</span>
+              <span>2D Garden</span>
+              <span class="badge-mini-hot">Ringan</span>
+            </button>
           </div>
-          <figcaption><span aria-hidden="true"></span> Dunia undangan MarryMe</figcaption>
-        </figure>
+
+          <div class="preset-grid" class:single-view={activePresetTab !== 'both'}>
+            <!-- PRESET 1 CARD (3D WORLD) -->
+            {#if activePresetTab === 'both' || activePresetTab === '3d'}
+              <article class="preset-card card-3d">
+                <header class="preset-header">
+                  <div class="preset-badge-group">
+                    <span class="badge-preset-num">PRESET 01</span>
+                    <span class="badge-tag tag-3d">3D Immersive</span>
+                  </div>
+                  <h3 class="preset-title">Summer Fantasy Island</h3>
+                  <p class="preset-desc">
+                    Petualangan 3 dimensi interaktif. Tamu berjalan di pulau taman, karakter animasi 3D, pelaminan bunga & efek confetti.
+                  </p>
+                </header>
+
+                <!-- Dual Mockup: Laptop + Phone -->
+                <div class="preset-mockup-stage">
+                  <div class="mockup-laptop">
+                    <div class="laptop-screen">
+                      <div class="mockup-chrome">
+                        <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
+                        <span class="chrome-url">kia-toni.marryme.web.id</span>
+                      </div>
+                      <img src="/media/preset-3d-desktop.png" alt="Preset 1 - Tampilan Laptop 3D" class="laptop-img" />
+                    </div>
+                    <div class="laptop-base"></div>
+                  </div>
+
+                  <div class="mockup-phone">
+                    <div class="phone-screen">
+                      <div class="phone-notch"></div>
+                      <img src="/media/preset-3d-mobile.png" alt="Preset 1 - Tampilan HP 3D" class="phone-img" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="preset-features">
+                  <span class="feature-pill">🎮 Joystick 3D & WASD</span>
+                  <span class="feature-pill">👗 Kustom Busana Mempelai</span>
+                  <span class="feature-pill">🎉 Pelaminan & Confetti</span>
+                  <span class="feature-pill">📱 Responsif HP & Desktop</span>
+                </div>
+
+                <footer class="preset-footer">
+                  <a
+                    href="https://kia-toni.marryme.web.id"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-demo-link"
+                    title="Buka live demo Preset 1 3D di tab baru"
+                  >
+                    <span>Demo 3D</span>
+                    <svg class="icon-arrow" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                  <button type="button" class="btn-select-preset" onclick={handleGoogleLogin}>
+                    Pilih Desain
+                  </button>
+                </footer>
+              </article>
+            {/if}
+
+            <!-- PRESET 2 CARD (2D PIXEL GARDEN) -->
+            {#if activePresetTab === 'both' || activePresetTab === '2d'}
+              <article class="preset-card card-2d">
+                <header class="preset-header">
+                  <div class="preset-badge-group">
+                    <span class="badge-preset-num">PRESET 02</span>
+                    <span class="badge-tag tag-2d">2D Pixel</span>
+                  </div>
+                  <h3 class="preset-title">Pixel Garden RPG</h3>
+                  <p class="preset-desc">
+                    Taman pernikahan retro pixel art yang ringan di semua ponsel, dengan air mancur beriak, danau angsa & pianis romantis.
+                  </p>
+                </header>
+
+                <!-- Dual Mockup: Laptop + Phone -->
+                <div class="preset-mockup-stage">
+                  <div class="mockup-laptop">
+                    <div class="laptop-screen">
+                      <div class="mockup-chrome">
+                        <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
+                        <span class="chrome-url">faris-eliza.marryme.web.id</span>
+                      </div>
+                      <img src="/media/preset-2d-desktop.png" alt="Preset 2 - Tampilan Laptop 2D" class="laptop-img" />
+                    </div>
+                    <div class="laptop-base"></div>
+                  </div>
+
+                  <div class="mockup-phone">
+                    <div class="phone-screen">
+                      <div class="phone-notch"></div>
+                      <img src="/media/preset-2d-mobile.png" alt="Preset 2 - Tampilan HP 2D" class="phone-img" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="preset-features">
+                  <span class="feature-pill">⚡ Instan & Hemat Kuota</span>
+                  <span class="feature-pill">🕹️ Analog Halus & Touch-to-Walk</span>
+                  <span class="feature-pill">🎹 Pianis & Penyanyi Danau</span>
+                  <span class="feature-pill">💌 Buku Tamu & Galeri Interaktif</span>
+                </div>
+
+                <footer class="preset-footer">
+                  <a
+                    href="/demo/wedding-garden-2.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-demo-link"
+                    title="Buka live demo Preset 2 2D di tab baru"
+                  >
+                    <span>Demo 2D</span>
+                    <svg class="icon-arrow" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                  <button type="button" class="btn-select-preset" onclick={handleGoogleLogin}>
+                    Pilih Desain
+                  </button>
+                </footer>
+              </article>
+            {/if}
+          </div>
+
+          <div class="preset-notice">
+            <span class="notice-icon">💡</span>
+            <span class="notice-text">
+              <strong>Bebas beralih tema:</strong> Kalian bisa memilih preset favorit saat login, dan tema bisa diubah kapan saja di pengaturan dashboard tanpa mengetik ulang data.
+            </span>
+          </div>
+        </div>
 
         <nav class="stepper" aria-label="Empat langkah membuat undangan">
           <ol>
             <li class="active" aria-current="step">
               <span class="step-number">01</span>
-              <span><strong>Masuk</strong><small>Simpan progres undangan</small></span>
+              <span><strong>Pilih Tema & Masuk</strong><small>3D Island atau 2D Pixel</small></span>
             </li>
             <li>
               <span class="step-number">02</span>
@@ -401,7 +568,7 @@
             </li>
             <li>
               <span class="step-number">04</span>
-              <span><strong>Bagikan</strong><small>Undang tamu ke dunia 3D kalian</small></span>
+              <span><strong>Bagikan</strong><small>Undang tamu ke dunia kalian</small></span>
             </li>
           </ol>
         </nav>
@@ -451,43 +618,91 @@
       <div class="section-inner">
         <div class="section-head center">
           <div>
-            <p class="eyebrow-deep">Live preview 3D world</p>
+            <p class="eyebrow-deep">Live Preview 2 Preset</p>
             <h2 id="preview-title">Dunia yang sudah hidup</h2>
             <p class="section-lead">
-              Lihat cuplikan undangan web dan mobile. Satu link, tamu bisa masuk dari HP maupun desktop.
+              Lihat cuplikan undangan web dan mobile untuk Preset 3D Fantasy Island maupun 2D Pixel Garden.
             </p>
+          </div>
+
+          <div class="preview-preset-toggle" role="group" aria-label="Pilih preset untuk preview">
+            <button
+              type="button"
+              class="preview-toggle-btn"
+              class:active={previewDevicePreset === '3d'}
+              onclick={() => previewDevicePreset = '3d'}
+            >
+              3D Open World
+            </button>
+            <button
+              type="button"
+              class="preview-toggle-btn"
+              class:active={previewDevicePreset === '2d'}
+              onclick={() => previewDevicePreset = '2d'}
+            >
+              2D Pixel RPG
+            </button>
           </div>
         </div>
 
-        <div class="device-stage">
-          <figure class="browser-frame">
-            <div class="browser-chrome" aria-hidden="true">
-              <span></span><span></span><span></span>
-              <div class="browser-url">kia-toni.marryme.web.id</div>
-            </div>
-            <video
-              src="/media/preview.mp4"
-              poster="/media/preview-poster.jpg"
-              aria-label="Preview undangan 3D di desktop"
-              class="browser-shot"
-              autoplay
-              loop
-              muted
-              playsinline
-            ></video>
-          </figure>
+        {#if previewDevicePreset === '3d'}
+          <div class="device-stage">
+            <figure class="browser-frame">
+              <div class="browser-chrome" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <div class="browser-url">kia-toni.marryme.web.id</div>
+              </div>
+              <video
+                src="/media/preview.mp4"
+                poster="/media/preview-poster.jpg"
+                aria-label="Preview undangan 3D di desktop"
+                class="browser-shot"
+                autoplay
+                loop
+                muted
+                playsinline
+              ></video>
+            </figure>
 
-          <figure class="phone-frame">
-            <div class="phone-notch" aria-hidden="true"></div>
-            <img
-              src="/documentation/resepsionis.png"
-              alt="Preview undangan 3D di ponsel"
-              class="phone-shot"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        </div>
+            <figure class="phone-frame">
+              <div class="phone-notch" aria-hidden="true"></div>
+              <img
+                src="/media/preset-3d-mobile.png"
+                alt="Preview undangan 3D di ponsel"
+                class="phone-shot"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+          </div>
+        {:else}
+          <div class="device-stage">
+            <figure class="browser-frame">
+              <div class="browser-chrome" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <div class="browser-url">faris-eliza.marryme.web.id</div>
+              </div>
+              <img
+                src="/media/preset-2d-desktop.png"
+                alt="Preview undangan 2D di desktop"
+                class="browser-shot"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+
+            <figure class="phone-frame">
+              <div class="phone-notch" aria-hidden="true"></div>
+              <img
+                src="/media/preset-2d-mobile.png"
+                alt="Preview undangan 2D di ponsel"
+                class="phone-shot"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+          </div>
+        {/if}
       </div>
     </section>
 
@@ -882,6 +1097,50 @@
             <p class="section-desc">Informasi teknis mengenai alamat domain dan sesi pengelola.</p>
 
             <div class="grid-2">
+              <div class="settings-card col-span-2">
+                <h4>Preset Desain Dunia Undangan</h4>
+                <p class="section-desc" style="margin-bottom: 14px;">Bebas beralih antara 3D dan 2D kapan saja tanpa menghapus data pernikahan yang sudah diisi.</p>
+                <div class="preset-theme-switch-grid">
+                  <button
+                    type="button"
+                    class="theme-switch-card"
+                    class:active={myConfig?.preset === '3d_summer' || !myConfig?.preset}
+                    onclick={async () => {
+                      if (!myConfig || myConfig.preset === '3d_summer') return
+                      myConfig.preset = '3d_summer'
+                      await saveConfig()
+                    }}
+                  >
+                    <div class="theme-switch-head">
+                      <strong>🌟 Preset 1: Dunia 3D Island</strong>
+                      {#if myConfig?.preset === '3d_summer' || !myConfig?.preset}
+                        <span class="badge-active">Aktif Digunakan</span>
+                      {/if}
+                    </div>
+                    <p class="theme-switch-desc">Dunia 3D Three.js interaktif dengan avatar animasi, pelaminan, dan confetti.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="theme-switch-card"
+                    class:active={myConfig?.preset === '2d_garden'}
+                    onclick={async () => {
+                      if (!myConfig || myConfig.preset === '2d_garden') return
+                      myConfig.preset = '2d_garden'
+                      await saveConfig()
+                    }}
+                  >
+                    <div class="theme-switch-head">
+                      <strong>🌿 Preset 2: Dunia 2D Pixel Garden</strong>
+                      {#if myConfig?.preset === '2d_garden'}
+                        <span class="badge-active green">Aktif Digunakan</span>
+                      {/if}
+                    </div>
+                    <p class="theme-switch-desc">Retro pixel RPG yang sangat ringan di semua ponsel, air mancur & pianis romantis.</p>
+                  </button>
+                </div>
+              </div>
+
               <div class="settings-card">
                 <h4>Status Subdomain</h4>
                 <p>Alamat: <code>{invitation.slug}.marryme.web.id</code></p>
@@ -900,7 +1159,7 @@
 
       {:else}
         <!-- Logged In Form Create Invitation (If No Invitation Yet) -->
-        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput {busy} {slugPattern} {handleCreate} />
+        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput bind:presetInput={onboardingPreset} {busy} {slugPattern} {handleCreate} />
 
       {/if}
     </section>

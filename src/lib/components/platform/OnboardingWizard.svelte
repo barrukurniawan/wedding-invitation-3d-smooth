@@ -5,12 +5,13 @@
     slugInput: string
     brideInput: string
     groomInput: string
+    presetInput?: '3d_summer' | '2d_garden'
     busy: boolean
     slugPattern: string
     handleCreate: () => Promise<void>
   }
   
-  let { slugInput = $bindable(), brideInput = $bindable(), groomInput = $bindable(), busy, slugPattern, handleCreate }: Props = $props()
+  let { slugInput = $bindable(), brideInput = $bindable(), groomInput = $bindable(), presetInput = $bindable('3d_summer'), busy, slugPattern, handleCreate }: Props = $props()
 </script>
 
 <div class="relative w-full max-w-2xl mx-auto p-8 md:p-12 rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/50 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden" in:fade={{ duration: 400, delay: 100 }}>
@@ -18,23 +19,69 @@
   <div class="absolute -top-24 -right-24 w-64 h-64 bg-rose-200/40 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-200/40 rounded-full blur-3xl pointer-events-none"></div>
   
-  <div class="relative z-10 text-center mb-10">
-    <span class="inline-block py-1 px-4 rounded-full bg-gradient-to-r from-amber-100 to-rose-100 text-amber-900 text-xs font-bold tracking-widest uppercase mb-6 shadow-sm">
+  <div class="relative z-10 text-center mb-8">
+    <span class="inline-block py-1 px-4 rounded-full bg-gradient-to-r from-amber-100 to-rose-100 text-amber-900 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm">
       Mulai Perjalanan Kalian
     </span>
-    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight mb-4">Tentukan Alamat Link Undangan</h2>
-    <p class="text-slate-500 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
-      Pilih subdomain unik yang singkat dan mudah diingat oleh keluarga serta para tamu.
+    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight mb-3">Tentukan Desain & Link Undangan</h2>
+    <p class="text-slate-500 text-base max-w-lg mx-auto leading-relaxed">
+      Pilih preset dunia virtual yang kalian sukai dan tentukan alamat subdomain unik untuk para tamu.
     </p>
   </div>
 
   <form
-    class="relative z-10 space-y-8"
+    class="relative z-10 space-y-7"
     onsubmit={(event) => {
       event.preventDefault()
       void handleCreate()
     }}
   >
+    <!-- Preset Theme Selector -->
+    <div class="space-y-3">
+      <span class="block text-sm font-semibold text-slate-700 ml-1">
+        Pilih Preset Desain Undangan
+      </span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Preset 1 3D -->
+        <button
+          type="button"
+          class="relative text-left p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between {presetInput === '3d_summer' ? 'border-amber-500 bg-amber-50/60 shadow-md ring-2 ring-amber-400/20' : 'border-slate-200 bg-white/80 hover:border-slate-300'}"
+          onclick={() => presetInput = '3d_summer'}
+        >
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-rose-800 bg-rose-100 px-2.5 py-0.5 rounded-full">PRESET 01</span>
+              {#if presetInput === '3d_summer'}
+                <span class="text-amber-600 font-bold text-xs bg-amber-100 px-2 py-0.5 rounded-full">✓ Terpilih</span>
+              {/if}
+            </div>
+            <h4 class="font-bold text-slate-800 text-base">🌟 Dunia 3D Summer Island</h4>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Petualangan 3D interaktif orang ketiga di pulau taman dengan avatar & confetti.</p>
+          </div>
+        </button>
+
+        <!-- Preset 2 2D -->
+        <button
+          type="button"
+          class="relative text-left p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between {presetInput === '2d_garden' ? 'border-emerald-500 bg-emerald-50/60 shadow-md ring-2 ring-emerald-400/20' : 'border-slate-200 bg-white/80 hover:border-slate-300'}"
+          onclick={() => presetInput = '2d_garden'}
+        >
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">PRESET 02 · RINGAN</span>
+              {#if presetInput === '2d_garden'}
+                <span class="text-emerald-600 font-bold text-xs bg-emerald-100 px-2 py-0.5 rounded-full">✓ Terpilih</span>
+              {/if}
+            </div>
+            <h4 class="font-bold text-slate-800 text-base">🌿 Dunia 2D Pixel Garden</h4>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Sangat ringan di semua ponsel, retro pixel RPG, air mancur & musisi danau.</p>
+          </div>
+        </button>
+      </div>
+      <p class="text-xs text-slate-400 ml-1">
+        💡 Tenang, kalian bisa beralih tema kapan saja di menu pengaturan tanpa kehilangan data.
+      </p>
+    </div>
     <div class="space-y-2 group">
        <label for="invitation-slug" class="block text-sm font-semibold text-slate-700 ml-1 transition-colors group-focus-within:text-amber-600">
         Alamat Undangan (Subdomain)
