@@ -11,7 +11,12 @@ const weddingDate = z.union([
   z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal pernikahan tidak valid.',
-  ),
+  ).refine((val) => {
+    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+    return val.slice(0, 10) >= todayWib
+  }, {
+    message: 'Tanggal pernikahan tidak boleh di masa lalu (sebelum hari ini).',
+  }),
   z.literal(''),
   z.null(),
 ])
@@ -126,7 +131,7 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
 
   try {
     const [invitationRows] = await pool.query(
-      'SELECT id FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1',
+      'SELECT id, status, activated_at FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1',
       [req.user.id],
     )
     const invitation = invitationRows[0]
@@ -153,10 +158,20 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
           `UPDATE invitations
            SET reception_at = ?,
                expires_at = DATE_ADD(?, INTERVAL 7 DAY),
-               retention_until = DATE_ADD(?, INTERVAL 37 DAY)
+               retention_until = DATE_ADD(?, INTERVAL 37 DAY),
+               status = IF(status = 'expired' AND activated_at IS NOT NULL, 'active', status)
            WHERE id = ?`,
           [mysqlDate, mysqlDate, mysqlDate, invitation.id],
         )
+
+        if (invitation.status === 'expired' && invitation.activated_at) {
+          await pool.query(
+            `INSERT INTO invitation_status_events
+               (invitation_id, from_status, to_status, actor_type, actor_user_id, reason)
+             VALUES (?, 'expired', 'active', 'user', ?, 'Tanggal pernikahan diperbarui ke masa depan')`,
+            [invitation.id, req.user.id],
+          ).catch((e) => console.error('Failed to log reactivation event:', e.message))
+        }
       } else {
         await pool.query(
           `UPDATE invitations

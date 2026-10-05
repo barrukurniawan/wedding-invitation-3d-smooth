@@ -5,6 +5,7 @@ import { normalizeMusicConfig } from '../services/configDefaults.js'
 const router = Router()
 
 router.get('/', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private')
   try {
     const [rows] = await pool.query(
       `SELECT invitation_id AS id, bride_name, groom_name, bride_parents, groom_parents, wedding_photo,

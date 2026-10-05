@@ -6,9 +6,12 @@
     formatIndonesianDate,
     buildTimeString,
     combineToIsoDateTime,
+    getTodayIso,
   } from '$lib/utils/dateFormatter'
 
   let { config = $bindable() }: { config: WeddingConfig } = $props()
+
+  const minSelectableDate = getTodayIso()
 
   // Initialize Akad state
   let akadIsoDate = $state(extractIsoDate(config.wedding_date || config.akad_date))
@@ -48,17 +51,26 @@
 
   function handleAkadDateInput(e: Event) {
     const val = (e.target as HTMLInputElement).value
-    akadIsoDate = val
+    if (val && val < minSelectableDate) {
+      akadIsoDate = minSelectableDate
+    } else {
+      akadIsoDate = val
+    }
     // If resepsi date is not filled yet, auto-populate same date
-    if (val && !resepsiIsoDate) {
-      resepsiIsoDate = val
+    if (akadIsoDate && !resepsiIsoDate) {
+      resepsiIsoDate = akadIsoDate
       syncResepsi()
     }
     syncAkad()
   }
 
   function handleResepsiDateInput(e: Event) {
-    resepsiIsoDate = (e.target as HTMLInputElement).value
+    const val = (e.target as HTMLInputElement).value
+    if (val && val < minSelectableDate) {
+      resepsiIsoDate = minSelectableDate
+    } else {
+      resepsiIsoDate = val
+    }
     syncResepsi()
   }
 
@@ -100,6 +112,7 @@
         Tanggal Akad (Klik Kalender)
         <input
           type="date"
+          min={minSelectableDate}
           value={akadIsoDate}
           onchange={handleAkadDateInput}
           class="cursor-pointer font-medium"
@@ -179,6 +192,7 @@
         Tanggal Resepsi (Klik Kalender)
         <input
           type="date"
+          min={minSelectableDate}
           value={resepsiIsoDate}
           onchange={handleResepsiDateInput}
           class="cursor-pointer font-medium"

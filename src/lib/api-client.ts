@@ -123,6 +123,11 @@ export function getCsrfToken() {
   return csrfToken
 }
 
+import { getFutureDateIso, formatIndonesianDate } from './utils/dateFormatter'
+
+const defaultFutureIso = getFutureDateIso(14)
+const defaultFutureVerbal = formatIndonesianDate(defaultFutureIso)
+
 export const defaultConfig: WeddingConfig = {
   id: 1,
   bride_name: 'Kia Anindya',
@@ -130,11 +135,11 @@ export const defaultConfig: WeddingConfig = {
   bride_parents: 'Bpk. ... & Ibu. ...',
   groom_parents: 'Bpk. ... & Ibu. ...',
   wedding_photo: '',
-  wedding_date: '2026-08-16T08:00:00+07:00',
-  akad_date: 'Minggu, 16 Agustus 2026',
+  wedding_date: `${defaultFutureIso}T08:00:00+07:00`,
+  akad_date: defaultFutureVerbal,
   akad_time: '08:00 - 10:00 WIB',
   akad_location: 'Kediaman Mempelai Wanita',
-  resepsi_date: 'Minggu, 16 Agustus 2026',
+  resepsi_date: defaultFutureVerbal,
   resepsi_time: '11:00 - 14:00 WIB',
   resepsi_location: 'Gedung Serbaguna',
   qris_image: '',

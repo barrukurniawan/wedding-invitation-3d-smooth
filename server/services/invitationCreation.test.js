@@ -11,7 +11,12 @@ const createSchema = z.object({
   reception_at: z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal resepsi tidak valid.',
-  ).optional(),
+  ).refine((val) => {
+    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+    return val.slice(0, 10) >= todayWib
+  }, {
+    message: 'Tanggal resepsi tidak boleh di masa lalu (sebelum hari ini).',
+  }).optional(),
 }).strict()
 
 function calculateLifecycleDates(receptionIsoString) {
@@ -148,3 +153,26 @@ test('Invitation Creation: Serialization formats invitation DTO accurately', () 
   assert.equal(dto.config.wedding_date, '2026-11-15T08:00:00')
   assert.equal(dto.public_url.includes('kia-toni'), true)
 })
+
+test('Invitation Creation: Rejects reception dates in the past', () => {
+  const pastResult = createSchema.safeParse({
+    slug: 'kia-toni',
+    reception_at: '2020-01-01T08:00:00',
+  })
+  assert.equal(pastResult.success, false)
+  assert.match(pastResult.error.issues[0].message, /masa lalu/)
+})
+
+test('Invitation Creation: Default reception date is at least 14 days in the future', () => {
+  const now = Date.now()
+  const d = new Date(now + 7 * 3600 * 1000)
+  d.setDate(d.getDate() + 14)
+  const expectedIsoPrefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+  const validFuture = createSchema.safeParse({
+    slug: 'kia-toni',
+    reception_at: `${expectedIsoPrefix}T08:00:00`,
+  })
+  assert.equal(validFuture.success, true)
+})
+

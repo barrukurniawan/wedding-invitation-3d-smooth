@@ -15,7 +15,12 @@ const createSchema = z.object({
   reception_at: z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal resepsi tidak valid.',
-  ).optional(),
+  ).refine((val) => {
+    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+    return val.slice(0, 10) >= todayWib
+  }, {
+    message: 'Tanggal resepsi tidak boleh di masa lalu (sebelum hari ini).',
+  }).optional(),
   preset: z.enum(['3d_summer', '2d_garden']).optional(),
 }).strict()
 
@@ -47,11 +52,30 @@ function toMysqlDateTime(iso) {
   return iso.slice(0, 19).replace('T', ' ')
 }
 
-function defaultReceptionAt() {
-  const date = new Date()
-  date.setUTCDate(date.getUTCDate() + 90)
-  date.setUTCHours(4, 0, 0, 0)
-  return date.toISOString().slice(0, 19)
+const INDO_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+const INDO_MONTHS = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+]
+
+function formatIndonesianDateFromIso(isoDateString) {
+  const [yearStr, monthStr, dayStr] = isoDateString.slice(0, 10).split('-')
+  const dateObj = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
+  const dayName = INDO_DAYS[dateObj.getDay()]
+  const day = dateObj.getDate()
+  const monthName = INDO_MONTHS[dateObj.getMonth()]
+  const year = dateObj.getFullYear()
+  return `${dayName}, ${day} ${monthName} ${year}`
+}
+
+function defaultReceptionAt(daysAhead = 14) {
+  // Always default to 14 days in the future at 08:00 WIB
+  const date = new Date(Date.now() + 7 * 3600 * 1000)
+  date.setDate(date.getDate() + daysAhead)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}T08:00:00`
 }
 
 router.get('/me', requireUser, async (req, res, next) => {
@@ -153,6 +177,8 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
       [invitationId, req.user.id],
     )
 
+    const defaultEventDateIndo = formatIndonesianDateFromIso(receptionIso)
+
     await connection.query(
       `INSERT INTO wedding_configs (
          invitation_id, bride_name, groom_name, bride_parents, groom_parents,
@@ -161,11 +187,11 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
          bank_account, bank_holder, maps_url, venue_address, gallery_photos, quote, preset
        ) VALUES (
          ?, ?, ?, 'Bpk. ... & Ibu. ...', 'Bpk. ... & Ibu. ...',
-         '', ?, 'Tanggal akad segera diumumkan', '08:00 - 10:00 WIB', 'Kediaman Mempelai Wanita',
-         'Tanggal resepsi segera diumumkan', '11:00 - 14:00 WIB', 'Gedung Serbaguna', '', 'BCA',
+         '', ?, ?, '08:00 - 10:00 WIB', 'Kediaman Mempelai Wanita',
+         ?, '11:00 - 14:00 WIB', 'Gedung Serbaguna', '', 'BCA',
          '', ?, '', '', CAST('[]' AS JSON), '', ?
        )`,
-      [invitationId, brideName, groomName, receptionMysql, groomName, preset],
+      [invitationId, brideName, groomName, receptionMysql, defaultEventDateIndo, defaultEventDateIndo, groomName, preset],
     )
 
     if (isFreeManualPackage()) {

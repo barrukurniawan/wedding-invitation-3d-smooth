@@ -3,6 +3,7 @@ import { classifyHost, RESERVED_SLUGS, SLUG_PATTERN } from '../services/host.js'
 import { getUserSession } from '../userAuth.js'
 
 function error(res, status, code, message) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private')
   return res.status(status).json({ error: { code, message } })
 }
 
