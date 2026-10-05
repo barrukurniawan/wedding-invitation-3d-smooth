@@ -8,12 +8,7 @@ const weddingDate = z.union([
   z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal pernikahan tidak valid.',
-  ).refine((val) => {
-    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
-    return val.slice(0, 10) >= todayWib
-  }, {
-    message: 'Tanggal pernikahan tidak boleh di masa lalu (sebelum hari ini).',
-  }),
+  ),
   z.literal(''),
   z.null(),
 ])
@@ -88,10 +83,6 @@ test('Tenant Config Editor: Schema validates event details and ISO wedding date'
 
   const invalidDate = configSchema.safeParse({ wedding_date: '25-10-2026 09:00' })
   assert.equal(invalidDate.success, false)
-
-  const pastDate = configSchema.safeParse({ wedding_date: '2020-01-01T08:00:00' })
-  assert.equal(pastDate.success, false)
-  assert.match(pastDate.error.issues[0].message, /masa lalu/)
 })
 
 test('Tenant Config Editor: Schema validates digital envelope and banking info', () => {

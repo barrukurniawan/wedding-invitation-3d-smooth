@@ -11,12 +11,7 @@ const createSchema = z.object({
   reception_at: z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal resepsi tidak valid.',
-  ).refine((val) => {
-    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
-    return val.slice(0, 10) >= todayWib
-  }, {
-    message: 'Tanggal resepsi tidak boleh di masa lalu (sebelum hari ini).',
-  }).optional(),
+  ).optional(),
 }).strict()
 
 function calculateLifecycleDates(receptionIsoString) {
@@ -154,16 +149,13 @@ test('Invitation Creation: Serialization formats invitation DTO accurately', () 
   assert.equal(dto.public_url.includes('kia-toni'), true)
 })
 
-test('Invitation Creation: Rejects reception dates in the past', () => {
-  const pastResult = createSchema.safeParse({
+test('Invitation Creation: Allows flexible reception dates and validates 14 days default', () => {
+  const flexibleDate = createSchema.safeParse({
     slug: 'kia-toni',
-    reception_at: '2020-01-01T08:00:00',
+    reception_at: '2026-10-20T08:00:00',
   })
-  assert.equal(pastResult.success, false)
-  assert.match(pastResult.error.issues[0].message, /masa lalu/)
-})
+  assert.equal(flexibleDate.success, true)
 
-test('Invitation Creation: Default reception date is at least 14 days in the future', () => {
   const now = Date.now()
   const d = new Date(now + 7 * 3600 * 1000)
   d.setDate(d.getDate() + 14)

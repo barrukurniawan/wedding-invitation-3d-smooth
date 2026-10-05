@@ -15,12 +15,7 @@ const createSchema = z.object({
   reception_at: z.string().trim().regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
     'Tanggal resepsi tidak valid.',
-  ).refine((val) => {
-    const todayWib = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
-    return val.slice(0, 10) >= todayWib
-  }, {
-    message: 'Tanggal resepsi tidak boleh di masa lalu (sebelum hari ini).',
-  }).optional(),
+  ).optional(),
   preset: z.enum(['3d_summer', '2d_garden']).optional(),
 }).strict()
 
