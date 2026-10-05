@@ -5,6 +5,7 @@ import { classifyHost, buildPublicUrl, RESERVED_SLUGS, SLUG_PATTERN } from './ho
 test('Tenant Routing: Host classification accurately identifies root, tenant, and local environments', () => {
   // Production root
   assert.deepEqual(classifyHost('marryme.web.id'), { type: 'root', hostname: 'marryme.web.id' })
+  assert.deepEqual(classifyHost('www.marryme.web.id'), { type: 'root', hostname: 'www.marryme.web.id' })
   assert.deepEqual(classifyHost('MARRYME.WEB.ID.'), { type: 'root', hostname: 'marryme.web.id' })
 
   // Local development root
@@ -30,7 +31,7 @@ test('Tenant Routing: Host classification accurately identifies root, tenant, an
 })
 
 test('Tenant Routing: Blocks all reserved subdomains from being treated as invitations', () => {
-  const reservedList = ['admin', 'www', 'api', 'app', 'login', 'dashboard', 'static', 'assets', 'support']
+  const reservedList = ['admin', 'api', 'app', 'login', 'dashboard', 'static', 'assets', 'support']
   for (const slug of reservedList) {
     assert.equal(RESERVED_SLUGS.has(slug), true, `Slug ${slug} must be in RESERVED_SLUGS`)
     assert.deepEqual(classifyHost(`${slug}.marryme.web.id`), { type: 'invalid' }, `Host ${slug}.marryme.web.id must be invalid`)

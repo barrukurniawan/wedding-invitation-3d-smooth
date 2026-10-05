@@ -10,7 +10,7 @@ const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 export function classifyBrowserHost(hostname: string): HostContext {
   const host = hostname.trim().toLowerCase().replace(/\.$/, '')
 
-  if (host === 'localhost' || host === '127.0.0.1' || host === BASE_DOMAIN) {
+  if (host === 'localhost' || host === '127.0.0.1' || host === BASE_DOMAIN || host === `www.${BASE_DOMAIN}`) {
     return { type: 'root' }
   }
 

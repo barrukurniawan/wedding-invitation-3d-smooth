@@ -8,8 +8,12 @@ export function classifyHost(rawHostname, baseDomain = process.env.BASE_DOMAIN |
   const hostname = String(rawHostname || '').trim().toLowerCase().replace(/\.$/, '')
   const normalizedBase = baseDomain.trim().toLowerCase().replace(/\.$/, '')
 
-  if (!hostname || hostname.includes(':')) return { type: 'invalid' }
-  if (hostname === normalizedBase || hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (
+    hostname === normalizedBase ||
+    hostname === `www.${normalizedBase}` ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1'
+  ) {
     return { type: 'root', hostname }
   }
 

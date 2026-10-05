@@ -5,6 +5,7 @@ import { normalizeReturnPath } from './oauthPaths.js'
 
 test('classifies root and invitation hosts exactly', () => {
   assert.deepEqual(classifyHost('marryme.web.id'), { type: 'root', hostname: 'marryme.web.id' })
+  assert.deepEqual(classifyHost('www.marryme.web.id'), { type: 'root', hostname: 'www.marryme.web.id' })
   assert.deepEqual(classifyHost('localhost'), { type: 'root', hostname: 'localhost' })
   assert.deepEqual(classifyHost('127.0.0.1'), { type: 'root', hostname: '127.0.0.1' })
   assert.deepEqual(classifyHost('KIA-TONI.marryme.web.id.'), {
@@ -22,7 +23,6 @@ test('classifies root and invitation hosts exactly', () => {
 test('rejects reserved, nested, malformed, and suffix-confusion hosts', () => {
   for (const hostname of [
     'admin.marryme.web.id',
-    'www.marryme.web.id',
     'admin.localhost',
     'foo.bar.marryme.web.id',
     'foo.bar.localhost',
