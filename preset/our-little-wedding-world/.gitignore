@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+dist/client/
+dist/server/
+dist/.openai/

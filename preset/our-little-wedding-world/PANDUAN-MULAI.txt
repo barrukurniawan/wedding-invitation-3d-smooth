@@ -1,0 +1,39 @@
+OUR LITTLE WEDDING WORLD — PANDUAN SOURCE CODE
+Versi 61 • Ekspor 2 Oktober 2026
+
+ISI ZIP
+- public/: game, tampilan CMS, CSS, JavaScript, gambar, animasi, audio, dan font.
+- worker/: backend CMS, multiplayer, ucapan, dan konfigurasi bawaan.
+- db/ dan drizzle/: skema database dan migrasi.
+- scripts/: server lokal, build, dan pemeriksaan fungsi.
+- package.json dan package-lock.json: dependensi proyek.
+- docs/: dokumentasi dan gambar pratinjau terdahulu.
+- .openai/hosting.json: identitas proyek dan deklarasi hosting Sites.
+Semua file source yang tercatat pada versi ini disertakan tanpa perubahan.
+
+CARA MENJALANKAN DI KOMPUTER
+1. Instal Node.js 24 atau versi kompatibel yang mendukung node:sqlite.
+2. Ekstrak ZIP dan buka terminal di folder our-little-wedding-world.
+3. Jalankan: npm ci
+4. Jalankan: npm run dev
+5. Buka http://localhost:4173 di browser.
+Jangan membuka public/index.html langsung melalui file://, karena game membutuhkan API backend.
+
+PRATINJAU CMS LOKAL
+Hentikan server biasa terlebih dahulu, lalu gunakan perintah sesuai terminal:
+- macOS/Linux: CMS_PREVIEW_OWNER=1 npm run dev
+- Windows PowerShell: $env:CMS_PREVIEW_OWNER='1'; npm run dev
+Buka http://localhost:4173/admin.
+Ini adalah fasilitas admin pengembangan lokal. Server pratinjau memakai database dan media di memori; data percobaan hilang setelah server dihentikan.
+
+BUILD
+Jalankan: npm run build
+Hasil berada di dist/client (aset publik) dan dist/server (Cloudflare Worker).
+Versi penuh memerlukan backend Worker dengan database D1 dan penyimpanan R2 yang dideklarasikan di .openai/hosting.json, serta konfigurasi identitas admin yang sesuai. Mengunggah HTML ke hosting statis saja tidak menjalankan CMS, multiplayer, atau ucapan.
+
+BATAS EKSPOR
+ZIP ini adalah ekspor source code dan aset bawaan proyek, bukan backup database produksi. Record website di CMS, ucapan tamu, sesi multiplayer, file /media/ yang diunggah melalui CMS, dan pengaturan/rahasia hosting online tidak disertakan. Game lokal dimulai dengan konfigurasi bawaan pada worker/default-config.js. Tidak ada perubahan pada website live saat ekspor ini dibuat.
+
+README.md memuat catatan pengembangan terdahulu; gunakan panduan ini untuk menjalankan versi sekarang. Lisensi font Caveat disertakan di public/assets/caveat-OFL.txt. Kredit foto contoh tersedia dalam konfigurasi galeri.
+
+Commit source: af10b2351f4e0c342f1d59a4dd13e4b90ea7af77

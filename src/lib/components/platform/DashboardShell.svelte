@@ -11,6 +11,7 @@
     logoutUser,
     startGoogleLogin,
     updateMyConfig,
+    updateMySlug,
     type GuestbookEntry,
     type GuestbookStats,
     type OwnerInvitation,
@@ -20,7 +21,6 @@
   import BrideGroomEditor from './editor/BrideGroomEditor.svelte'
   import EventDetailsEditor from './editor/EventDetailsEditor.svelte'
   import EnvelopeEditor from './editor/EnvelopeEditor.svelte'
-  import LocationEditor from './editor/LocationEditor.svelte'
   import GalleryEditor from './editor/GalleryEditor.svelte'
   import QuoteEditor from './editor/QuoteEditor.svelte'
   import MusicEditor from './editor/MusicEditor.svelte'
@@ -38,7 +38,7 @@
   let brideInput = $state('')
   let groomInput = $state('')
   let onboardingPreset = $state<'3d_summer' | '2d_garden'>('3d_summer')
-  const slugPattern = '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+  const slugPattern = '[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?'
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
     'https://kia-toni.marryme.web.id'
@@ -194,11 +194,17 @@
   }
 
   async function handleCreate() {
-    busy = true
     error = ''
+    const normalizedSlug = slugInput.trim().toLowerCase()
+    if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(normalizedSlug)) {
+      error = 'Subdomain hanya boleh berisi huruf kecil (a-z), angka (0-9), dan tanda hubung (-).'
+      return
+    }
+
+    busy = true
     try {
       const result = await createInvitation({
-        slug: slugInput.trim().toLowerCase(),
+        slug: normalizedSlug,
         bride_name: brideInput.trim() || undefined,
         groom_name: groomInput.trim() || undefined,
         preset: onboardingPreset,
@@ -237,6 +243,43 @@
     setTimeout(() => (copiedToast = false), 2500)
   }
 
+  let editingSlug = $state(false)
+  let newSlugInput = $state('')
+  let slugError = $state('')
+  let slugSuccessMsg = $state('')
+  let savingSlug = $state(false)
+
+  function startEditSlug() {
+    if (!invitation) return
+    newSlugInput = invitation.slug
+    slugError = ''
+    slugSuccessMsg = ''
+    editingSlug = true
+  }
+
+  async function handleSaveSlug() {
+    if (!invitation) return
+    const normalized = newSlugInput.trim().toLowerCase()
+    if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(normalized)) {
+      slugError = 'Subdomain hanya boleh huruf kecil (a-z), angka (0-9), dan tanda hubung (-).'
+      return
+    }
+    savingSlug = true
+    slugError = ''
+    slugSuccessMsg = ''
+    try {
+      const res = await updateMySlug(normalized)
+      invitation = res.invitation
+      slugSuccessMsg = 'Alamat subdomain berhasil diperbarui!'
+      editingSlug = false
+      setTimeout(() => (slugSuccessMsg = ''), 4000)
+    } catch (err) {
+      slugError = err instanceof ApiError ? err.message : 'Gagal memperbarui subdomain.'
+    } finally {
+      savingSlug = false
+    }
+  }
+
   // Progress Engine Calculation
   interface TaskItem {
     id: string
@@ -244,12 +287,12 @@
     category: string
     done: boolean
     targetTab: 'edit' | 'pembayaran' | 'preview' | 'pengaturan'
-    targetSubTab?: 'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'
+    targetSubTab?: 'mempelai' | 'acara' | 'amplop' | 'galeri' | 'quote' | 'musik'
   }
 
   function calculateProgress() {
     if (!myConfig || !invitation) {
-      return { percent: 0, completedCount: 0, totalCount: 6, tasks: [] as TaskItem[] }
+      return { percent: 0, completedCount: 0, totalCount: 5, tasks: [] as TaskItem[] }
     }
 
     const isCustom = (val?: string, defaultVal = '') =>
@@ -266,9 +309,9 @@
       },
       {
         id: 'acara',
-        label: 'Detail Acara Akad & Resepsi',
-        category: 'Acara',
-        done: isCustom(myConfig.wedding_date) && isCustom(myConfig.akad_date) && isCustom(myConfig.resepsi_date),
+        label: 'Jadwal Acara & Titik Lokasi Venue',
+        category: 'Acara & Lokasi',
+        done: Boolean((isCustom(myConfig.akad_date) || isCustom(myConfig.wedding_date)) && (isCustom(myConfig.venue_address) || isCustom(myConfig.maps_url))),
         targetTab: 'edit',
         targetSubTab: 'acara',
       },
@@ -287,14 +330,6 @@
         done: isCustom(myConfig.bank_account) || isCustom(myConfig.qris_image),
         targetTab: 'edit',
         targetSubTab: 'amplop',
-      },
-      {
-        id: 'lokasi',
-        label: 'Alamat Venue & Google Maps',
-        category: 'Lokasi',
-        done: isCustom(myConfig.venue_address) || isCustom(myConfig.maps_url),
-        targetTab: 'edit',
-        targetSubTab: 'lokasi',
       },
       {
         id: 'pembayaran',
@@ -401,7 +436,6 @@
               onclick={() => activePresetTab = '3d'}
               aria-selected={activePresetTab === '3d'}
             >
-              <span class="preset-tab-icon">🧱</span>
               <span>3D Island</span>
             </button>
             <button
@@ -412,7 +446,6 @@
               onclick={() => activePresetTab = '2d'}
               aria-selected={activePresetTab === '2d'}
             >
-              <span class="preset-tab-icon">👾</span>
               <span>2D Garden</span>
               <span class="badge-mini-hot">Ringan</span>
             </button>
@@ -429,7 +462,7 @@
                   </div>
                   <h3 class="preset-title">Summer Fantasy Island</h3>
                   <p class="preset-desc">
-                    Petualangan 3 dimensi interaktif. Tamu berjalan di pulau taman, karakter animasi 3D, pelaminan bunga & efek confetti.
+                    Petualangan 3 dimensi interaktif. Tamu dapat berjalan menjelajahi pulau taman tropis yang indah dengan kontrol bebas dan suasana romantis.
                   </p>
                 </header>
 
@@ -455,10 +488,27 @@
                 </div>
 
                 <div class="preset-features">
-                  <span class="feature-pill">🎮 Joystick 3D & WASD</span>
-                  <span class="feature-pill">👗 Kustom Busana Mempelai</span>
-                  <span class="feature-pill">🎉 Pelaminan & Confetti</span>
-                  <span class="feature-pill">📱 Responsif HP & Desktop</span>
+                  <span class="feature-pill">
+                    <span class="feature-pill-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="6" fill="currentColor" fill-opacity="0.18" />
+                        <line x1="6" y1="12" x2="10" y2="12" />
+                        <line x1="8" y1="10" x2="8" y2="14" />
+                        <circle cx="15.5" cy="10.5" r="1" fill="currentColor" />
+                        <circle cx="17.5" cy="13.5" r="1" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <span>Joystick 3D &amp; WASD</span>
+                  </span>
+                  <span class="feature-pill">
+                    <span class="feature-pill-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18" />
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" fill-opacity="0.4" />
+                      </svg>
+                    </span>
+                    <span>Eksplorasi Pulau 3D</span>
+                  </span>
                 </div>
 
                 <footer class="preset-footer">
@@ -491,7 +541,7 @@
                   </div>
                   <h3 class="preset-title">Pixel Garden RPG</h3>
                   <p class="preset-desc">
-                    Taman pernikahan retro pixel art yang ringan di semua ponsel, dengan air mancur beriak, danau angsa & pianis romantis.
+                    Taman pernikahan retro pixel art yang sangat ringan di semua ponsel, dengan suasana danau romantis dan fitur multiplayer real-time.
                   </p>
                 </header>
 
@@ -517,15 +567,30 @@
                 </div>
 
                 <div class="preset-features">
-                  <span class="feature-pill">⚡ Instan & Hemat Kuota</span>
-                  <span class="feature-pill">🕹️ Analog Halus & Touch-to-Walk</span>
-                  <span class="feature-pill">🎹 Pianis & Penyanyi Danau</span>
-                  <span class="feature-pill">💌 Buku Tamu & Galeri Interaktif</span>
+                  <span class="feature-pill">
+                    <span class="feature-pill-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="7" r="4" fill="currentColor" fill-opacity="0.18" />
+                        <path d="M2 20a7 7 0 0 1 14 0" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        <path d="M22 20a7 7 0 0 0-6-6" />
+                      </svg>
+                    </span>
+                    <span>Multiplayer Online Realtime</span>
+                  </span>
+                  <span class="feature-pill">
+                    <span class="feature-pill-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.22" />
+                      </svg>
+                    </span>
+                    <span>Super Ringan &amp; Cepat Dimuat</span>
+                  </span>
                 </div>
 
                 <footer class="preset-footer">
                   <a
-                    href="/demo/wedding-garden-2.html"
+                    href="/presets/garden-2d/index.html"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="btn-demo-link"
@@ -545,7 +610,14 @@
           </div>
 
           <div class="preset-notice">
-            <span class="notice-icon">💡</span>
+            <span class="notice-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+                <path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z" fill="currentColor" fill-opacity="0.18" />
+                <line x1="12" y1="6" x2="12" y2="10" />
+              </svg>
+            </span>
             <span class="notice-text">
               <strong>Bebas beralih tema:</strong> Kalian bisa memilih preset favorit saat login, dan tema bisa diubah kapan saja di pengaturan dashboard tanpa mengetik ulang data.
             </span>
@@ -620,9 +692,6 @@
           <div>
             <p class="eyebrow-deep">Live Preview 2 Preset</p>
             <h2 id="preview-title">Dunia yang sudah hidup</h2>
-            <p class="section-lead">
-              Lihat cuplikan undangan web dan mobile untuk Preset 3D Fantasy Island maupun 2D Pixel Garden.
-            </p>
           </div>
 
           <div class="preview-preset-toggle" role="group" aria-label="Pilih preset untuk preview">
@@ -682,13 +751,16 @@
                 <span></span><span></span><span></span>
                 <div class="browser-url">faris-eliza.marryme.web.id</div>
               </div>
-              <img
-                src="/media/preset-2d-desktop.png"
-                alt="Preview undangan 2D di desktop"
+              <video
+                src="/media/demo_2d.mp4"
+                poster="/media/demo_2d_poster.jpg"
+                aria-label="Preview video undangan 2D di desktop"
                 class="browser-shot"
-                loading="lazy"
-                decoding="async"
-              />
+                autoplay
+                loop
+                muted
+                playsinline
+              ></video>
             </figure>
 
             <figure class="phone-frame">
@@ -967,15 +1039,18 @@
                 class:active={editSubTab === 'mempelai'}
                 onclick={() => (editSubTab = 'mempelai')}
               >
-                Data Mempelai
+                💍 Data Mempelai
               </button>
               <button
                 type="button"
-                class="sub-tab-btn"
+                class="sub-tab-btn relative"
                 class:active={editSubTab === 'acara'}
                 onclick={() => (editSubTab = 'acara')}
               >
-                Detail Acara
+                📅 Detail Acara &amp; Lokasi
+                {#if !myConfig?.maps_url || !myConfig?.venue_address}
+                  <span class="ml-1 text-[10px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-full shadow-xs">!</span>
+                {/if}
               </button>
               <button
                 type="button"
@@ -983,15 +1058,7 @@
                 class:active={editSubTab === 'amplop'}
                 onclick={() => (editSubTab = 'amplop')}
               >
-                Amplop Digital &amp; Bank
-              </button>
-              <button
-                type="button"
-                class="sub-tab-btn"
-                class:active={editSubTab === 'lokasi'}
-                onclick={() => (editSubTab = 'lokasi')}
-              >
-                Lokasi Venue
+                💌 Amplop Digital &amp; Bank
               </button>
               <button
                 type="button"
@@ -999,7 +1066,7 @@
                 class:active={editSubTab === 'galeri'}
                 onclick={() => (editSubTab = 'galeri')}
               >
-                Galeri Foto 3D
+                🖼️ Galeri Foto 3D
               </button>
               <button
                 type="button"
@@ -1029,8 +1096,6 @@
                   <EventDetailsEditor bind:config={myConfig} />
                 {:else if editSubTab === 'amplop'}
                   <EnvelopeEditor bind:config={myConfig} />
-                {:else if editSubTab === 'lokasi'}
-                  <LocationEditor bind:config={myConfig} />
                 {:else if editSubTab === 'galeri'}
                   <GalleryEditor bind:config={myConfig} />
                 {:else if editSubTab === 'quote'}
@@ -1146,6 +1211,56 @@
                 <p>Alamat: <code>{invitation.slug}.marryme.web.id</code></p>
                 <p>Status: <strong class="badge-inline" data-status={invitation.status}>{statusLabel(invitation.status)}</strong></p>
                 <p>Zona Waktu: <code>{invitation.timezone}</code></p>
+
+                {#if !editingSlug}
+                  <div class="mt-3 flex items-center gap-2">
+                    <button type="button" class="ghost-btn-sm" onclick={startEditSlug}>
+                      ✏️ Ubah Subdomain
+                    </button>
+                    {#if slugSuccessMsg}
+                      <span class="text-xs text-emerald-600 font-medium">✓ {slugSuccessMsg}</span>
+                    {/if}
+                  </div>
+                {:else}
+                  <div class="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <label for="new-subdomain-input" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Subdomain Baru:
+                    </label>
+                    <div class="flex items-center gap-1.5">
+                      <div class="flex items-center flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
+                        <input
+                          id="new-subdomain-input"
+                          bind:value={newSlugInput}
+                          placeholder="nama-pasangan"
+                          class="w-full bg-transparent text-xs font-mono text-slate-800 outline-none"
+                        />
+                        <span class="text-[11px] text-slate-400 font-mono">.marryme.web.id</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="primary-btn-sm text-xs py-1.5 px-3"
+                        disabled={savingSlug}
+                        onclick={handleSaveSlug}
+                      >
+                        {savingSlug ? 'Menyimpan...' : 'Simpan'}
+                      </button>
+                      <button
+                        type="button"
+                        class="ghost-btn-sm text-xs py-1.5 px-2"
+                        disabled={savingSlug}
+                        onclick={() => (editingSlug = false)}
+                      >
+                        Batal
+                      </button>
+                    </div>
+                    {#if slugError}
+                      <p class="text-xs text-rose-600 mt-1.5 font-medium">⚠️ {slugError}</p>
+                    {/if}
+                    <p class="text-[11px] text-slate-400 mt-1">
+                      💡 Kalian bebas mengubah subdomain jika sebelumnya mengisi nama uji coba / acak.
+                    </p>
+                  </div>
+                {/if}
               </div>
               <div class="settings-card">
                 <h4>Akun Pengelola</h4>
@@ -1159,7 +1274,7 @@
 
       {:else}
         <!-- Logged In Form Create Invitation (If No Invitation Yet) -->
-        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput bind:presetInput={onboardingPreset} {busy} {slugPattern} {handleCreate} />
+        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput bind:presetInput={onboardingPreset} {busy} errorMessage={error} {handleCreate} />
 
       {/if}
     </section>

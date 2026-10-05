@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#213d32"><title>The Wedding of Faris &amp; Eliza</title><meta name="description" content="Jelajahi taman pernikahan Faris dan Eliza. Petualangan kecil untuk orang-orang tersayang."><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="style.css"></head>
+<body data-phase="title">
+<audio id="gardenMusic" src="assets/wedding-song-complete.m4a" loop preload="auto"></audio>
+<main class="game-frame" aria-label="Taman pernikahan interaktif">
+<canvas id="game" inert tabindex="0" aria-label="Permainan taman pernikahan. Geser analog atau gunakan tombol WASD atau panah untuk berjalan. Ketuk jalan untuk menuju ke sana. Tekan E untuk melihat informasi pernikahan di dekatmu."></canvas>
+<p class="sr-only">Tamu dengan beragam pakaian, rambut, dan hijab duduk di sebagian bangku kiri dan kanan menghadap pengantin. Empat tamu lainnya menikmati taman: dua mengobrol di sisi air mancur dan dua menikmati hidangan di area resepsi.</p>
+<canvas id="playerLayer" aria-hidden="true"></canvas>
+<img id="weddingCouple" class="wedding-couple" src="assets/mempelai.gif" alt="Faris dan Eliza, pasangan pengantin" hidden draggable="false">
+<button id="pianist" class="pianist" hidden aria-label="Dekati pianis dan penyanyi"><img id="pianistImage" src="assets/pianist-idle.png" data-idle="assets/pianist-idle.png" data-playing="assets/pianist.gif" alt="Pianis di jalan setapak kiri atas, dekat bangku taman" draggable="false"><img id="singerImage" src="assets/singer-idle.png" data-idle="assets/singer-idle.png" data-playing="assets/singer.gif" alt="Penyanyi di samping pianis" draggable="false"></button>
+<section class="opening" id="opening" aria-label="Selamat datang di pernikahan kami">
+<div class="opening-panel" id="titleScreen">
+<div class="title-card"><img src="assets/wedding-card.jpg" width="1101" height="1536" alt="Kartu pernikahan Faris dan Eliza dengan ilustrasi kedua mempelai" fetchpriority="high" draggable="false"></div>
+<div class="title-copy"><div class="title-sparkles" aria-hidden="true">✦ &nbsp; ✧ &nbsp; ✦</div><p class="opening-kicker">The Wedding of</p><h1>Faris <span>&amp;</span> Eliza</h1>
+<button class="opening-continue" id="continueButton"><span aria-hidden="true">▶</span> Mulai Permainan</button></div>
+</div>
+<div class="opening-panel character-panel" id="characterScreen" hidden>
+<div class="player-name-field"><label for="playerName">Siapa namamu?</label><input id="playerName" type="text" required maxlength="24" autocomplete="given-name" placeholder="Tulis namamu" aria-describedby="nameHelp"><p id="nameHelp">Isi nama, lalu pilih karaktermu di bawah.</p><p id="nameError" role="alert" hidden></p></div>
+<div class="character-options">
+<button class="character-option" data-character="men" disabled><canvas id="menPreview" width="136" height="136" aria-hidden="true"></canvas><span>Pria</span></button>
+<button class="character-option" data-character="woman" disabled><canvas id="womanPreview" width="136" height="136" aria-hidden="true"></canvas><span>Wanita</span></button>
+<button class="character-option character-pair" data-character="pair" disabled><canvas id="pairPreview" width="204" height="136" aria-hidden="true"></canvas><span>Pria &amp; Wanita</span><small>Pria memimpin, wanita mengikuti</small></button>
+</div>
+
+</div>
+</section>
+<div class="map-loading" id="loading">Membuka taman…</div>
+<div class="map-wedding-title" aria-label="The Wedding of Faris &amp; Eliza"><span>The Wedding of</span><strong>Faris &amp; Eliza</strong></div>
+<nav class="game-tools" aria-label="Menu permainan"><button id="soundButton" class="map-button" aria-pressed="true" aria-label="Matikan musik" title="Nyalakan atau matikan musik">♫<span class="sr-only">Musik menyala</span></button><button id="journalButton" class="map-button" aria-label="Informasi pernikahan" title="Informasi pernikahan">✉ <span>Info pernikahan</span></button><button id="chatButton" class="map-button" aria-label="Chat" title="Chat" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.7L3 21l1.7-5.1A8.5 8.5 0 1 1 20 11.5Z"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01"/></svg></button><button id="guideButton" class="map-button" aria-label="Cara bermain" title="Cara bermain">?</button></nav>
+<button id="joystick" class="joystick" aria-label="Analog gerakan. Geser ke arah yang diinginkan untuk berjalan." aria-describedby="stickHelp"><span class="joystick-ring" aria-hidden="true"></span><span class="joystick-thumb" id="joystickThumb" aria-hidden="true"><span></span></span></button>
+<span id="stickHelp" class="sr-only">Geser lebih jauh dari tengah untuk berjalan lebih cepat. Lepaskan untuk berhenti. Pengguna papan ketik bisa memakai tombol WASD atau panah.</span>
+<button class="interact" id="interact" hidden><kbd>E</kbd><span><small>Lihat info</small><strong></strong></span></button>
+<p class="move-hint" id="moveHint">Ketuk tempat untuk info<br><span>atau jelajahi taman dengan analog</span></p>
+<span id="travelStatus" class="sr-only" aria-live="polite">Selamat menikmati taman kami</span>
+<div id="speechBubble" role="status" aria-live="polite" hidden></div>
+</main>
+<dialog id="chatDialog" aria-labelledby="chatTitle"><form id="chatForm" class="dialog-inner"><button type="button" class="close" id="closeChat" aria-label="Tutup chat">×</button><h2 id="chatTitle">Katakan sesuatu</h2><label for="chatInput">Pesan karaktermu</label><input id="chatInput" type="text" placeholder="Halo semuanya!" autocomplete="off" aria-describedby="chatHelp chatCount" autofocus><div class="chat-meta"><span id="chatHelp">Maks. 15 karakter · tampil 5 detik</span><span id="chatCount">0 / 15</span></div><button type="submit" id="sendChat" class="primary-button" disabled>Kirim</button></form></dialog>
+<dialog id="details"><div class="dialog-inner"><button class="close" id="closeDetails" aria-label="Tutup detail pernikahan">×</button><div class="eyebrow" id="detailCategory"></div><span class="detail-symbol" id="detailSymbol"></span><h2 id="detailTitle"></h2><p id="detailDescription"></p><div id="detailGallery" class="photo-gallery" hidden></div><div id="detailFields"></div>
+<section id="wishBoard" hidden aria-label="Kartu ucapan tamu">
+<div id="wishChoice" class="wish-choice"><p>Mau titipkan doa atau membaca ucapan tamu?</p><button type="button" id="writeWishTab">Kirim ucapan</button><button type="button" id="readWishTab">Lihat ucapan tamu</button></div><button type="button" id="backWishChoice" hidden>‹ Kembali ke pilihan</button>
+<div id="writeWishPanel" hidden><form id="wishForm" class="wish-paper"><label for="wishInput">Untuk Faris &amp; Eliza,</label><textarea id="wishInput" rows="3" placeholder="Semoga bahagia bersama selamanya ♡" aria-describedby="wishCount"></textarea><div class="wish-signature">Dengan bahagia,<strong id="wishSignature"></strong></div><div class="wish-form-footer"><span id="wishCount">0 / 50</span><button id="sendWish" type="submit" disabled>Kirim ucapan</button></div></form>
+<p id="wishStatus" role="status" aria-live="polite"></p></div><div id="readWishPanel"  hidden><p id="wishListStatus" role="status" aria-live="polite"></p><div id="wishList"></div><button id="moreWishes" type="button" hidden>Lihat ucapan lainnya</button></div>
+</section><div class="detail-foot"><span>♥</span> Sepotong cerita dari hari bahagia kami</div><button class="primary-button" id="backToGarden">Kembali ke taman <span>↗</span></button></div></dialog>
+
+<dialog id="journal"><div class="dialog-inner"><button class="close" id="closeJournal" aria-label="Tutup informasi pernikahan">×</button><div class="eyebrow">HARI BAHAGIA KAMI</div><h2>Informasi pernikahan</h2><p>Pilih informasi yang ingin kamu lihat. Semua bisa dibuka langsung tanpa berjalan.</p><div class="progress-label"><span>Tempat yang dikunjungi</span><b id="progressText">0 / 5</b></div><div class="progress-track"><div id="progressFill"></div></div><nav class="places" id="places" aria-label="Informasi pernikahan"></nav></div></dialog>
+<dialog id="guide"><div class="dialog-inner"><button class="close" id="closeGuide" aria-label="Tutup panduan bermain">×</button><div class="eyebrow">PANDUAN BERMAIN</div><h2>Yuk, jelajahi tamannya.</h2><ul class="instructions"><li><b>Gerakkan dengan ibu jari</b><span>Geser analog ke arah yang diinginkan. Geser lebih jauh untuk berjalan lebih cepat, lalu lepaskan untuk berhenti.</span></li><li><b>Ikuti jalan setapak</b><span>Ketuk jalan untuk berjalan ke sana. Jika memakai papan ketik, gunakan tombol WASD atau panah.</span></li><li><b>Kenali pernikahan kami</b><span>Ketuk penanda tempat di peta untuk langsung membaca informasinya, atau gunakan tombol Info pernikahan. Kamu juga bisa mendekati tempat yang bercahaya lalu mengetuk Lihat info. Kamu juga bisa menekan E atau membuka tombol amplop. Dekati pianis dan penyanyi di jalan setapak kiri atas, dekat bangku taman untuk menyalakan atau mematikan musik.</span></li></ul><p>Selamat datang di taman Faris &amp; Eliza. Buka venue Akad &amp; Resepsi untuk jadwal acara beserta alamatnya. Informasi pernikahan saat ini menggunakan data contoh.</p><button class="primary-button" id="startExploring">Kembali ke taman <span>↗</span></button><button class="text-button" id="recenter">Kembali ke pintu masuk</button></div></dialog>
+<dialog id="photoViewer" aria-label="Foto galeri"><div class="photo-viewer-inner"><button class="close" id="closePhoto" aria-label="Tutup foto">×</button><img id="largePhoto" alt=""><p id="photoCaption"></p></div></dialog>
+<dialog id="welcomeDialog" aria-labelledby="welcomeSpeaker" aria-describedby="welcomeText">
+<div class="welcome-dialog-body"><canvas id="welcomePortrait" width="112" height="112" aria-hidden="true"></canvas><div class="welcome-copy"><p class="eyebrow">PETUGAS PENYAMBUTAN</p><h2 id="welcomeSpeaker"></h2><p id="welcomeText" aria-live="polite"></p></div></div>
+<div class="welcome-dialog-actions"><span id="welcomeProgress" aria-label="Bagian panduan"></span><button id="skipWelcome">Lewati</button><button id="nextWelcome" autofocus>Lanjut →</button></div>
+</dialog>
+<script src="cms-bootstrap.js"></script></body></html>

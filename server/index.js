@@ -16,6 +16,7 @@ import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
 import trackRoutes from './routes/track.js'
+import multiplayerRoutes from './routes/multiplayer.js'
 import pool from './db.js'
 import { attachHostContext, requirePublicInvitation, requireRootHost } from './middleware/tenant.js'
 
@@ -61,6 +62,8 @@ app.use('/api/my', requireRootHost, uploadRoutes)
 app.use('/api/my/contacts', requireRootHost, contactRoutes)
 app.use('/api/payment', midtransWebhookRoutes)
 app.use('/api/admin', requireRootHost, adminRoutes)
+app.use('/api/multiplayer', multiplayerRoutes)
+app.use('/api', multiplayerRoutes)
 
 app.use((err, req, res, next) => {
   console.error('Unhandled API error:', err)
@@ -73,7 +76,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Terjadi kesalahan pada server.' } })
 })
 
-async function waitForDb(retries = 10, delayMs = 3000) {
+async function waitForDb(retries = process.env.NODE_ENV === 'production' ? 10 : 2, delayMs = 1500) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       await pool.query('SELECT 1')
@@ -81,7 +84,13 @@ async function waitForDb(retries = 10, delayMs = 3000) {
       return
     } catch (err) {
       console.warn(`DB not ready (attempt ${attempt}/${retries}): ${err.message}`)
-      if (attempt === retries) throw err
+      if (attempt === retries) {
+        if (process.env.NODE_ENV === 'production') {
+          throw err
+        }
+        console.warn('⚠️ Development mode: Database offline, running in-memory fallback for multiplayer.')
+        return
+      }
       await new Promise((r) => setTimeout(r, delayMs))
     }
   }

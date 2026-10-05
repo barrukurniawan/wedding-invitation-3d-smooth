@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "dev:server": "npm --prefix server run dev",
     "build:nature": "node scripts/build-nature-pack.cjs",
     "build": "npm run build:nature && vite build",
     "models:runtime": "node scripts/trim-model-animations.mjs",

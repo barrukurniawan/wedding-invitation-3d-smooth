@@ -7,7 +7,15 @@
   let countdown = $state('')
 
   $effect(() => {
+    if (!$weddingConfig.wedding_date) {
+      countdown = 'Tanggal pernikahan akan segera diumumkan.'
+      return
+    }
     const target = new Date($weddingConfig.wedding_date).getTime()
+    if (isNaN(target)) {
+      countdown = 'Tanggal pernikahan akan segera diumumkan.'
+      return
+    }
     function update() {
       const diff = target - Date.now()
       if (diff <= 0) {

@@ -4,10 +4,14 @@ import { z } from 'zod'
 import { normalizeMusicConfig } from './configDefaults.js'
 
 const text = (max) => z.string().trim().max(max)
-const weddingDate = z.string().trim().regex(
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
-  'Tanggal pernikahan tidak valid.',
-)
+const weddingDate = z.union([
+  z.string().trim().regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
+    'Tanggal pernikahan tidak valid.',
+  ),
+  z.literal(''),
+  z.null(),
+])
 
 const configSchema = z.object({
   bride_name: text(255),
@@ -32,7 +36,9 @@ const configSchema = z.object({
   gallery_photos: z.array(text(2048)).max(30),
   bgm_url: text(2048),
   bgm_title: text(255),
-}).partial().strict()
+  preset: z.enum(['3d_summer', '2d_garden']),
+  slug: z.string().optional(),
+}).partial().passthrough()
 
 function serializeConfig(config) {
   const result = normalizeMusicConfig({ ...config })
@@ -42,6 +48,8 @@ function serializeConfig(config) {
     : result.gallery_photos || []
   if (result.wedding_date) {
     result.wedding_date = String(result.wedding_date).replace(' ', 'T')
+  } else {
+    result.wedding_date = ''
   }
   return result
 }
@@ -99,7 +107,15 @@ test('Tenant Config Editor: Enforces maximum 30 photos limit in gallery array', 
   assert.equal(overResult.success, false)
 })
 
-test('Tenant Config Editor: Rejects unallowed or injected fields with strict parsing', () => {
+test('Tenant Config Editor: Allows tentative wedding_date (null or empty string)', () => {
+  const nullDate = configSchema.safeParse({ wedding_date: null })
+  assert.equal(nullDate.success, true)
+
+  const emptyDate = configSchema.safeParse({ wedding_date: '' })
+  assert.equal(emptyDate.success, true)
+})
+
+test('Tenant Config Editor: Strips unallowed injected fields before database update', () => {
   const maliciousInjection = {
     bride_name: 'Siti',
     is_admin: true,
@@ -107,8 +123,11 @@ test('Tenant Config Editor: Rejects unallowed or injected fields with strict par
     status: 'active',
   }
 
-  const result = configSchema.safeParse(maliciousInjection)
-  assert.equal(result.success, false)
+  const parsed = configSchema.safeParse(maliciousInjection)
+  assert.equal(parsed.success, true)
+  const allowed = ['bride_name', 'groom_name', 'bride_parents', 'groom_parents', 'wedding_photo', 'wedding_date', 'akad_date', 'akad_time', 'akad_location', 'resepsi_date', 'resepsi_time', 'resepsi_location', 'qris_image', 'bank_name', 'bank_account', 'bank_holder', 'maps_url', 'venue_address', 'quote', 'gallery_photos', 'bgm_url', 'bgm_title', 'preset']
+  const fields = Object.keys(parsed.data).filter((f) => allowed.includes(f))
+  assert.deepEqual(fields, ['bride_name'])
 })
 
 test('Tenant Config Editor: Serialization properly parses JSON gallery and normalizes music defaults', () => {

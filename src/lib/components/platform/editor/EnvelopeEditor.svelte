@@ -22,7 +22,7 @@
       <input bind:value={config.bank_holder} placeholder="Atas nama di rekening bank" />
     </label>
     <label class="col-span-2">
-      Gambar QRIS (URL Image)
+      Gambar QRIS / Rekening
       <input bind:value={config.qris_image} placeholder="https://..." />
     </label>
   </div>

@@ -8,13 +8,18 @@
   $effect(() => {
     if (!browser) return
     const update = () => {
-      const now = new Date()
-      const weddingDate = new Date($weddingConfig.wedding_date)
-      const ms = weddingDate.getTime() - now.getTime()
-      if (ms <= 0) {
+      if (!$weddingConfig.wedding_date) {
         expired = true
         return
       }
+      const now = new Date()
+      const weddingDate = new Date($weddingConfig.wedding_date)
+      const ms = weddingDate.getTime() - now.getTime()
+      if (isNaN(ms) || ms <= 0) {
+        expired = true
+        return
+      }
+      expired = false
       diff = {
         days: Math.floor(ms / 86400000),
         hours: Math.floor((ms % 86400000) / 3600000),

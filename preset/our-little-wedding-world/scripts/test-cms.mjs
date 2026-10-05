@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import worker from '../worker/index.js';
+import DEFAULT from '../worker/default-config.js';
+import {createLocalDb} from './local-db.mjs';
+const DB=createLocalDb(),files=new Map(),MEDIA={async put(key,data,options){files.set(key,{body:data,httpMetadata:options.httpMetadata});},async get(key){return files.get(key);}};
+const env={DB,MEDIA,CMS_OWNER_EMAIL:'owner@example.test',ASSETS:{async fetch(){return Response.redirect('https://garden.test/',308);}}};
+async function api(path,data,{admin=false,email='owner@example.test',origin='https://garden.test'}={}){return worker.fetch(new Request('https://garden.test'+path,{method:data?'POST':'GET',headers:{...(data?{'Content-Type':'application/json','Origin':origin}:{}),...(admin?{'oai-authenticated-user-id':'owner-user','oai-authenticated-user-email':email}:{})},body:data?JSON.stringify(data):undefined}),env);}
+const owner={admin:true};
+assert.equal((await api('/api/admin/sites')).status,401);
+assert.equal((await api('/api/admin/sites',null,{admin:true,email:'stranger@example.test'})).status,403);
+assert.equal((await api('/admin')).status,200);assert.match(await (await api('/admin')).text(),/Masuk dengan ChatGPT/);
+assert.equal((await api('/api/admin/create',{site:'budi-ani',groom:'Budi',bride:'Ani'},{admin:true,origin:'https://evil.test'})).status,403);
+let data=await (await api('/api/admin/sites',null,owner)).json();assert.equal(data.sites[0].slug,'faris-eliza');assert.equal(data.sites[0].live,1);
+assert.equal((await api('/api/admin/create',{site:'budi-ani',groom:'Budi',bride:'Ani'},owner)).status,200);
+assert.equal((await api('/api/content?site=budi-ani')).status,404);assert.equal((await api('/w/budi-ani/')).status,404);assert.equal((await api('/api/content?site=budi-ani&preview=1')).status,403);
+let record=await (await api('/api/admin/site?site=budi-ani',null,owner)).json();assert.equal(record.draft.profile.groom,'Budi');assert.equal(record.draft.profile.bride,'Ani');
+assert.equal((await api('/api/admin/save',{site:'budi-ani',revision:0,config:record.draft},owner)).status,409);
+const config=record.draft;config.places.find(p=>p.id==='story').timeline=[{time:'Juni 2022',title:'Pertemuan pertama',description:'Berkenalan melalui seorang teman.'}];config.profile.startButton='Masuk taman';assert.equal((await api('/api/admin/publish',{site:'budi-ani',revision:1,config},owner)).status,200);
+assert.equal((await api('/w/budi-ani/')).status,200);assert.match(await (await api('/w/budi-ani/')).text(),/<base href="\/">/);
+for(const path of ['/', '/w/budi-ani/', '/w/budi-ani']){const page=await api(path);assert.equal(page.status,200);const html=await page.text();assert.match(html, /id="titleScreen"/);assert.match(html, /src="cms-bootstrap.js"/);assert.match(html, /<base href="\/">/);}
+assert.match(await (await api('/admin',null,owner)).text(), /id="siteList"/);
+data=await (await api('/api/content?site=budi-ani')).json();assert.equal(data.config.profile.startButton,'Masuk taman');
+assert.deepEqual(data.config.places.find(p=>p.id==='story').timeline,config.places.find(p=>p.id==='story').timeline);
+const invalid=structuredClone(config);invalid.places.find(p=>p.id==='story').timeline[0].time=123;assert.equal((await api('/api/admin/save',{site:'budi-ani',revision:2,config:invalid},owner)).status,400);
+config.profile.startButton='Draft rahasia';assert.equal((await api('/api/admin/save',{site:'budi-ani',revision:2,config},owner)).status,200);
+data=await (await api('/api/content?site=budi-ani')).json();assert.equal(data.config.profile.startButton,'Masuk taman');
+data=await (await api('/api/content?site=budi-ani&preview=1',null,owner)).json();assert.equal(data.config.profile.startButton,'Draft rahasia');
+let root=await (await api('/api/content')).json();assert.equal(root.config.profile.groom,'Faris');
+const state={name:'Tamu',character:'men',x:768,y:919,dir:'south',walking:false};
+const one=await (await api('/api/join',{...state,site:'budi-ani'})).json();const two=await (await api('/api/join',state)).json();
+assert.equal((await api('/api/sync',{...state,...one,site:'faris-eliza'})).status,401);
+let result=await (await api('/api/sync',{...state,...one,site:'budi-ani'})).json();assert.equal(result.players.length,0);
+result=await (await api('/api/sync',{...state,...two})).json();assert.equal(result.players.length,0);
+assert.equal((await api('/api/wishes/send',{...one,site:'faris-eliza',message:'Halo',requestId:crypto.randomUUID()})).status,401);
+await api('/api/wishes/send',{...one,site:'budi-ani',message:'Bahagia selalu!',requestId:crypto.randomUUID()});
+result=await (await api('/api/wishes/list',{})).json();assert.equal(result.wishes.length,0);
+result=await (await api('/api/wishes/list',{site:'budi-ani'})).json();assert.equal(result.wishes.length,1);const wish=result.wishes[0];
+await api('/api/admin/moderate',{site:'budi-ani',id:wish.id,hidden:true},owner);result=await (await api('/api/wishes/list',{site:'budi-ani'})).json();assert.equal(result.wishes.length,0);
+await api('/api/admin/moderate',{site:'budi-ani',id:wish.id,hidden:false},owner);result=await (await api('/api/wishes/list',{site:'budi-ani'})).json();assert.equal(result.wishes.length,1);
+async function upload(bytes,slot,type='image/png'){const form=new FormData();form.append('file',new Blob([bytes],{type}),'test.png');form.append('slot',slot);return worker.fetch(new Request('https://garden.test/api/admin/upload?site=budi-ani',{method:'POST',headers:{Origin:'https://garden.test','oai-authenticated-user-id':'owner-user','oai-authenticated-user-email':'owner@example.test'},body:form}),env);}
+assert.equal((await upload('<svg onload="alert(1)"></svg>','cover','image/svg+xml')).status,400);
+const png=new Uint8Array(24);png.set([137,80,78,71,13,10,26,10]);const dv=new DataView(png.buffer);dv.setUint32(16,1536);dv.setUint32(20,1024);
+assert.equal((await upload(png,'men')).status,400);
+const media=await (await upload(png,'map')).json();assert.ok(media.url.startsWith('/media/budi-ani/'));assert.equal((await api(media.url)).status,200);
+config.assets.map=media.url;assert.equal((await api('/api/admin/publish',{site:'budi-ani',revision:3,config},owner)).status,200);
+config.assets.map='/media/other-site/test.png';assert.equal((await api('/api/admin/save',{site:'budi-ani',revision:4,config},owner)).status,400);
+await api('/api/admin/visibility',{site:'budi-ani',revision:4,active:false},owner);assert.equal((await api('/w/budi-ani/')).status,404);assert.equal((await api('/api/join',{...state,site:'budi-ani'})).status,404);
+assert.equal((await api('/api/content')).status,200);DB.close();console.log('PASS: owner-only CMS, CSRF, create/draft/publish/preview, conflict protection, tenant isolation, moderation, media checks and availability');

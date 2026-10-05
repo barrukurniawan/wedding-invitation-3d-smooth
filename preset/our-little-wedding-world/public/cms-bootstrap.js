@@ -1,0 +1,13 @@
+(async()=>{
+const path=location.pathname.split('/');window.CMS_SITE=path[1]==='w'?path[2]:'faris-eliza';window.CMS_PREVIEW=new URLSearchParams(location.search).get('preview')==='1';
+const $=s=>document.querySelector(s),url='/api/content?site='+encodeURIComponent(window.CMS_SITE)+(window.CMS_PREVIEW?'&preview=1':'');
+let revision=null,mediaSignature='';
+function apply(config){const name=config.profile.groom+' & '+config.profile.bride;document.title=config.profile.titlePrefix+' '+name;$('#titleScreen .opening-kicker').textContent=config.profile.titlePrefix;$('#titleScreen h1').textContent=name;$('#continueButton').textContent=config.profile.startButton;$('.map-wedding-title span').textContent=config.profile.titlePrefix;$('.map-wedding-title strong').textContent=name;$('.map-wedding-title').setAttribute('aria-label',document.title);$('#wishForm label').textContent='Untuk '+name+',';$('#weddingCouple').alt=name;$('#guide .dialog-inner>p').textContent='Selamat datang di taman '+name+'. Buka venue Akad & Resepsi untuk jadwal acara beserta alamatnya.'+(config.demo?' Informasi pernikahan saat ini menggunakan data contoh.':'');
+const a=config.assets;$('.title-card img').src=a.cover;$('.title-card img').alt='Kartu pernikahan '+name;$('#weddingCouple').src=a.couple;
+for(const [id,idle,playing] of [['pianistImage','pianistIdle','pianistPlaying'],['singerImage','singerIdle','singerPlaying']]){const el=$('#'+id);el.dataset.idle=a[idle];el.dataset.playing=a[playing];el.src=$('#gardenMusic').paused?a[idle]:a[playing];}
+if($('#gardenMusic').getAttribute('src')!==a.music)$('#gardenMusic').src=a.music;
+}
+try{const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();window.WEDDING=data.config;revision=data.revision;mediaSignature=JSON.stringify([data.config.assets,data.config.characters]);apply(data.config);const script=document.createElement('script');script.src='/game.js';document.body.append(script);
+}catch{$('#loading').textContent='Undangan belum bisa dimuat. Muat ulang halaman untuk mencoba lagi.';return;}
+setInterval(async()=>{if(document.hidden||document.querySelector('dialog[open]'))return;try{const r=await fetch(url,{cache:'no-store'});if(r.status===404){location.reload();return;}if(!r.ok)return;const data=await r.json();if(data.revision===revision)return;const signature=JSON.stringify([data.config.assets,data.config.characters]);const mediaChanged=signature!==mediaSignature;mediaSignature=signature;revision=data.revision;window.WEDDING=data.config;apply(data.config);window.dispatchEvent(new CustomEvent('wedding-content-updated',{detail:{mediaChanged}}));}catch{}},15000);
+})();

@@ -204,4 +204,76 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
   }
 })
 
+const slugUpdateSchema = z.object({
+  slug: z.string().trim().toLowerCase().regex(SLUG_PATTERN, 'Slug hanya boleh berisi huruf kecil (a-z), angka (0-9), dan tanda hubung (-).'),
+}).strict()
+
+router.patch('/slug', requireUser, requireCsrf, async (req, res, next) => {
+  const parsed = slugUpdateSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0]?.message || 'Slug tidak valid.' },
+    })
+  }
+
+  const newSlug = parsed.data.slug
+  if (RESERVED_SLUGS.has(newSlug)) {
+    return res.status(400).json({ error: { code: 'SLUG_RESERVED', message: 'Slug undangan tidak tersedia.' } })
+  }
+
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+
+    const [ownedRows] = await connection.query(
+      `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
+              c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
+       FROM invitations i
+       LEFT JOIN wedding_configs c ON c.invitation_id = i.id
+       WHERE i.owner_user_id = ? AND i.deleted_at IS NULL
+       LIMIT 1 FOR UPDATE`,
+      [req.user.id],
+    )
+    const current = ownedRows[0]
+    if (!current) {
+      await connection.rollback()
+      return res.status(404).json({ error: { code: 'INVITATION_NOT_FOUND', message: 'Undangan belum dibuat.' } })
+    }
+
+    if (current.slug === newSlug) {
+      await connection.rollback()
+      return res.json({ invitation: serializeInvitation(current) })
+    }
+
+    const [existing] = await connection.query(
+      'SELECT id FROM invitations WHERE slug = ? AND id <> ? LIMIT 1 FOR UPDATE',
+      [newSlug, current.id],
+    )
+    if (existing[0]) {
+      await connection.rollback()
+      return res.status(409).json({ error: { code: 'SLUG_TAKEN', message: 'Subdomain tersebut sudah dipakai oleh pengguna lain.' } })
+    }
+
+    await connection.query(
+      'UPDATE invitations SET slug = ? WHERE id = ?',
+      [newSlug, current.id],
+    )
+
+    // Also update associated wishes if any
+    await connection.query(
+      'UPDATE wedding_wishes SET site = ? WHERE site = ?',
+      [newSlug, current.slug],
+    )
+
+    current.slug = newSlug
+    await connection.commit()
+    res.json({ invitation: serializeInvitation(current) })
+  } catch (error) {
+    await connection.rollback()
+    next(error)
+  } finally {
+    connection.release()
+  }
+})
+
 export default router

@@ -7,10 +7,14 @@ import { normalizeMusicConfig } from '../services/configDefaults.js'
 const router = Router()
 
 const text = (max) => z.string().trim().max(max)
-const weddingDate = z.string().trim().regex(
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
-  'Tanggal pernikahan tidak valid.',
-)
+const weddingDate = z.union([
+  z.string().trim().regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/,
+    'Tanggal pernikahan tidak valid.',
+  ),
+  z.literal(''),
+  z.null(),
+])
 
 const configSchema = z.object({
   bride_name: text(255),
@@ -36,13 +40,40 @@ const configSchema = z.object({
   bgm_url: text(2048),
   bgm_title: text(255),
   preset: z.enum(['3d_summer', '2d_garden']),
-}).partial().strict()
+  slug: z.string().optional(),
+}).partial().passthrough()
 
 function invalid(res, error) {
   return res.status(400).json({
     error: { code: 'VALIDATION_ERROR', message: error.issues?.[0]?.message || 'Data tidak valid.' },
   })
 }
+
+const ALLOWED_CONFIG_COLUMNS = new Set([
+  'bride_name',
+  'groom_name',
+  'bride_parents',
+  'groom_parents',
+  'wedding_photo',
+  'wedding_date',
+  'akad_date',
+  'akad_time',
+  'akad_location',
+  'resepsi_date',
+  'resepsi_time',
+  'resepsi_location',
+  'qris_image',
+  'bank_name',
+  'bank_account',
+  'bank_holder',
+  'maps_url',
+  'venue_address',
+  'quote',
+  'gallery_photos',
+  'bgm_url',
+  'bgm_title',
+  'preset',
+])
 
 function serializeConfig(config) {
   const result = normalizeMusicConfig(config)
@@ -52,6 +83,8 @@ function serializeConfig(config) {
     : result.gallery_photos || []
   if (result.wedding_date) {
     result.wedding_date = String(result.wedding_date).replace(' ', 'T')
+  } else {
+    result.wedding_date = ''
   }
   return result
 }
@@ -86,7 +119,7 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
   if (!parsed.success) return invalid(res, parsed.error)
 
   const data = parsed.data
-  const fields = Object.keys(data)
+  const fields = Object.keys(data).filter((field) => ALLOWED_CONFIG_COLUMNS.has(field))
   if (fields.length === 0) {
     return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Tidak ada perubahan.' } })
   }
@@ -103,7 +136,7 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
 
     const values = fields.map((field) => {
       if (field === 'gallery_photos') return JSON.stringify(data[field])
-      if (field === 'wedding_date') return data[field].slice(0, 19).replace('T', ' ')
+      if (field === 'wedding_date') return data[field] ? data[field].slice(0, 19).replace('T', ' ') : null
       return data[field]
     })
 
@@ -112,6 +145,29 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
       `UPDATE wedding_configs SET ${setSql} WHERE invitation_id = ?`,
       [...values, invitation.id],
     )
+
+    if (fields.includes('wedding_date')) {
+      if (data.wedding_date) {
+        const mysqlDate = data.wedding_date.slice(0, 19).replace('T', ' ')
+        await pool.query(
+          `UPDATE invitations
+           SET reception_at = ?,
+               expires_at = DATE_ADD(?, INTERVAL 7 DAY),
+               retention_until = DATE_ADD(?, INTERVAL 37 DAY)
+           WHERE id = ?`,
+          [mysqlDate, mysqlDate, mysqlDate, invitation.id],
+        )
+      } else {
+        await pool.query(
+          `UPDATE invitations
+           SET reception_at = NULL,
+               expires_at = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 365 DAY),
+               retention_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 395 DAY)
+           WHERE id = ?`,
+          [invitation.id],
+        )
+      }
+    }
 
     const [configRows] = await pool.query(
       'SELECT * FROM wedding_configs WHERE invitation_id = ?',

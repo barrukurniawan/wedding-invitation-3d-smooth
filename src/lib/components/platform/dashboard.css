@@ -406,6 +406,7 @@
     color: var(--muted);
     font-size: 0.84rem;
     line-height: 1.5;
+    min-height: 3.8em;
   }
 
   /* ─── Mockup Stage (Laptop + Phone) ─── */
@@ -528,17 +529,47 @@
   .preset-features {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
     margin-bottom: 18px;
+    min-height: 38px;
   }
   .feature-pill {
-    padding: 4px 9px;
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(0, 0, 0, 0.07);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 13px 5px 6px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(244, 114, 182, 0.28);
     border-radius: 999px;
-    font-size: 0.735rem;
+    font-size: 0.77rem;
     font-weight: 600;
-    color: var(--ink);
+    color: #4a2835;
+    box-shadow: 0 1px 3px rgba(83, 38, 54, 0.04);
+    letter-spacing: -0.01em;
+    transition: all 0.2s ease;
+  }
+  .feature-pill:hover {
+    background: #ffffff;
+    border-color: rgba(244, 114, 182, 0.45);
+    box-shadow: 0 2px 6px rgba(190, 24, 93, 0.08);
+  }
+  .feature-pill-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(244, 63, 94, 0.12); /* soft pink transparan satu tema */
+    color: #be185d; /* aksen pink rose */
+    flex-shrink: 0;
+  }
+  .feature-pill-icon svg {
+    width: 13px;
+    height: 13px;
+    display: block;
   }
 
   /* ─── Preset Footer Actions ─── */
@@ -600,19 +631,32 @@
   /* ─── Preset Notice ─── */
   .preset-notice {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 16px;
-    background: rgba(246, 232, 234, 0.65);
-    border: 1px solid rgba(143, 29, 69, 0.15);
-    border-radius: 14px;
-    font-size: 0.8125rem;
-    line-height: 1.45;
-    color: var(--ink);
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(255, 240, 244, 0.75);
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    border-radius: 16px;
+    font-size: 0.825rem;
+    line-height: 1.5;
+    color: #4a2835;
+    backdrop-filter: blur(8px);
   }
   .notice-icon {
-    font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(244, 63, 94, 0.12); /* soft pink transparan satu tema */
+    color: #be185d; /* aksen pink rose */
     flex-shrink: 0;
+  }
+  .notice-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
 
   /* ─── Preview Preset Toggle (Lower Section) ─── */
@@ -2087,9 +2131,52 @@
 .card-subGroup textarea:focus,
 .card-subGroup select:focus {
   outline: none;
-  background: #ffffff;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(158, 32, 76, 0.12);
+  background: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(158, 32, 76, 0.14) !important;
+}
+
+/* Unfilled inputs / placeholders: vibrant soft pink tint as visual indicator */
+.form-section input:placeholder-shown,
+.form-section textarea:placeholder-shown,
+.grid-2 input:placeholder-shown,
+.grid-2 textarea:placeholder-shown,
+.grid-3 input:placeholder-shown,
+.grid-3 textarea:placeholder-shown,
+.card-subGroup input:placeholder-shown,
+.card-subGroup textarea:placeholder-shown,
+.input-empty {
+  background: #ffeef2 !important;
+  border-color: #fda4af !important;
+  color: #9f1239;
+}
+
+.form-section input::placeholder,
+.form-section textarea::placeholder,
+.grid-2 input::placeholder,
+.grid-2 textarea::placeholder,
+.grid-3 input::placeholder,
+.grid-3 textarea::placeholder,
+.card-subGroup input::placeholder,
+.card-subGroup textarea::placeholder,
+.input-empty::placeholder {
+  color: #be185d !important;
+  opacity: 0.65;
+}
+
+/* Filled inputs: clean pure white background */
+.form-section input:not(:placeholder-shown),
+.form-section textarea:not(:placeholder-shown),
+.grid-2 input:not(:placeholder-shown),
+.grid-2 textarea:not(:placeholder-shown),
+.grid-3 input:not(:placeholder-shown),
+.grid-3 textarea:not(:placeholder-shown),
+.card-subGroup input:not(:placeholder-shown),
+.card-subGroup textarea:not(:placeholder-shown),
+.input-filled {
+  background: #ffffff !important;
+  border-color: #d8c6ca !important;
+  color: #292321 !important;
 }
 
 /* Save Config Bar */

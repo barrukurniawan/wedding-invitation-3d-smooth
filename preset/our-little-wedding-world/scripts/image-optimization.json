@@ -1,0 +1,83 @@
+[
+  {
+    "source": "character-atlas.png",
+    "optimized": "character-atlas.webp",
+    "width": 680,
+    "height": 544,
+    "sourceBytes": 84355,
+    "optimizedBytes": 27236,
+    "rgbaSha256": "b581ddb90addfa4d3a97812ee7b82d304e7dd91f35e9f39531f665ab23a03292"
+  },
+  {
+    "source": "garden.png",
+    "optimized": "garden.webp",
+    "width": 1536,
+    "height": 1024,
+    "sourceBytes": 3646396,
+    "optimizedBytes": 2709252,
+    "rgbaSha256": "3170d468b8a20d2d8ef383392d73e91781107244627114d78391fa8a2b3ce1e1"
+  },
+  {
+    "source": "pianist-idle.png",
+    "optimized": "pianist-idle.webp",
+    "width": 609,
+    "height": 500,
+    "sourceBytes": 308821,
+    "optimizedBytes": 171000,
+    "rgbaSha256": "5633b6fed1904acd5ea9f45c881c2f531d09a97344593cf2bd2695e92cbd1238"
+  },
+  {
+    "source": "seated-guests.png",
+    "optimized": "seated-guests.webp",
+    "width": 1536,
+    "height": 1024,
+    "sourceBytes": 1704804,
+    "optimizedBytes": 1138674,
+    "rgbaSha256": "2299602a0e3dad961d77e34f445d31b8788e04c06da29e4bee2ba2ae39920478"
+  },
+  {
+    "source": "singer-idle.png",
+    "optimized": "singer-idle.webp",
+    "width": 1086,
+    "height": 1448,
+    "sourceBytes": 1339807,
+    "optimizedBytes": 750904,
+    "rgbaSha256": "e6306ed29d243b0f577fab8d9e867146c794c47f2a92d7667819b076e197ecf1"
+  },
+  {
+    "source": "wedding-guests-v2.png",
+    "optimized": "wedding-guests-v2.webp",
+    "width": 1254,
+    "height": 1254,
+    "sourceBytes": 717898,
+    "optimizedBytes": 516798,
+    "rgbaSha256": "35916fe280ac3a66e586b09723ce39e1dfa90fbb2cfdcc662c31b0caf56fd6f7"
+  },
+  {
+    "source": "wedding-guests.png",
+    "optimized": "wedding-guests.webp",
+    "width": 1254,
+    "height": 1254,
+    "sourceBytes": 734111,
+    "optimizedBytes": 526300,
+    "rgbaSha256": "91a4e26a5c8aebbd160c0cd6aca6b4ca63f3a853b8a56eb29eb8d3a91b728236"
+  },
+  {
+    "source": "wedding-hosts.png",
+    "optimized": "wedding-hosts.webp",
+    "width": 1254,
+    "height": 1254,
+    "sourceBytes": 804084,
+    "optimizedBytes": 561632,
+    "rgbaSha256": "a3841bdd1668be6e62d1078391e9c73635a4f8e4e6379e7b0513aaa5af74650d"
+  },
+  {
+    "source": "woman-atlas.png",
+    "optimized": "woman-atlas.webp",
+    "width": 544,
+    "height": 544,
+    "sourceBytes": 78759,
+    "optimizedBytes": 25218,
+    "rgbaSha256": "8ad1204ae04bab6b5c24825fae2fc110acbcf14415deb61dd90e34fe4e4e0cab"
+  }
+]

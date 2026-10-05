@@ -23,6 +23,7 @@ export interface WeddingConfig {
   bgm_url?: string
   bgm_title?: string
   preset?: '3d_summer' | '2d_garden'
+  slug?: string
   updated_at: string
 }
 
@@ -307,7 +308,7 @@ export function getMyConfig() {
 }
 
 export function buildMyConfigPayload(config: Partial<WeddingConfig> & { invitation_id?: number }) {
-  const { id, updated_at, invitation_id, ...editableConfig } = config
+  const { id, updated_at, invitation_id, slug, ...editableConfig } = config
   return Object.fromEntries(
     Object.entries(editableConfig).filter(([, value]) => value !== null && value !== undefined),
   )
@@ -316,6 +317,13 @@ export function buildMyConfigPayload(config: Partial<WeddingConfig> & { invitati
 export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?: number }) {
   const payload = buildMyConfigPayload(config)
   return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(payload) })
+}
+
+export function updateMySlug(slug: string) {
+  return request<{ invitation: OwnerInvitation }>('/invitations/slug', {
+    method: 'PATCH',
+    body: JSON.stringify({ slug }),
+  })
 }
 
 export function checkoutPayment() {
