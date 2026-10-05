@@ -57,9 +57,17 @@
     const a = config.assets;
     if (a) {
       const coverImg = $('.title-card img');
+      const titleCard = $('.title-card');
       if (coverImg && a.cover) {
         coverImg.src = a.cover;
         coverImg.alt = 'Kartu pernikahan ' + name;
+        if (a.cover && !a.cover.includes('wedding-card.jpg')) {
+          titleCard?.classList.add('has-custom-photo');
+          coverImg.classList.add('has-custom-photo');
+        } else {
+          titleCard?.classList.remove('has-custom-photo');
+          coverImg.classList.remove('has-custom-photo');
+        }
       }
       if (coupleImg && a.couple) coupleImg.src = a.couple;
 
@@ -94,16 +102,16 @@
       },
       assets: {
         cover: c.wedding_photo || 'assets/wedding-card.jpg',
-        map: 'assets/garden.png',
-        gate: 'assets/front-gate.svg',
+        map: 'assets/garden.webp',
+        gate: 'assets/front-gate.webp',
         couple: 'assets/mempelai.gif',
-        pianistIdle: 'assets/pianist-idle.png',
+        pianistIdle: 'assets/pianist-idle.webp',
         pianistPlaying: 'assets/pianist.gif',
-        singerIdle: 'assets/singer-idle.png',
+        singerIdle: 'assets/singer-idle.webp',
         singerPlaying: 'assets/singer.gif',
-        guests: 'assets/wedding-guests-v2.png',
-        seated: 'assets/seated-guests.png',
-        hosts: 'assets/wedding-hosts.png',
+        guests: 'assets/wedding-guests-v2.webp',
+        seated: 'assets/seated-guests.webp',
+        hosts: 'assets/wedding-hosts.webp',
         music: c.bgm_url || 'assets/wedding-song-complete.m4a',
         click: 'assets/button-pop.mp3',
       },

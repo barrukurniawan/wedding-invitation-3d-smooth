@@ -525,7 +525,11 @@ function drawCharacterPreviews(){
  const pairCtx=$('#pairPreview').getContext('2d');pairCtx.clearRect(0,0,204,136);pairCtx.imageSmoothingEnabled=false;pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);
 }
 let loaded=0;
-function assetLoaded(){if(++loaded===7){ready=true;$('#loading').hidden=true;resize();
+function assetLoaded(){
+  const percent = Math.min(100, Math.round((++loaded / 7) * 100));
+  const loadEl = $('#loading');
+  if(loadEl && !ready){loadEl.innerHTML = `Membuka taman… <span style="display:inline-block;margin-left:6px;font-weight:700;opacity:0.9;">${percent}%</span>`;}
+  if(loaded===7){ready=true;if(loadEl)loadEl.hidden=true;resize();
   for(const [id,c] of Object.entries(characters)){const preview=$(`#${id}Preview`),pctx=preview.getContext('2d');pctx.imageSmoothingEnabled=false;pctx.drawImage(c.image,0,2*68,68,68,0,0,136,136);}
   const pairCtx=$('#pairPreview').getContext('2d');pairCtx.imageSmoothingEnabled=false;
   pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);

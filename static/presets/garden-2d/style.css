@@ -42,6 +42,8 @@ body[data-phase="title"] .opening{background:radial-gradient(ellipse at 22% 30%,
 #titleScreen[hidden]{display:none}
 .title-card{justify-self:center;perspective:1000px;filter:drop-shadow(0 15px 24px #091b2870)}
 .title-card img{display:block;width:auto;height:min(68dvh,560px);max-width:100%;object-fit:contain;border-radius:18px;transform:rotate(-3deg);animation:card-hover 5s ease-in-out infinite}
+.title-card.has-custom-photo{padding:10px;background:linear-gradient(135deg,#fffdf7,#fbf4e8 50%,#ebd7ba);border-radius:22px;box-shadow:0 16px 36px #05111a70,0 0 0 2px #ffe6a480;transform:rotate(-3deg);animation:card-hover 5s ease-in-out infinite}
+.title-card.has-custom-photo img{width:min(72vw,360px);height:min(60dvh,480px);aspect-ratio:4/5;object-fit:cover;object-position:center;border-radius:15px;border:1px solid #d4b58e60;transform:none;animation:none}
 .title-copy{text-align:center}.title-sparkles{color:#ffe69b;font-size:26px;letter-spacing:9px;margin-bottom:18px}
 #titleScreen .opening-kicker{font:italic 23px Nunito,ui-rounded,sans-serif;color:#fff3cf;margin:0 0 10px}
 #titleScreen h1{font-family:Nunito,ui-rounded,sans-serif;font-weight:900;font-size:clamp(38px,4.8vw,60px);line-height:1.12;color:#fff5d5;letter-spacing:-1.5px;margin:0 0 34px;text-shadow:0 4px 0 #49604f,0 8px 16px #071b2855}
