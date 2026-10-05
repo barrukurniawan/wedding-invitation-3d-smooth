@@ -8,6 +8,7 @@
 
   let {
     url,
+    modelName,
     instances,
     leafColor,
     tint,
@@ -16,7 +17,8 @@
     tintGradient,
     scale = 1
   }: {
-    url: string
+    url?: string
+    modelName?: string
     instances: { position: [number, number, number]; rotationY?: number; scale?: number }[]
     leafColor?: string
     tint?: string
@@ -273,11 +275,14 @@
   let instancedNature: InstancedNature | undefined
   let destroyed = false
 
-  const gltf = untrack(() => useGltf(url, { meshoptDecoder: MeshoptDecoder }))
+  const resolvedUrl = url ?? '/nature/gltf/nature-pack.glb'
+  const gltf = untrack(() => useGltf(resolvedUrl, { meshoptDecoder: MeshoptDecoder }))
   const nature = untrack(async () => {
     const { scene } = await gltf
-    const resolvedTint = tint ?? getNatureTintForUrl(url)
-    const prepared = scene.clone(true)
+    const tintKey = modelName ? `${modelName}.glb` : resolvedUrl
+    const resolvedTint = tint ?? getNatureTintForUrl(tintKey)
+    const sourceObj = (modelName ? scene.getObjectByName(modelName) : undefined) ?? scene
+    const prepared = sourceObj.clone(true)
 
     prepared.traverse((obj) => {
       const mesh = obj as THREE.Mesh
