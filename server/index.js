@@ -29,7 +29,14 @@ if (process.env.TRUST_PROXY) {
     : process.env.TRUST_PROXY
   app.set('trust proxy', trustProxy)
 }
-app.use(helmet({ crossOriginResourcePolicy: false }))
+// nginx already sets HSTS, CSP frame-ancestors, and Referrer-Policy — disable those
+// in helmet to prevent duplicate headers reaching the browser.
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  strictTransportSecurity: false,
+  contentSecurityPolicy: false,
+  referrerPolicy: false,
+}))
 app.use(express.json({ limit: '64kb' }))
 app.use(cookieParser())
 
@@ -66,8 +73,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Terjadi kesalahan pada server.' } })
 })
 
+async function waitForDb(retries = 10, delayMs = 3000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await pool.query('SELECT 1')
+      console.log('Database connection established.')
+      return
+    } catch (err) {
+      console.warn(`DB not ready (attempt ${attempt}/${retries}): ${err.message}`)
+      if (attempt === retries) throw err
+      await new Promise((r) => setTimeout(r, delayMs))
+    }
+  }
+}
+
 async function start() {
-  await pool.query('SELECT 1')
+  await waitForDb()
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Wedding API running on http://0.0.0.0:${PORT}`)
   })

@@ -660,24 +660,24 @@
 
 <!-- VEGETASI deferred — not on critical ready path (pop-in after overlay OK) -->
 {#if showDecor}
-  <Nature url="/nature/gltf/Tree_4_A_Color1.glb" scale={1.7} instances={[...sparseTrees(liningTreesLeft), ...sparseTrees(liningTreesRight), ...sparseTrees(redLeafSidesLeft), ...sparseTrees(redLeafSidesRight)]} />
-  <Nature url="/nature/gltf/Bush_4_D_Color1.glb" scale={1.3} instances={[...sparseTrees(pineLayer), ...sparseTrees(redPineLeft), ...sparseTrees(redPineRight), ...sparseTrees(redTwistedLeft), ...sparseTrees(redTwistedRight), ...sparseTrees(mailboxTrees), ...sparseTrees(extraTreesLeft), ...sparseTrees(extraTreesRight), ...sparseTrees(pineSidesLeft), ...sparseTrees(pineSidesRight)]} />
-  <Nature url="/nature/gltf/Tree_1_A_Color1.glb" scale={1.7} instances={[...sparseTrees(redLeafTrees), ...rockMed2Left, ...rockMed2Right, ...mushroomLaetiLeft, ...mushroomLaetiRight]} />
-  <Nature url="/nature/gltf/Bush_1_A_Color1.glb" scale={1.3} instances={[...grassTall, ...bushes, ...grassWispyShortRight, ...grassShortLeft, ...stageBushes]} />
-  <Nature url="/nature/gltf/Bush_2_A_Color1.glb" scale={1.3} instances={[...grassWispy, ...grassShortRight, ...grassWispyShortLeft, ...bushFlowersLeft, ...bushFlowersRight]} />
-  <Nature url="/nature/gltf/Bush_4_F_Color1.glb" scale={1.3} instances={[...mushrooms, ...rockSidesRight, ...pebbleSidesLeft, ...pebbleSidesRight]} />
-  <Nature url="/nature/gltf/Bush_4_E_Color1.glb" scale={1.5} instances={[...plantBigLeft, ...plantBigRight]} />
-  <Nature url="/nature/gltf/Grass_2_A_Color1.glb" scale={1.1} instances={flower3} />
-  <Nature url="/nature/gltf/Grass_1_C_Color1.glb" scale={1.1} instances={flower4} />
-  <Nature url="/nature/gltf/Bush_3_A_Color1.glb" scale={1.2} instances={ferns} />
-  <Nature url="/nature/gltf/Bush_4_A_Color1.glb" scale={1.2} instances={plants} />
-  <Nature url="/nature/gltf/Tree_2_D_Color1.glb" scale={1.7} instances={pebbles} />
-  <Nature url="/nature/gltf/Tree_2_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
-  <Nature url="/nature/gltf/Tree_3_A_Color1.glb" scale={1.7} instances={sparseTrees(sideTreesRight)} />
-  <Nature url="/nature/gltf/Grass_1_A_Color1.glb" scale={1.1} instances={flowerSingleLeft} />
-  <Nature url="/nature/gltf/Grass_2_B_Color1.glb" scale={1.1} instances={flowerSingleRight} />
-  <Nature url="/nature/gltf/Grass_1_B_Color1.glb" scale={1.0} instances={cloversLeft} />
-  <Nature url="/nature/gltf/Grass_2_C_Color1.glb" scale={1.0} instances={cloversRight} />
+  <Nature modelName="Tree_4_A_Color1" scale={1.7} instances={[...sparseTrees(liningTreesLeft), ...sparseTrees(liningTreesRight), ...sparseTrees(redLeafSidesLeft), ...sparseTrees(redLeafSidesRight)]} />
+  <Nature modelName="Bush_4_D_Color1" scale={1.3} instances={[...sparseTrees(pineLayer), ...sparseTrees(redPineLeft), ...sparseTrees(redPineRight), ...sparseTrees(redTwistedLeft), ...sparseTrees(redTwistedRight), ...sparseTrees(mailboxTrees), ...sparseTrees(extraTreesLeft), ...sparseTrees(extraTreesRight), ...sparseTrees(pineSidesLeft), ...sparseTrees(pineSidesRight)]} />
+  <Nature modelName="Tree_1_A_Color1" scale={1.7} instances={[...sparseTrees(redLeafTrees), ...rockMed2Left, ...rockMed2Right, ...mushroomLaetiLeft, ...mushroomLaetiRight]} />
+  <Nature modelName="Bush_1_A_Color1" scale={1.3} instances={[...grassTall, ...bushes, ...grassWispyShortRight, ...grassShortLeft, ...stageBushes]} />
+  <Nature modelName="Bush_2_A_Color1" scale={1.3} instances={[...grassWispy, ...grassShortRight, ...grassWispyShortLeft, ...bushFlowersLeft, ...bushFlowersRight]} />
+  <Nature modelName="Bush_4_F_Color1" scale={1.3} instances={[...mushrooms, ...rockSidesRight, ...pebbleSidesLeft, ...pebbleSidesRight]} />
+  <Nature modelName="Bush_4_E_Color1" scale={1.5} instances={[...plantBigLeft, ...plantBigRight]} />
+  <Nature modelName="Grass_2_A_Color1" scale={1.1} instances={flower3} />
+  <Nature modelName="Grass_1_C_Color1" scale={1.1} instances={flower4} />
+  <Nature modelName="Bush_3_A_Color1" scale={1.2} instances={ferns} />
+  <Nature modelName="Bush_4_A_Color1" scale={1.2} instances={plants} />
+  <Nature modelName="Tree_2_D_Color1" scale={1.7} instances={pebbles} />
+  <Nature modelName="Tree_2_A_Color1" scale={1.7} instances={sparseTrees(sideTreesLeft)} />
+  <Nature modelName="Tree_3_A_Color1" scale={1.7} instances={sparseTrees(sideTreesRight)} />
+  <Nature modelName="Grass_1_A_Color1" scale={1.1} instances={flowerSingleLeft} />
+  <Nature modelName="Grass_2_B_Color1" scale={1.1} instances={flowerSingleRight} />
+  <Nature modelName="Grass_1_B_Color1" scale={1.0} instances={cloversLeft} />
+  <Nature modelName="Grass_2_C_Color1" scale={1.0} instances={cloversRight} />
   <Nature
     url="/nature/gltf/Bush_Common_Flowers.gltf"
     scale={0.55}
