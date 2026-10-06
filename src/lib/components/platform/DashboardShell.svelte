@@ -553,7 +553,7 @@
                         <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
                         <span class="chrome-url">faris-eliza.marryme.web.id</span>
                       </div>
-                      <img src="/media/preset-2d-desktop.png" alt="Preset 2 - Tampilan Laptop 2D" class="laptop-img" />
+                      <img src="/media/preset-2d-desktop.png?v=3" alt="Preset 2 - Tampilan Laptop 2D" class="laptop-img" />
                     </div>
                     <div class="laptop-base"></div>
                   </div>
@@ -561,7 +561,7 @@
                   <div class="mockup-phone">
                     <div class="phone-screen">
                       <div class="phone-notch"></div>
-                      <img src="/media/preset-2d-mobile.png" alt="Preset 2 - Tampilan HP 2D" class="phone-img" />
+                      <img src="/media/preset-2d-mobile.png?v=3" alt="Preset 2 - Tampilan HP 2D" class="phone-img" />
                     </div>
                   </div>
                 </div>
@@ -766,7 +766,7 @@
             <figure class="phone-frame">
               <div class="phone-notch" aria-hidden="true"></div>
               <img
-                src="/media/preset-2d-mobile.png"
+                src="/media/preset-2d-mobile.png?v=3"
                 alt="Preview undangan 2D di ponsel"
                 class="phone-shot"
                 loading="lazy"
