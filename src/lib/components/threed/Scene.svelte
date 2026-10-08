@@ -17,6 +17,7 @@ import Labels from './Labels.svelte'
 import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/gameState.svelte'
   import { getNearbyTrigger } from '../../utils/interaction'
   import { bumpCriticalLoaded } from '../../stores/loadProgress.svelte'
+  import { resolveVenue, type SurroundingsProps } from '../../venues'
 
   const { scene } = useThrelte()
 
@@ -33,13 +34,19 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   let playerReady = $state(false)
   let receptionistReady = $state(false)
   let envCriticalReady = $state(false)
-  let Environment = $state<Component>()
+  let Environment = $state<typeof import('./Environment.svelte').default>()
+  let Surroundings = $state<Component<SurroundingsProps>>()
   let readySent = false
   let lastTriggerId: string | null = null
 
+  // Fase 1 akan membaca venue dari $weddingConfig; sementara selalu default (garden).
+  const venue = resolveVenue()
+
   onMount(() => {
-    void import('./Environment.svelte').then((module) => {
-      Environment = module.default
+    // Muat inti venue dan sekelilingnya paralel supaya tidak ada round-trip berantai.
+    void Promise.all([import('./Environment.svelte'), venue.loadSurroundings()]).then(([env, surroundings]) => {
+      Surroundings = surroundings.default
+      Environment = env.default
     })
   })
 
@@ -54,8 +61,9 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   // Fallback background + fog horizon yang menyatu dengan sky dome.
   // lowPower: slightly closer fog far plane (less fill cost)
   $effect(() => {
-    scene.background = new THREE.Color('#8ed3f7')
-    scene.fog = new THREE.Fog('#dff3fb', lowPower ? 26 : 32, lowPower ? 55 : 68)
+    const { background, fog } = venue.theme
+    scene.background = new THREE.Color(background)
+    scene.fog = new THREE.Fog(fog.color, lowPower ? fog.nearLowPower : fog.near, lowPower ? fog.farLowPower : fog.far)
   })
 
   // Render loop utama: gerakan -> deteksi proximity
@@ -71,12 +79,13 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
 </script>
 
 <CameraRig />
-<Sky {lowPower} />
-<Lighting />
-{#if Environment}
+<Sky {lowPower} colors={venue.theme.sky} />
+<Lighting lighting={venue.theme.lighting} />
+{#if Environment && Surroundings}
   <Environment
     {lowPower}
     {renderQuality}
+    {Surroundings}
     onReady={() => {
       if (envCriticalReady) return
       envCriticalReady = true

@@ -1,17 +1,19 @@
 <script lang="ts">
   import { T } from '@threlte/core'
+  import type { VenueTheme } from '../../venues'
 
+  let { lighting }: { lighting: VenueTheme['lighting'] } = $props()
 </script>
 
 <T.HemisphereLight
-  color="#ffe8c4"
-  groundColor="#6a8b5a"
-  intensity={2.0}
+  color={lighting.hemisphere.sky}
+  groundColor={lighting.hemisphere.ground}
+  intensity={lighting.hemisphere.intensity}
 />
 
-<T.AmbientLight color="#fff3dd" intensity={0.5} />
+<T.AmbientLight color={lighting.ambient.color} intensity={lighting.ambient.intensity} />
 
 <T.DirectionalLight
-  position={[-12, 20, 8]}
-  intensity={2.0}
+  position={lighting.sun.position}
+  intensity={lighting.sun.intensity}
 />

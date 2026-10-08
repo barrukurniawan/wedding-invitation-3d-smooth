@@ -3,16 +3,17 @@
   import { T } from '@threlte/core'
   import { onDestroy, untrack } from 'svelte'
 
-  let { lowPower = false }: { lowPower?: boolean } = $props()
+  let { lowPower = false, colors }: { lowPower?: boolean; colors: { horizon: string; top: string } } = $props()
   const resolvedLowPower = untrack(() => lowPower)
+  const initialColors = untrack(() => colors)
 
   const skyGeometry = new THREE.SphereGeometry(92, resolvedLowPower ? 20 : 32, resolvedLowPower ? 12 : 18)
   const skyMaterial = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      horizonColor: { value: new THREE.Color('#eaf8ff') },
-      skyColor: { value: new THREE.Color('#8ed3f7') }
+      horizonColor: { value: new THREE.Color(initialColors.horizon) },
+      skyColor: { value: new THREE.Color(initialColors.top) }
     },
     vertexShader: `
       varying float vHeight;

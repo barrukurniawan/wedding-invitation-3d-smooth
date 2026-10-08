@@ -100,6 +100,13 @@ export const colliders = [
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 }
 ]
 
+// Wedding arch di kaki tangga (world z≈-14.9). Dua tiang kokoh di X±4.5 (di
+// luar jalur jalan ±1.0), crossbar atas di Y≈3.9. Dipakai VenueCore (visual +
+// kabel lampu) dan VenueOccluders (proxy kamera).
+export const ARCH_POST_X = 4.5
+export const ARCH_Z = -14.9
+export const ARCH_TOP_Y = 3.9
+
 export const STAGE = {
   minX: -5.25,
   maxX: 5.25,
