@@ -26,6 +26,20 @@ export const playerSprinting = writable(false)
 export const tutorialJoystickDone = writable(false)
 export const joystickDelta = { x: 0, z: 0 }
 
+// Dev-only: titik spawn tetap untuk skrip perf (`?spawn=receptionist`), lihat scripts/perf/measure-scene.mjs.
+const DEV_SPAWNS: Record<string, [number, number]> = {
+  receptionist: [1.6, -6],
+  stage: [0, -11.5],
+  side: [7.5, 3]
+}
+if (browser && import.meta.env.DEV) {
+  const spawn = DEV_SPAWNS[new URLSearchParams(window.location.search).get('spawn') ?? '']
+  if (spawn) {
+    playerPos.x = spawn[0]
+    playerPos.z = spawn[1]
+  }
+}
+
 const keys: Record<string, boolean> = {}
 let distanceWalked = 0
 let lastMoving = false

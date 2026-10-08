@@ -11,17 +11,19 @@
     "models:runtime": "node scripts/trim-model-animations.mjs",
     "preview": "vite preview",
     "test": "npm --prefix server test",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "perf:measure": "node scripts/perf/measure-scene.mjs"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^3.0.0",
     "@gltf-transform/core": "^4.2.1",
     "@gltf-transform/extensions": "^4.2.1",
     "@gltf-transform/functions": "^4.2.1",
+    "@sveltejs/adapter-static": "^3.0.0",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
+    "puppeteer-core": "^23.11.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^3.4.14",

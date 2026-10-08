@@ -18,3 +18,6 @@ deploy-docker-vps.md
 patch*.cjs
 patch*.js
 *.backup*
+
+# Hasil ukur performa lokal (scripts/perf)
+.perf/
