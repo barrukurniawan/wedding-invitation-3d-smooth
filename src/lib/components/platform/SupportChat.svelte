@@ -19,6 +19,29 @@
   let errorMsg = $state('')
   let loaded = $state(false)
   let disabled = $state(false)
+
+  // Penarik perhatian: label "Butuh bantuan?", sapaan, dan animasi, sampai pengguna
+  // pernah membuka chat atau menutup sapaan (diingat per browser).
+  const SEEN_KEY = 'marryme_support_seen'
+  function readSeen() {
+    try {
+      return localStorage.getItem(SEEN_KEY) === '1'
+    } catch {
+      return false
+    }
+  }
+  let seen = $state(readSeen())
+  let teaser = $state(false)
+  function markSeen() {
+    seen = true
+    teaser = false
+    try {
+      localStorage.setItem(SEEN_KEY, '1')
+    } catch {
+      // Penyimpanan diblokir (mode privat): cukup berlaku untuk sesi ini.
+    }
+  }
+  const attention = $derived(!open && (!seen || unread > 0))
   let list = $state<HTMLElement | null>(null)
   let input = $state<HTMLTextAreaElement | null>(null)
 
@@ -66,11 +89,18 @@
   onMount(() => {
     void poll()
     schedule()
-    return () => clearTimeout(timer)
+    const teaserTimer = setTimeout(() => {
+      if (!seen && !open) teaser = true
+    }, 2500)
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(teaserTimer)
+    }
   })
 
   async function toggle() {
     open = !open
+    if (open) markSeen()
     schedule()
     if (open) {
       // Muat ulang penuh setiap dibuka supaya status Terkirim/Dibaca ikut terbaru.
@@ -160,11 +190,30 @@
     </section>
   {/if}
 
-  <button type="button" class="chat-fab" aria-label={open ? 'Tutup chat bantuan' : 'Buka chat bantuan'} aria-expanded={open} onclick={toggle}>
+  {#if teaser && !open}
+    <div class="chat-teaser" role="status" transition:fly={{ y: 10, duration: 220 }}>
+      <button type="button" class="teaser-body" onclick={toggle}>
+        <strong>Ada kendala atau error? 👋</strong>
+        <span>Chat langsung dengan admin MarryMe di sini.</span>
+      </button>
+      <button type="button" class="teaser-close" aria-label="Tutup sapaan" onclick={markSeen}>✕</button>
+    </div>
+  {/if}
+
+  <button
+    type="button"
+    class="chat-fab"
+    class:attention
+    class:extended={!seen && !open}
+    aria-label={open ? 'Tutup chat bantuan' : 'Buka chat bantuan'}
+    aria-expanded={open}
+    onclick={toggle}
+  >
     {#if open}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
     {:else}
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+      {#if !seen}<span class="fab-label">Butuh bantuan?</span>{/if}
       {#if unread > 0}<span class="badge">{unread > 9 ? '9+' : unread}</span>{/if}
     {/if}
   </button>
@@ -189,6 +238,119 @@
   .chat-fab:hover {
     background: #5e1230;
     transform: translateY(-2px);
+  }
+  /* Bentuk memanjang dengan label sampai pengguna pernah membuka chat. */
+  .chat-fab.extended {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    padding: 0 20px 0 16px;
+    border-radius: 999px;
+  }
+  .fab-label {
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  /* Cincin emas berdenyut + goyangan singkat tiap ~7 dtk. */
+  .chat-fab.attention {
+    box-shadow: 0 0 0 3px #fbbf24, 0 12px 30px -10px rgba(143, 29, 69, 0.6);
+    animation: chat-wiggle 7s ease-in-out 2s infinite;
+  }
+  .chat-fab.attention::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    border: 3px solid #fbbf24;
+    animation: chat-ripple 2.2s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes chat-ripple {
+    0% {
+      transform: scale(1);
+      opacity: 0.85;
+    }
+    100% {
+      transform: scale(1.45);
+      opacity: 0;
+    }
+  }
+  @keyframes chat-wiggle {
+    0%,
+    86%,
+    100% {
+      transform: rotate(0);
+    }
+    88% {
+      transform: rotate(-9deg) scale(1.06);
+    }
+    90% {
+      transform: rotate(8deg) scale(1.06);
+    }
+    92% {
+      transform: rotate(-6deg) scale(1.04);
+    }
+    94% {
+      transform: rotate(4deg);
+    }
+    96% {
+      transform: rotate(-2deg);
+    }
+  }
+  .chat-teaser {
+    position: fixed;
+    right: 20px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    z-index: 80;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    width: min(290px, calc(100vw - 40px));
+    padding: 12px 10px 12px 16px;
+    border-radius: 18px 18px 6px 18px;
+    background: #fff;
+    border: 1px solid #f3d27a;
+    box-shadow: 0 18px 40px -18px rgba(40, 20, 25, 0.45);
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  }
+  .teaser-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .teaser-body strong {
+    display: block;
+    font-size: 14px;
+    color: #181314;
+  }
+  .teaser-body span {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: #6b6264;
+    line-height: 1.4;
+  }
+  .teaser-close {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #8a8183;
+    font-size: 11px;
+  }
+  .teaser-close:hover {
+    background: #f4f1f0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat-fab.attention,
+    .chat-fab.attention::before {
+      animation: none;
+    }
   }
   .badge {
     position: absolute;
