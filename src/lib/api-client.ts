@@ -525,3 +525,69 @@ export function getAnalyticsSummary() {
 export function getAnalyticsVisitors(days: 7 | 30 = 7) {
   return request<AnalyticsVisitors>(`/admin/analytics/visitors?days=${days}`)
 }
+
+export type TrafficRange = 7 | 30 | 90
+
+export interface AdminSubdomain {
+  id: number
+  slug: string
+  public_url: string
+  status: string
+  created_at: string | null
+  activated_at: string | null
+  expires_at: string | null
+  payment_proof_url: string | null
+  payment_submitted_at: string | null
+  rejection_reason: string | null
+  bride_name: string | null
+  groom_name: string | null
+  preset: '3d_summer' | '2d_garden'
+  venue: VenueId
+  owner_email: string | null
+  owner_name: string | null
+  views: number
+  uniques: number
+  total_views: number
+  last_visit: string | null
+  rsvp: { total: number; hadir: number; ragu: number; tidakHadir: number }
+}
+
+export interface TrafficSourceCount {
+  source: string
+  views: number
+}
+
+export interface SubdomainTraffic {
+  days: number
+  series: VisitorSeriesPoint[]
+  sources: TrafficSourceCount[]
+  paths: { path: string; views: number }[]
+}
+
+export interface PlatformTraffic {
+  days: number
+  totals: {
+    views: number
+    uniques: number
+    platformViews: number
+    platformUniques: number
+    invitationViews: number
+    invitationUniques: number
+    activeSlugs: number
+  }
+  series: { date: string; platformViews: number; invitationViews: number; platformUniques: number; invitationUniques: number }[]
+  sources: TrafficSourceCount[]
+  platformPaths: { path: string; views: number }[]
+}
+
+export function getAdminSubdomains(days: TrafficRange = 30) {
+  return request<{ days: number; items: AdminSubdomain[] }>(`/admin/subdomains?days=${days}`)
+}
+
+export function getAdminSubdomainTraffic(id: number, days: TrafficRange = 30) {
+  return request<SubdomainTraffic>(`/admin/subdomains/${id}/traffic?days=${days}`)
+}
+
+export function getPlatformTraffic(days: TrafficRange = 30) {
+  return request<PlatformTraffic>(`/admin/analytics/traffic?days=${days}`)
+}

@@ -8,6 +8,7 @@ import { sendActivationEmail } from '../services/email.js'
 import { buildPublicUrl } from '../services/host.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { stripAdminConfigMetadata } from '../services/adminConfig.js'
+import { classifySource, normalizePath, sumBy } from '../services/trafficSource.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -232,6 +233,196 @@ router.get('/analytics/visitors', requireAdmin, async (req, res, next) => {
         email: r.email,
         createdAt: toIso(r.created_at),
       })),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ---- Analitik semua subdomain & trafik (hanya baca) ----
+const rangeSchema = z.object({ days: z.coerce.number().int().min(1).max(365).default(30) })
+const WIB = "CONVERT_TZ(created_at, '+00:00', '+07:00')"
+
+const asDay = (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10))
+// Waktu dikirim sebagai ISO dengan zona eksplisit supaya sama di lokal (sesi MySQL +07) dan VPS (UTC):
+// TIMESTAMP lewat UNIX_TIMESTAMP(); DATETIME yang ditulis UTC_TIMESTAMP() diberi 'Z';
+// expires_at dihitung dari jam resepsi WIB, jadi diberi '+07:00'.
+const fromEpoch = (seconds) => (seconds == null ? null : new Date(Number(seconds) * 1000).toISOString())
+const withZone = (value, zone) => (value == null ? null : `${String(value).replace(' ', 'T').slice(0, 19)}${zone}`)
+
+// Daftar tanggal WIB untuk rentang (termasuk hari ini) supaya hari tanpa kunjungan tetap tampil 0.
+function rangeDays(days) {
+  const today = new Date(Date.now() + 7 * 3600 * 1000)
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date(today)
+    d.setUTCDate(d.getUTCDate() - (days - 1 - i))
+    return d.toISOString().slice(0, 10)
+  })
+}
+
+async function sourcesAndPaths(where, params) {
+  const [rows] = await pool.query(
+    `SELECT referrer, path, COUNT(*) AS views FROM visitor_events
+     WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY ${where}
+     GROUP BY referrer, path ORDER BY views DESC LIMIT 20000`,
+    params,
+  )
+  return {
+    sources: sumBy(rows, (r) => classifySource(r.referrer, r.path)).map(({ key, views }) => ({ source: key, views })),
+    paths: sumBy(rows, (r) => normalizePath(r.path)).slice(0, 15).map(({ key, views }) => ({ path: key, views })),
+  }
+}
+
+router.get('/subdomains', requireAdmin, async (req, res, next) => {
+  const parsed = rangeSchema.safeParse(req.query)
+  if (!parsed.success) return invalid(res, parsed.error)
+  try {
+    const [rows] = await pool.query(
+      `SELECT i.id, i.slug, i.status, UNIX_TIMESTAMP(i.created_at) AS created_epoch, i.activated_at, i.expires_at,
+              i.payment_proof_url, i.payment_submitted_at, i.rejection_reason,
+              c.bride_name, c.groom_name, c.preset, c.venue,
+              u.email AS owner_email, u.display_name AS owner_name,
+              COALESCE(v.views, 0) AS views, COALESCE(v.uniques, 0) AS uniques,
+              COALESCE(t.total_views, 0) AS total_views, UNIX_TIMESTAMP(t.last_visit) AS last_visit_epoch,
+              COALESCE(g.total, 0) AS rsvp_total, COALESCE(g.hadir, 0) AS rsvp_hadir,
+              COALESCE(g.ragu, 0) AS rsvp_ragu, COALESCE(g.tidak, 0) AS rsvp_tidak
+       FROM invitations i
+       LEFT JOIN wedding_configs c ON c.invitation_id = i.id
+       LEFT JOIN users u ON u.id = i.owner_user_id
+       LEFT JOIN (
+         SELECT invitation_id, COUNT(*) AS views, COUNT(DISTINCT visit_id) AS uniques
+         FROM visitor_events
+         WHERE invitation_id IS NOT NULL AND created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY
+         GROUP BY invitation_id
+       ) v ON v.invitation_id = i.id
+       LEFT JOIN (
+         SELECT invitation_id, COUNT(*) AS total_views, MAX(created_at) AS last_visit
+         FROM visitor_events WHERE invitation_id IS NOT NULL GROUP BY invitation_id
+       ) t ON t.invitation_id = i.id
+       LEFT JOIN (
+         SELECT invitation_id, COUNT(*) AS total,
+           SUM(attendance = 'Hadir') AS hadir, SUM(attendance = 'Ragu-ragu') AS ragu, SUM(attendance = 'Tidak Hadir') AS tidak
+         FROM guestbook_entries WHERE status <> 'deleted' GROUP BY invitation_id
+       ) g ON g.invitation_id = i.id
+       WHERE i.deleted_at IS NULL
+       ORDER BY (i.status = 'pending_verification') DESC, i.created_at DESC, i.id DESC`,
+      [parsed.data.days],
+    )
+    res.json({
+      days: parsed.data.days,
+      items: rows.map((r) => ({
+        id: Number(r.id),
+        slug: r.slug,
+        public_url: buildPublicUrl(r.slug),
+        status: r.status,
+        created_at: fromEpoch(r.created_epoch),
+        activated_at: withZone(r.activated_at, 'Z'),
+        expires_at: withZone(r.expires_at, '+07:00'),
+        payment_proof_url: r.payment_proof_url || null,
+        payment_submitted_at: withZone(r.payment_submitted_at, 'Z'),
+        rejection_reason: r.rejection_reason || null,
+        bride_name: r.bride_name,
+        groom_name: r.groom_name,
+        preset: r.preset || '3d_summer',
+        venue: r.venue || 'garden',
+        owner_email: r.owner_email,
+        owner_name: r.owner_name,
+        views: Number(r.views),
+        uniques: Number(r.uniques),
+        total_views: Number(r.total_views),
+        last_visit: fromEpoch(r.last_visit_epoch),
+        rsvp: { total: Number(r.rsvp_total), hadir: Number(r.rsvp_hadir), ragu: Number(r.rsvp_ragu), tidakHadir: Number(r.rsvp_tidak) },
+      })),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/subdomains/:id/traffic', requireAdmin, async (req, res, next) => {
+  const id = z.coerce.number().int().positive().safeParse(req.params.id)
+  const parsed = rangeSchema.safeParse(req.query)
+  if (!id.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  if (!parsed.success) return invalid(res, parsed.error)
+  const days = parsed.data.days
+  try {
+    const [[seriesRows], extra] = await Promise.all([
+      pool.query(
+        `SELECT DATE(${WIB}) AS d, COUNT(*) AS views, COUNT(DISTINCT visit_id) AS uniques
+         FROM visitor_events
+         WHERE invitation_id = ? AND created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY
+         GROUP BY d ORDER BY d`,
+        [id.data, days],
+      ),
+      sourcesAndPaths('AND invitation_id = ?', [days, id.data]),
+    ])
+    const byDay = new Map(seriesRows.map((r) => [asDay(r.d), r]))
+    res.json({
+      days,
+      series: rangeDays(days).map((date) => ({
+        date,
+        views: Number(byDay.get(date)?.views || 0),
+        uniques: Number(byDay.get(date)?.uniques || 0),
+      })),
+      ...extra,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/analytics/traffic', requireAdmin, async (req, res, next) => {
+  const parsed = rangeSchema.safeParse(req.query)
+  if (!parsed.success) return invalid(res, parsed.error)
+  const days = parsed.data.days
+  try {
+    const [[seriesRows], [totalRows], platform, all] = await Promise.all([
+      pool.query(
+        `SELECT DATE(${WIB}) AS d,
+           SUM(slug IS NULL) AS platform_views, SUM(slug IS NOT NULL) AS invitation_views,
+           COUNT(DISTINCT CASE WHEN slug IS NULL THEN visit_id END) AS platform_uniques,
+           COUNT(DISTINCT CASE WHEN slug IS NOT NULL THEN visit_id END) AS invitation_uniques
+         FROM visitor_events WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY
+         GROUP BY d ORDER BY d`,
+        [days],
+      ),
+      pool.query(
+        `SELECT COUNT(*) AS views, COUNT(DISTINCT visit_id) AS uniques,
+           SUM(slug IS NULL) AS platform_views, SUM(slug IS NOT NULL) AS invitation_views,
+           COUNT(DISTINCT CASE WHEN slug IS NULL THEN visit_id END) AS platform_uniques,
+           COUNT(DISTINCT CASE WHEN slug IS NOT NULL THEN visit_id END) AS invitation_uniques,
+           COUNT(DISTINCT slug) AS active_slugs
+         FROM visitor_events WHERE created_at >= UTC_TIMESTAMP() - INTERVAL ? DAY`,
+        [days],
+      ),
+      sourcesAndPaths('AND slug IS NULL', [days]),
+      sourcesAndPaths('', [days]),
+    ])
+    const byDay = new Map(seriesRows.map((r) => [asDay(r.d), r]))
+    const t = totalRows[0] || {}
+    res.json({
+      days,
+      totals: {
+        views: Number(t.views || 0),
+        uniques: Number(t.uniques || 0),
+        platformViews: Number(t.platform_views || 0),
+        platformUniques: Number(t.platform_uniques || 0),
+        invitationViews: Number(t.invitation_views || 0),
+        invitationUniques: Number(t.invitation_uniques || 0),
+        activeSlugs: Number(t.active_slugs || 0),
+      },
+      series: rangeDays(days).map((date) => {
+        const r = byDay.get(date)
+        return {
+          date,
+          platformViews: Number(r?.platform_views || 0),
+          invitationViews: Number(r?.invitation_views || 0),
+          platformUniques: Number(r?.platform_uniques || 0),
+          invitationUniques: Number(r?.invitation_uniques || 0),
+        }
+      }),
+      sources: all.sources,
+      platformPaths: platform.paths,
     })
   } catch (error) {
     next(error)
