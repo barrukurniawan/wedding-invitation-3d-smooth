@@ -28,6 +28,7 @@
   import PaymentManager from './dashboard/PaymentManager.svelte'
   import InvitationSender from './dashboard/InvitationSender.svelte'
   import OnboardingWizard from './OnboardingWizard.svelte'
+  import SupportChat from './SupportChat.svelte'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
@@ -47,6 +48,8 @@
 
   // Workspace Navigation & Sub-tabs
   let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'preview' | 'pengaturan' | 'kirim'>('edit')
+  // Konteks chat bantuan: subdomain + tab yang sedang dibuka, supaya admin tahu letak kendalanya.
+  const supportContext = $derived(invitation ? `${invitation.slug} · ${activeTab}` : 'onboarding')
   let ownerTabs = $state<HTMLElement | null>(null)
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
 
@@ -1341,6 +1344,10 @@
     </div>
   </footer>
 </main>
+
+{#if user}
+  <SupportChat context={supportContext} />
+{/if}
 
 <!-- QR Code Modal -->
 {#if showQrModal && invitation}

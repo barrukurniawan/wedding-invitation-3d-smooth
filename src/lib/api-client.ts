@@ -591,3 +591,52 @@ export function getAdminSubdomainTraffic(id: number, days: TrafficRange = 30) {
 export function getPlatformTraffic(days: TrafficRange = 30) {
   return request<PlatformTraffic>(`/admin/analytics/traffic?days=${days}`)
 }
+
+export interface SupportMessage {
+  id: number
+  sender: 'user' | 'admin'
+  body: string
+  context: string | null
+  read: boolean
+  created_at: string
+}
+
+export interface SupportThread {
+  user_id: number
+  name: string | null
+  email: string | null
+  slug: string | null
+  total: number
+  unread: number
+  last_body: string
+  last_sender: 'user' | 'admin'
+  last_at: string
+}
+
+export function getSupportUnread() {
+  return request<{ unread: number }>('/support/unread')
+}
+
+export function getSupportMessages(after = 0, markRead = false) {
+  return request<{ messages: SupportMessage[]; unread: number }>(`/support/messages?after=${after}${markRead ? '&markRead=1' : ''}`)
+}
+
+export function sendSupportMessage(body: string, context?: string) {
+  return request<{ message: SupportMessage }>('/support/messages', { method: 'POST', body: JSON.stringify({ body, context }) })
+}
+
+export function getAdminSupportUnread() {
+  return request<{ unread: number; threads: number }>('/admin/support/unread-count')
+}
+
+export function getAdminSupportThreads() {
+  return request<{ threads: SupportThread[] }>('/admin/support/threads')
+}
+
+export function getAdminSupportMessages(userId: number, after = 0) {
+  return request<{ messages: SupportMessage[] }>(`/admin/support/threads/${userId}/messages?after=${after}`)
+}
+
+export function sendAdminSupportReply(userId: number, body: string) {
+  return request<{ message: SupportMessage }>(`/admin/support/threads/${userId}/messages`, { method: 'POST', body: JSON.stringify({ body }) })
+}
