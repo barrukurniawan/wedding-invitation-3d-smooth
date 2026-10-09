@@ -13,7 +13,8 @@
     "test": "npm --prefix server test",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "perf:measure": "node scripts/perf/measure-scene.mjs",
-    "build:beach": "node scripts/build-beach-pack.cjs"
+    "build:beach": "node scripts/build-beach-pack.cjs",
+    "models:wave": "node scripts/add-wave-animation.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.2.1",
