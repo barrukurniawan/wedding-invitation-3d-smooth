@@ -39,6 +39,7 @@
   import Hero from './landing/Hero.svelte'
   import LoginModal from './landing/LoginModal.svelte'
   import DesignCatalog from './landing/DesignCatalog.svelte'
+  import FeatureBlocks from './landing/FeatureBlocks.svelte'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
@@ -71,8 +72,6 @@
     loginOpen = true
   }
 
-  // Landing Page: preview toggle (3D/2D)
-  let previewDevicePreset = $state<'3d' | '2d'>('3d')
 
   // Config & Payment & Guestbook State
   let myConfig = $state<WeddingConfig | null>(null)
@@ -462,131 +461,7 @@
 
     <DesignCatalog {pricing} demoUrl={DEMO_URL} onSelect={openLogin} />
 
-    <section class="preview-section" id="preview" aria-labelledby="preview-title">
-      <div class="section-inner">
-        <div class="section-head center">
-          <div>
-            <p class="eyebrow-deep">Live Preview 2 Preset</p>
-            <h2 id="preview-title">Dunia yang sudah hidup</h2>
-          </div>
-
-          <div class="preview-preset-toggle" role="group" aria-label="Pilih preset untuk preview">
-            <button
-              type="button"
-              class="preview-toggle-btn"
-              class:active={previewDevicePreset === '3d'}
-              onclick={() => previewDevicePreset = '3d'}
-            >
-              3D Open World
-            </button>
-            <button
-              type="button"
-              class="preview-toggle-btn"
-              class:active={previewDevicePreset === '2d'}
-              onclick={() => previewDevicePreset = '2d'}
-            >
-              2D Pixel RPG
-            </button>
-          </div>
-        </div>
-
-        {#if previewDevicePreset === '3d'}
-          <div class="device-stage">
-            <figure class="browser-frame">
-              <div class="browser-chrome" aria-hidden="true">
-                <span></span><span></span><span></span>
-                <div class="browser-url">kia-toni.marryme.web.id</div>
-              </div>
-              <video
-                src="/media/preview.mp4"
-                poster="/media/preview-poster.jpg"
-                aria-label="Preview undangan 3D di desktop"
-                class="browser-shot"
-                autoplay
-                loop
-                muted
-                playsinline
-              ></video>
-            </figure>
-
-            <figure class="phone-frame">
-              <div class="phone-notch" aria-hidden="true"></div>
-              <img
-                src="/media/preset-3d-mobile.png"
-                alt="Preview undangan 3D di ponsel"
-                class="phone-shot"
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-          </div>
-        {:else}
-          <div class="device-stage">
-            <figure class="browser-frame">
-              <div class="browser-chrome" aria-hidden="true">
-                <span></span><span></span><span></span>
-                <div class="browser-url">faris-eliza.marryme.web.id</div>
-              </div>
-              <video
-                src="/media/demo_2d.mp4"
-                poster="/media/demo_2d_poster.jpg"
-                aria-label="Preview video undangan 2D di desktop"
-                class="browser-shot"
-                autoplay
-                loop
-                muted
-                playsinline
-              ></video>
-            </figure>
-
-            <figure class="phone-frame">
-              <div class="phone-notch" aria-hidden="true"></div>
-              <img
-                src="/media/preset-2d-mobile.png?v=3"
-                alt="Preview undangan 2D di ponsel"
-                class="phone-shot"
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-          </div>
-        {/if}
-      </div>
-    </section>
-
-    <section class="why-section" aria-labelledby="why-title">
-      <div class="section-inner">
-        <div class="section-head center">
-          <p class="eyebrow-deep">Mengapa undangan 3D?</p>
-          <h2 id="why-title">Lebih dari sekadar tautan cantik</h2>
-          <p class="section-lead">
-            MarryMe mengubah undangan menjadi ruang yang bisa dijelajahi — intimate, modern, dan mudah
-            dibagikan.
-          </p>
-        </div>
-
-        <div class="why-grid">
-          <article class="why-card">
-            <h3>Unik &amp; berkesan</h3>
-            <p>Bukan template flat. Tamu mengingat undangan kalian sebagai petualangan kecil di dunia 3D.</p>
-          </article>
-          <article class="why-card">
-            <h3>Sangat interaktif</h3>
-            <p>
-              Jalan-jalan virtual, buka galeri, cek lokasi acara, dan tulis ucapan di buku tamu dalam
-              satu scene.
-            </p>
-          </article>
-          <article class="why-card">
-            <h3>HP &amp; desktop</h3>
-            <p>
-              Kontrol sentuh di ponsel, keyboard di desktop. Satu link, semua tamu bisa masuk dengan
-              nyaman.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
+    <FeatureBlocks demoUrl={DEMO_URL} onCta={openLogin} />
 
     <section class="steps-section" aria-labelledby="steps-title">
       <div class="section-inner">

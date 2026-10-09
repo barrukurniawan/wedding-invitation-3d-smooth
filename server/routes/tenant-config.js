@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { toIsoString } from '../services/dates.js'
 import { z } from 'zod'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
@@ -221,7 +222,7 @@ router.get('/guestbook', requireUser, async (req, res, next) => {
 
     const items = rows.map((r) => ({
       ...r,
-      created_at: r.created_at ? String(r.created_at).replace(' ', 'T') : '',
+      created_at: toIsoString(r.created_at) ?? '',
     }))
 
     res.json({ items, stats })

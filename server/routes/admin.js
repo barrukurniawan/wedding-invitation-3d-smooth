@@ -10,6 +10,7 @@ import { transitionInvitation, withTransaction } from '../services/invitationSta
 import { stripAdminConfigMetadata } from '../services/adminConfig.js'
 import { classifySource, normalizePath, sumBy } from '../services/trafficSource.js'
 import { afterSchema, insertMessage, listMessages, markRead, messageSchema, notMigrated } from '../services/support.js'
+import { toIsoString } from '../services/dates.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -552,7 +553,7 @@ router.get('/invitations', requireAdmin, async (req, res, next) => {
       status: r.status,
       payment_proof_url: r.payment_proof_url || null,
       payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
-      created_at: String(r.created_at).replace(' ', 'T'),
+      created_at: toIsoString(r.created_at),
        activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
        rejection_reason: r.rejection_reason || null,
       bride_name: r.bride_name || null,
@@ -589,7 +590,7 @@ router.get('/invitations/:id', requireAdmin, async (req, res, next) => {
       status: r.status,
       payment_proof_url: r.payment_proof_url || null,
       payment_submitted_at: r.payment_submitted_at ? String(r.payment_submitted_at).replace(' ', 'T') : null,
-      created_at: String(r.created_at).replace(' ', 'T'),
+      created_at: toIsoString(r.created_at),
        activated_at: r.activated_at ? String(r.activated_at).replace(' ', 'T') : null,
        rejection_reason: r.rejection_reason || null,
       bride_name: r.bride_name || null,

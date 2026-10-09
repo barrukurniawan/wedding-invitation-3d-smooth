@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { toIsoString } from '../services/dates.js'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import pool from '../db.js'
@@ -24,8 +25,8 @@ function serialize(row) {
     name: row.name,
     phone: row.phone,
     gender: row.gender,
-    created_at: String(row.created_at).replace(' ', 'T'),
-    updated_at: String(row.updated_at).replace(' ', 'T'),
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at),
   }
 }
 
