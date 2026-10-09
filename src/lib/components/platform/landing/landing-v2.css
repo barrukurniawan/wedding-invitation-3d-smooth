@@ -1,0 +1,115 @@
+/* Landing page v2: token tambahan + utilitas bersama. Komponen punya style scoped sendiri. */
+.onboarding {
+  --lp-gold: #f5b942;
+  --lp-gold-deep: #c98a12;
+  --lp-ink: #1d1618;
+  --lp-maroon: #8f1d45;
+  --lp-maroon-deep: #5e1230;
+  --lp-blush: #fbe7ec;
+  --lp-peach: #fde8d8;
+  --lp-lavender: #ece6fa;
+  --lp-mint: #e2f3ea;
+  --lp-sky: #e3eefb;
+  --lp-radius: 24px;
+  --lp-max: 1160px;
+  scroll-behavior: smooth;
+}
+
+.lp-container {
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding-inline: 24px;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font: 700 0.95rem/1 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.lp-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.lp-btn.primary {
+  background: var(--lp-maroon);
+  color: #fff;
+  box-shadow: 0 14px 30px -14px rgba(143, 29, 69, 0.7);
+}
+.lp-btn.primary:hover:not(:disabled) {
+  background: var(--lp-maroon-deep);
+  transform: translateY(-1px);
+}
+.lp-btn.gold {
+  background: var(--lp-gold);
+  color: var(--lp-ink);
+  box-shadow: 0 14px 30px -14px rgba(201, 138, 18, 0.7);
+}
+.lp-btn.gold:hover:not(:disabled) {
+  background: #ffc857;
+  transform: translateY(-1px);
+}
+.lp-btn.ghost {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--lp-ink);
+  border: 1px solid rgba(143, 29, 69, 0.18);
+}
+.lp-btn.ghost:hover:not(:disabled) {
+  background: #fff;
+}
+.lp-btn.sm {
+  padding: 10px 18px;
+  font-size: 0.85rem;
+}
+
+.lp-eyebrow {
+  margin: 0 0 12px;
+  color: var(--lp-maroon);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.lp-section {
+  padding-block: clamp(56px, 8vw, 104px);
+}
+.lp-section-head {
+  max-width: 640px;
+  margin: 0 auto 40px;
+  text-align: center;
+}
+.lp-section-head h2 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--lp-ink);
+}
+.lp-section-head p {
+  margin: 14px auto 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* Katalog lama sementara satu kolom di bawah hero baru. */
+.journey.single {
+  grid-template-columns: minmax(0, 1fr);
+  padding-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding {
+    scroll-behavior: auto;
+  }
+}
