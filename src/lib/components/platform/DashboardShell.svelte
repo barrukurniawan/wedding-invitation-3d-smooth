@@ -38,6 +38,7 @@
   import PromoBar from './landing/PromoBar.svelte'
   import Hero from './landing/Hero.svelte'
   import LoginModal from './landing/LoginModal.svelte'
+  import DesignCatalog from './landing/DesignCatalog.svelte'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
@@ -70,8 +71,7 @@
     loginOpen = true
   }
 
-  // Landing Page Preset Catalog State
-  let activePresetTab = $state<'both' | '3d' | '2d'>('both')
+  // Landing Page: preview toggle (3D/2D)
   let previewDevicePreset = $state<'3d' | '2d'>('3d')
 
   // Config & Payment & Guestbook State
@@ -460,219 +460,7 @@
       <Hero {pricing} {stats} demoUrl={DEMO_URL} {busy} onCta={openLogin} />
     {/if}
 
-    <section class="journey single" id="desain" aria-label="Katalog desain">
-      <div class="story-column">
-        <!-- Showcase 2 Preset Katalog -->
-        <div class="preset-catalog" aria-label="Katalog Desain Undangan MarryMe">
-          <div class="preset-tabs" role="tablist" aria-label="Pilih tampilan preset">
-            <button
-              type="button"
-              role="tab"
-              class="preset-tab-btn"
-              class:active={activePresetTab === 'both'}
-              onclick={() => activePresetTab = 'both'}
-              aria-selected={activePresetTab === 'both'}
-            >
-              <span>Semua Preset (2)</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              class="preset-tab-btn"
-              class:active={activePresetTab === '3d'}
-              onclick={() => activePresetTab = '3d'}
-              aria-selected={activePresetTab === '3d'}
-            >
-              <span>3D Island</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              class="preset-tab-btn"
-              class:active={activePresetTab === '2d'}
-              onclick={() => activePresetTab = '2d'}
-              aria-selected={activePresetTab === '2d'}
-            >
-              <span>2D Garden</span>
-              <span class="badge-mini-hot">Ringan</span>
-            </button>
-          </div>
-
-          <div class="preset-grid" class:single-view={activePresetTab !== 'both'}>
-            <!-- PRESET 1 CARD (3D WORLD) -->
-            {#if activePresetTab === 'both' || activePresetTab === '3d'}
-              <article class="preset-card card-3d">
-                <header class="preset-header">
-                  <div class="preset-badge-group">
-                    <span class="badge-preset-num">PRESET 01</span>
-                    <span class="badge-tag tag-3d">3D Immersive</span>
-                  </div>
-                  <h3 class="preset-title">Summer Fantasy Island</h3>
-                  <p class="preset-desc">
-                    Petualangan 3 dimensi interaktif. Tamu dapat berjalan menjelajahi pulau taman tropis yang indah dengan kontrol bebas dan suasana romantis.
-                  </p>
-                </header>
-
-                <!-- Dual Mockup: Laptop + Phone -->
-                <div class="preset-mockup-stage">
-                  <div class="mockup-laptop">
-                    <div class="laptop-screen">
-                      <div class="mockup-chrome">
-                        <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
-                        <span class="chrome-url">kia-toni.marryme.web.id</span>
-                      </div>
-                      <img src="/media/preset-3d-desktop.png" alt="Preset 1 - Tampilan Laptop 3D" class="laptop-img" />
-                    </div>
-                    <div class="laptop-base"></div>
-                  </div>
-
-                  <div class="mockup-phone">
-                    <div class="phone-screen">
-                      <div class="phone-notch"></div>
-                      <img src="/media/preset-3d-mobile.png" alt="Preset 1 - Tampilan HP 3D" class="phone-img" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="preset-features">
-                  <span class="feature-pill">
-                    <span class="feature-pill-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="6" width="20" height="12" rx="6" fill="currentColor" fill-opacity="0.18" />
-                        <line x1="6" y1="12" x2="10" y2="12" />
-                        <line x1="8" y1="10" x2="8" y2="14" />
-                        <circle cx="15.5" cy="10.5" r="1" fill="currentColor" />
-                        <circle cx="17.5" cy="13.5" r="1" fill="currentColor" />
-                      </svg>
-                    </span>
-                    <span>Joystick 3D &amp; WASD</span>
-                  </span>
-                  <span class="feature-pill">
-                    <span class="feature-pill-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18" />
-                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" fill-opacity="0.4" />
-                      </svg>
-                    </span>
-                    <span>Eksplorasi Pulau 3D</span>
-                  </span>
-                </div>
-
-                <footer class="preset-footer">
-                  <a
-                    href="https://kia-toni.marryme.web.id"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn-demo-link"
-                    title="Buka live demo Preset 1 3D di tab baru"
-                  >
-                    <span>Demo 3D</span>
-                    <svg class="icon-arrow" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd" />
-                    </svg>
-                  </a>
-                  <button type="button" class="btn-select-preset" onclick={openLogin}>
-                    Pilih Desain
-                  </button>
-                </footer>
-              </article>
-            {/if}
-
-            <!-- PRESET 2 CARD (2D PIXEL GARDEN) -->
-            {#if activePresetTab === 'both' || activePresetTab === '2d'}
-              <article class="preset-card card-2d">
-                <header class="preset-header">
-                  <div class="preset-badge-group">
-                    <span class="badge-preset-num">PRESET 02</span>
-                    <span class="badge-tag tag-2d">2D Pixel</span>
-                  </div>
-                  <h3 class="preset-title">Pixel Garden RPG</h3>
-                  <p class="preset-desc">
-                    Taman pernikahan retro pixel art yang sangat ringan di semua ponsel, dengan suasana danau romantis dan fitur multiplayer real-time.
-                  </p>
-                </header>
-
-                <!-- Dual Mockup: Laptop + Phone -->
-                <div class="preset-mockup-stage">
-                  <div class="mockup-laptop">
-                    <div class="laptop-screen">
-                      <div class="mockup-chrome">
-                        <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
-                        <span class="chrome-url">faris-eliza.marryme.web.id</span>
-                      </div>
-                      <img src="/media/preset-2d-desktop.png?v=3" alt="Preset 2 - Tampilan Laptop 2D" class="laptop-img" />
-                    </div>
-                    <div class="laptop-base"></div>
-                  </div>
-
-                  <div class="mockup-phone">
-                    <div class="phone-screen">
-                      <div class="phone-notch"></div>
-                      <img src="/media/preset-2d-mobile.png?v=3" alt="Preset 2 - Tampilan HP 2D" class="phone-img" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="preset-features">
-                  <span class="feature-pill">
-                    <span class="feature-pill-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="7" r="4" fill="currentColor" fill-opacity="0.18" />
-                        <path d="M2 20a7 7 0 0 1 14 0" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        <path d="M22 20a7 7 0 0 0-6-6" />
-                      </svg>
-                    </span>
-                    <span>Multiplayer Online Realtime</span>
-                  </span>
-                  <span class="feature-pill">
-                    <span class="feature-pill-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.22" />
-                      </svg>
-                    </span>
-                    <span>Super Ringan &amp; Cepat Dimuat</span>
-                  </span>
-                </div>
-
-                <footer class="preset-footer">
-                  <a
-                    href="/presets/garden-2d/index.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn-demo-link"
-                    title="Buka live demo Preset 2 2D di tab baru"
-                  >
-                    <span>Demo 2D</span>
-                    <svg class="icon-arrow" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd" />
-                    </svg>
-                  </a>
-                  <button type="button" class="btn-select-preset" onclick={openLogin}>
-                    Pilih Desain
-                  </button>
-                </footer>
-              </article>
-            {/if}
-          </div>
-
-          <div class="preset-notice">
-            <span class="notice-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18h6" />
-                <path d="M10 22h4" />
-                <path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z" fill="currentColor" fill-opacity="0.18" />
-                <line x1="12" y1="6" x2="12" y2="10" />
-              </svg>
-            </span>
-            <span class="notice-text">
-              <strong>Bebas beralih tema:</strong> Kalian bisa memilih preset favorit saat login, dan tema bisa diubah kapan saja di pengaturan dashboard tanpa mengetik ulang data.
-            </span>
-          </div>
-        </div>
-
-      </div>
-    </section>
+    <DesignCatalog {pricing} demoUrl={DEMO_URL} onSelect={openLogin} />
 
     <section class="preview-section" id="preview" aria-labelledby="preview-title">
       <div class="section-inner">
