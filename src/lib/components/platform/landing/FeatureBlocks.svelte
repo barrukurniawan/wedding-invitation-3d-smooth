@@ -39,7 +39,7 @@
       title: 'Taman sore hari atau pantai saat matahari terbenam',
       desc: 'Satu klik di dashboard untuk mengganti venue. Isi undangan, posisi tamu, dan pelaminan tetap sama, hanya dunianya yang berubah.',
       chips: ['Venue Taman', 'Venue Pantai Sunset', 'Ganti kapan saja, data tetap'],
-      img: '/media/features/beach-wide.webp',
+      img: '/media/features/sunset-pantai.webp',
       img2: '/media/designs/garden.webp',
       imgAlt: 'Venue pantai dan venue taman',
       frame: 'pair',
@@ -293,7 +293,7 @@
   }
   .phone {
     position: relative;
-    width: min(260px, 70%);
+    width: min(300px, 78%);
     margin: 0 auto;
     overflow: hidden;
     border-radius: 34px;
@@ -315,7 +315,7 @@
   .phone img {
     display: block;
     width: 100%;
-    aspect-ratio: 390 / 760;
+    aspect-ratio: 496 / 768;
     object-fit: cover;
     border-radius: 26px;
   }

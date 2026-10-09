@@ -14,6 +14,12 @@
 
   // Video hanya di layar lebar & tanpa reduced-motion; selain itu cukup poster (hemat data HP).
   let playVideo = $state(false)
+  // Video gameplay diputar bergantian: Taman lalu Pantai Sunset.
+  const clips = [
+    { src: '/media/hero-garden.mp4', label: 'kia-toni.marryme.web.id' },
+    { src: '/media/hero-beach.mp4', label: 'kia-toni.marryme.web.id · venue Pantai' },
+  ]
+  let clip = $state(0)
   onMount(() => {
     const wide = window.matchMedia('(min-width: 900px)')
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -59,16 +65,18 @@
 
   <div class="visual" aria-hidden="true">
     <figure class="browser">
-      <div class="chrome"><span></span><span></span><span></span><i>kia-toni.marryme.web.id</i></div>
+      <div class="chrome"><span></span><span></span><span></span><i>{clips[clip].label}</i></div>
       {#if playVideo}
-        <video src="/media/hero.mp4" poster="/media/hero-poster.jpg" autoplay loop muted playsinline preload="metadata"></video>
+        {#key clip}
+          <video src={clips[clip].src} poster={clip === 0 ? '/media/hero-poster.webp' : undefined} autoplay muted playsinline preload="auto" onended={() => (clip = (clip + 1) % clips.length)}></video>
+        {/key}
       {:else}
-        <img src="/media/hero-poster.jpg" alt="" loading="eager" decoding="async" />
+        <img src="/media/hero-poster.webp" alt="" loading="eager" decoding="async" />
       {/if}
     </figure>
     <figure class="phone">
       <span class="notch"></span>
-      <img src="/media/preset-3d-mobile.png" alt="" loading="lazy" decoding="async" />
+      <img src="/media/features/mobile-3d.webp" alt="" loading="lazy" decoding="async" />
     </figure>
     {#each callouts as c (c.pos)}
       <span class="callout {c.pos}"><i>{c.icon}</i>{c.text}</span>
@@ -223,7 +231,7 @@
   .phone img {
     display: block;
     width: 100%;
-    aspect-ratio: 9 / 18.5;
+    aspect-ratio: 496 / 768;
     object-fit: cover;
     border-radius: 20px;
   }

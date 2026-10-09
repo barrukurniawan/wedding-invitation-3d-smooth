@@ -22,13 +22,13 @@
   <!-- 3D Summer Island Backdrop -->
   <div 
     class="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-out transform"
-    style="background-image: url('/media/preset-3d-desktop.png?v=2'); opacity: {presetInput === '3d_summer' ? '0.42' : '0'}; transform: scale({presetInput === '3d_summer' ? '1' : '1.04'}); filter: blur(2px);"
+    style="background-image: url('/media/preset-3d-desktop.webp'); opacity: {presetInput === '3d_summer' ? '0.42' : '0'}; transform: scale({presetInput === '3d_summer' ? '1' : '1.04'}); filter: blur(2px);"
   ></div>
 
   <!-- 2D Pixel Garden Backdrop -->
   <div 
     class="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-out transform"
-    style="background-image: url('/media/preset-2d-desktop.png?v=3'); opacity: {presetInput === '2d_garden' ? '0.45' : '0'}; transform: scale({presetInput === '2d_garden' ? '1' : '1.04'}); filter: blur(2px);"
+    style="background-image: url('/media/preset-2d-desktop.webp'); opacity: {presetInput === '2d_garden' ? '0.45' : '0'}; transform: scale({presetInput === '2d_garden' ? '1' : '1.04'}); filter: blur(2px);"
   ></div>
 
   <!-- Soft Vignette & Frosted Gradient for Perfect Form Readability -->
@@ -90,7 +90,7 @@
           <!-- Gameplay Image Preview Banner -->
           <div class="relative w-full h-28 overflow-hidden bg-slate-100 shrink-0">
             <img 
-              src="/media/preset-3d-desktop.png?v=2" 
+              src="/media/preset-3d-desktop.webp" 
               alt="Preview Gameplay 3D Summer Island" 
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -126,7 +126,7 @@
           <!-- Gameplay Image Preview Banner -->
           <div class="relative w-full h-28 overflow-hidden bg-slate-100 shrink-0">
             <img 
-              src="/media/preset-2d-desktop.png?v=3" 
+              src="/media/preset-2d-desktop.webp" 
               alt="Preview Gameplay 2D Pixel Garden" 
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

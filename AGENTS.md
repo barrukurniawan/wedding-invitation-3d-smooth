@@ -33,7 +33,7 @@
 ## Landing Page (root host, logged out)
 - Composed in `DashboardShell.svelte` from `src/lib/components/platform/landing/*` (LandingNav, PromoBar, Hero, DesignCatalog, FeatureBlocks, Steps, Pricing, Faq, ClosingCta, WhatsAppFab, LoginModal; shared tokens in `landing/landing-v2.css`). Logged-in dashboard markup/CSS (`dashboard.css`) is untouched.
 - Pricing/promo come from `GET /api/public/pricing` (`server/services/pricing.js`, env: `PRICE_NORMAL_IDR`, `INVITATION_PRICE_IDR`, `PRICE_AFTER_PROMO_IDR`, `PROMO_LABEL`, `PROMO_ENDS_AT`, `WHATSAPP_NUMBER`); promo UI hides itself after the deadline. Social-proof numbers from `GET /api/public/stats`. Never hardcode prices in the frontend.
-- Landing assets: `static/media/designs/*.webp`, `static/media/features/*.webp`, `hero.mp4` (keep ≤ 1 MB; regenerate from local scenes with puppeteer, see PLAN_LANDING_PAGE.md).
+- Landing assets: WebP only (`static/media/designs/*.webp`, `static/media/features/*.webp`; convert user PNGs with `cwebp -q 82`, keep source PNGs in `assets/media-source/`). Hero videos `hero-garden.mp4` + `hero-beach.mp4` play in turn; regenerate with `node scripts/media/record-gameplay.mjs garden|beach` (needs ffmpeg, dev server + API). Encode at 30 fps (half of the 60 fps capture); 24 fps judders.
 - MySQL TIMESTAMP columns come back as `Date` (pool uses `dateStrings` only for DATETIME): serialize with `toIsoString()` from `server/services/dates.js`, never `String(date)`.
 
 ## Admin Dashboard
