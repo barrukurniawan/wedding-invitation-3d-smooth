@@ -12,9 +12,6 @@
 
   const parts = $derived(countdown.parts)
   const show = $derived(Boolean(pricing?.promoActive && countdown.active))
-  const compact = $derived(
-    parts ? (parts.days > 0 ? `${parts.days} hari ${parts.hours} jam` : `${parts.hours} jam ${parts.minutes} mnt`) : '',
-  )
   const pct = $derived(pricing?.normalPrice ? discountPct(pricing.normalPrice, pricing.currentPrice) : 0)
   const endsLabel = $derived(
     pricing?.promoEndsAt
@@ -27,25 +24,21 @@
   <section class="promo" id="promo" aria-label="{pricing.promoLabel}">
     <div class="inner">
       <div class="copy">
-        <span class="pill" aria-label="{pricing.promoLabel}, berakhir dalam {compact}">
+        <span class="pill">
           <span class="dot" aria-hidden="true"></span>
           <span class="label-text">{pricing.promoLabel}</span>
-          <span class="time">⏱ {compact}</span>
         </span>
         <p class="price">
           <s>{fmtIdr(pricing.normalPrice ?? 0)}</s>
           <strong>{pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)}</strong>
-          <span class="save">{pricing.isFree ? `hemat ${fmtIdr(pricing.normalPrice ?? 0)}` : `hemat ${pct}%`}</span>
+          {#if !pricing.isFree}<span class="save">hemat {pct}%</span>{/if}
         </p>
-        <p class="note">
-          Untuk semua undangan baru sampai <b>{endsLabel}</b>.
-          {#if pricing.afterPromoPrice != null}
-            Setelah itu {fmtIdr(pricing.afterPromoPrice)}.
-          {/if}
-        </p>
+        {#if pricing.afterPromoPrice != null}
+          <p class="note">Setelah promo: {fmtIdr(pricing.afterPromoPrice)}</p>
+        {/if}
       </div>
 
-      <div class="timer" role="timer" aria-live="off" aria-label="Sisa waktu promo">
+      <div class="timer" role="timer" aria-live="off" aria-label="Sisa waktu promo, berakhir {endsLabel}">
         {#each [[parts.days, 'Hari'], [parts.hours, 'Jam'], [parts.minutes, 'Menit'], [parts.seconds, 'Detik']] as [value, label] (label)}
           <div class="cell">
             <span class="digits">{pad2(Number(value))}</span>
@@ -94,10 +87,8 @@
     background: var(--lp-gold);
     animation: pulse 1.8s ease-out infinite;
   }
-  .pill .label-text,
-  .time {
+  .pill .label-text {
     color: var(--lp-gold);
-    font-variant-numeric: tabular-nums;
   }
   @keyframes pulse {
     0% {
