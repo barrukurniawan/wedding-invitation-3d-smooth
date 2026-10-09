@@ -15,6 +15,7 @@ import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
+import supportRoutes from './routes/support.js'
 import trackRoutes from './routes/track.js'
 import multiplayerRoutes from './routes/multiplayer.js'
 import pool from './db.js'
@@ -60,6 +61,7 @@ app.use('/api/my', requireRootHost, tenantConfigRoutes)
 app.use('/api/my', requireRootHost, tenantPaymentRoutes)
 app.use('/api/my', requireRootHost, uploadRoutes)
 app.use('/api/my/contacts', requireRootHost, contactRoutes)
+app.use('/api/support', requireRootHost, supportRoutes)
 app.use('/api/payment', midtransWebhookRoutes)
 app.use('/api/admin', requireRootHost, adminRoutes)
 app.use('/api/multiplayer', multiplayerRoutes)

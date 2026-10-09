@@ -9,6 +9,7 @@ import { buildPublicUrl } from '../services/host.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { stripAdminConfigMetadata } from '../services/adminConfig.js'
 import { classifySource, normalizePath, sumBy } from '../services/trafficSource.js'
+import { afterSchema, insertMessage, listMessages, markRead, messageSchema, notMigrated } from '../services/support.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -426,6 +427,80 @@ router.get('/analytics/traffic', requireAdmin, async (req, res, next) => {
     })
   } catch (error) {
     next(error)
+  }
+})
+
+// ---- Chat bantuan (admin) ----
+router.get('/support/unread-count', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT COUNT(*) AS messages, COUNT(DISTINCT user_id) AS threads FROM support_messages WHERE sender = 'user' AND read_at IS NULL",
+    )
+    res.json({ unread: Number(rows[0]?.messages || 0), threads: Number(rows[0]?.threads || 0) })
+  } catch (error) {
+    if (!notMigrated(res, error)) next(error)
+  }
+})
+
+router.get('/support/threads', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT t.user_id, t.unread, t.total, u.display_name, u.email,
+              (SELECT slug FROM invitations WHERE owner_user_id = t.user_id AND deleted_at IS NULL ORDER BY id DESC LIMIT 1) AS slug,
+              m.body AS last_body, m.sender AS last_sender, UNIX_TIMESTAMP(m.created_at) AS last_epoch
+       FROM (
+         SELECT user_id, MAX(id) AS last_id, COUNT(*) AS total,
+                SUM(sender = 'user' AND read_at IS NULL) AS unread
+         FROM support_messages GROUP BY user_id
+       ) t
+       JOIN support_messages m ON m.id = t.last_id
+       JOIN users u ON u.id = t.user_id
+       ORDER BY t.last_id DESC`,
+    )
+    res.json({
+      threads: rows.map((r) => ({
+        user_id: Number(r.user_id),
+        name: r.display_name,
+        email: r.email,
+        slug: r.slug || null,
+        total: Number(r.total),
+        unread: Number(r.unread || 0),
+        last_body: r.last_body,
+        last_sender: r.last_sender,
+        last_at: new Date(Number(r.last_epoch) * 1000).toISOString(),
+      })),
+    })
+  } catch (error) {
+    if (!notMigrated(res, error)) next(error)
+  }
+})
+
+const supportUserId = (req) => z.coerce.number().int().positive().safeParse(req.params.userId)
+
+router.get('/support/threads/:userId/messages', requireAdmin, async (req, res, next) => {
+  const userId = supportUserId(req)
+  const parsed = afterSchema.safeParse(req.query)
+  if (!userId.success || !parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Permintaan tidak valid.' } })
+  try {
+    await markRead(userId.data, 'user')
+    res.json({ messages: await listMessages(userId.data, parsed.data.after) })
+  } catch (error) {
+    if (!notMigrated(res, error)) next(error)
+  }
+})
+
+router.post('/support/threads/:userId/messages', requireAdmin, async (req, res, next) => {
+  const userId = supportUserId(req)
+  if (!userId.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID pengguna tidak valid.' } })
+  const parsed = messageSchema.omit({ context: true }).safeParse(req.body)
+  if (!parsed.success) return invalid(res, parsed.error)
+  try {
+    const [users] = await pool.query("SELECT id FROM users WHERE id = ? AND status <> 'deleted'", [userId.data])
+    if (!users[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Pengguna tidak ditemukan.' } })
+    const message = await insertMessage(userId.data, 'admin', parsed.data.body)
+    res.status(201).json({ message })
+  } catch (error) {
+    if (!notMigrated(res, error)) next(error)
   }
 })
 
