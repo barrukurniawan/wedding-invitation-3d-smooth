@@ -40,6 +40,11 @@
   import LoginModal from './landing/LoginModal.svelte'
   import DesignCatalog from './landing/DesignCatalog.svelte'
   import FeatureBlocks from './landing/FeatureBlocks.svelte'
+  import Steps from './landing/Steps.svelte'
+  import Pricing from './landing/Pricing.svelte'
+  import Faq from './landing/Faq.svelte'
+  import ClosingCta from './landing/ClosingCta.svelte'
+  import WhatsAppFab from './landing/WhatsAppFab.svelte'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
@@ -463,44 +468,13 @@
 
     <FeatureBlocks demoUrl={DEMO_URL} onCta={openLogin} />
 
-    <section class="steps-section" aria-labelledby="steps-title">
-      <div class="section-inner">
-        <div class="section-head center">
-          <p class="eyebrow-deep">Langkah mudah</p>
-          <h2 id="steps-title">Dari ide ke link yang dibagikan</h2>
-        </div>
-
-        <ol class="steps-grid">
-          <li class="step-card">
-            <span class="step-num" aria-hidden="true">01</span>
-            <h3>Pilih tema</h3>
-            <p>Mulai dari dunia 3D yang sudah disiapkan. Suasana warm summer afternoon siap dibagikan.</p>
-          </li>
-          <li class="step-card">
-            <span class="step-num" aria-hidden="true">02</span>
-            <h3>Kustomisasi dunia 3D</h3>
-            <p>
-              Isi detail pasangan, acara, dan pesan. Pilih subdomain yang mudah diingat di
-              marryme.web.id.
-            </p>
-          </li>
-          <li class="step-card">
-            <span class="step-num" aria-hidden="true">03</span>
-            <h3>Sebarkan link</h3>
-            <p>Setelah aktif, bagikan tautan publik. Tamu langsung masuk ke dunia undangan kalian.</p>
-          </li>
-        </ol>
-
-        <div class="closing">
-          <h2>Siap membuat undangan yang dikenang?</h2>
-          <p>Mulai gratis, atau coba dulu demo publik untuk merasakan dunia 3D-nya.</p>
-          <div class="closing-actions">
-            <button type="button" class="primary-btn large" onclick={openLogin}>Buat undangan gratis</button>
-            <a class="ghost-btn large" href={DEMO_URL} target="_blank" rel="noreferrer">Lihat demo</a>
-          </div>
-        </div>
-      </div>
-    </section>
+    <Steps />
+    <Pricing {pricing} onCta={openLogin} />
+    <Faq {pricing} />
+    <ClosingCta {pricing} {stats} demoUrl={DEMO_URL} onCta={openLogin} />
+    {#if pricing?.whatsapp}
+      <WhatsAppFab number={pricing.whatsapp} />
+    {/if}
 
   {:else}
     <!-- Logged In Workspace Section -->
@@ -964,13 +938,15 @@
     </section>
   {/if}
 
-  <!-- Footer -->
+  <!-- Footer (dashboard; landing punya footer sendiri) -->
+  {#if user}
   <footer class="site-footer">
     <div class="footer-inner">
       <p><span>MarryMe</span> by Jago Institute</p>
       <p class="footer-year">2026</p>
     </div>
   </footer>
+  {/if}
 
   {#if !user && loginOpen}
     <LoginModal {busy} {error} onLogin={handleGoogleLogin} onClose={() => (loginOpen = false)} />
