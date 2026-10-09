@@ -21,6 +21,7 @@
   import Icon from '$lib/components/admin/ui/Icon.svelte'
   import MonitoringTab from '$lib/components/admin/MonitoringTab.svelte'
   import SubdomainsTab from '$lib/components/admin/SubdomainsTab.svelte'
+  import TrafficTab from '$lib/components/admin/TrafficTab.svelte'
   import CoupleTab from '$lib/components/admin/CoupleTab.svelte'
   import EventsTab from '$lib/components/admin/EventsTab.svelte'
   import PaymentTab from '$lib/components/admin/PaymentTab.svelte'
@@ -276,7 +277,7 @@
           {:else if activeTab === 'subdomain'}
             <SubdomainsTab />
           {:else if activeTab === 'trafik'}
-            <div class="adm-card"><p class="adm-empty">Halaman trafik sedang disiapkan.</p></div>
+            <TrafficTab />
           {:else if activeTab === 'konten'}
             <div class="adm-banner">
               <Icon name="edit" size={16} />

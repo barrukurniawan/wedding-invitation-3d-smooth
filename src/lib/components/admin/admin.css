@@ -665,6 +665,7 @@ textarea.adm-input {
 }
 
 .adm-bar-track {
+  display: block;
   height: 6px;
   border-radius: 999px;
   background: var(--adm-soft);
@@ -672,6 +673,7 @@ textarea.adm-input {
   min-width: 60px;
 }
 .adm-bar-fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
   background: var(--adm-accent);
