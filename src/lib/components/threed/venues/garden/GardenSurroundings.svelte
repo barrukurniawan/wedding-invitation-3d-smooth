@@ -4,6 +4,7 @@
   import * as THREE from 'three'
   import { getToonGradient } from '../../../../utils/toonMaterial'
   import Nature from '../../Nature.svelte'
+  import StaticBatch from '../../StaticBatch.svelte'
   import { GROUND_COLOR } from '../../../../constants/natureTheme'
   import { isLoaded } from '../../../../stores/gameState.svelte'
   import type { SurroundingsProps } from '../../../../venues'
@@ -406,47 +407,49 @@
   const animalPanda = [{ position: [-5.5, 0, -12.5] as [number, number, number], rotationY: 0.3, scale: 0.6 }]
 </script>
 
-<!-- Ground: rumput kiri -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -12]}>
-  <T.PlaneGeometry args={[23.4, 44]} />
-  <T.MeshToonMaterial color="#ffffff" map={pinkGradientLeft} gradientMap={gradient} />
-</T.Mesh>
-<!-- Ground: rumput tengah (hijau muda, di bawah jalan) -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -12]}>
-  <T.PlaneGeometry args={[7.2, 44]} />
-  <T.MeshToonMaterial color="#a3c98f" gradientMap={gradient} />
-</T.Mesh>
-<!-- Ground: rumput kanan -->
-<T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -12]}>
-  <T.PlaneGeometry args={[23.4, 44]} />
-  <T.MeshToonMaterial color="#ffffff" map={pinkGradientRight} gradientMap={gradient} />
-</T.Mesh>
+<StaticBatch>
+  <!-- Ground: rumput kiri -->
+  <T.Mesh rotation.x={-Math.PI / 2} position={[-15.3, -0.04, -12]}>
+    <T.PlaneGeometry args={[23.4, 44]} />
+    <T.MeshToonMaterial color="#ffffff" map={pinkGradientLeft} gradientMap={gradient} />
+  </T.Mesh>
+  <!-- Ground: rumput tengah (hijau muda, di bawah jalan) -->
+  <T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.04, -12]}>
+    <T.PlaneGeometry args={[7.2, 44]} />
+    <T.MeshToonMaterial color="#a3c98f" gradientMap={gradient} />
+  </T.Mesh>
+  <!-- Ground: rumput kanan -->
+  <T.Mesh rotation.x={-Math.PI / 2} position={[15.3, -0.04, -12]}>
+    <T.PlaneGeometry args={[23.4, 44]} />
+    <T.MeshToonMaterial color="#ffffff" map={pinkGradientRight} gradientMap={gradient} />
+  </T.Mesh>
 
-<!-- GUNUNG di belakang panggung — 3 lapis kedalaman (fog meredupkan lapisan jauh) -->
-{#each mtnFar as m}
-  <T.Group position={[m.x, m.y, m.z]}>
-    <T.Mesh>
-      <T.ConeGeometry args={[m.r, m.h, m.seg]} />
-      <T.MeshToonMaterial color="#c9d3c2" gradientMap={gradient} />
-    </T.Mesh>
-  </T.Group>
-{/each}
-{#each mtnMid as m}
-  <T.Group position={[m.x, m.y, m.z]}>
-    <T.Mesh castShadow>
-      <T.ConeGeometry args={[m.r, m.h, m.seg]} />
-      <T.MeshToonMaterial color="#8aa890" gradientMap={gradient} />
-    </T.Mesh>
-  </T.Group>
-{/each}
-{#each mtnNear as m}
-  <T.Group position={[m.x, m.y, m.z]}>
-    <T.Mesh castShadow>
-      <T.ConeGeometry args={[m.r, m.h, m.seg]} />
-      <T.MeshToonMaterial color="#6f8b75" gradientMap={gradient} />
-    </T.Mesh>
-  </T.Group>
-{/each}
+  <!-- GUNUNG di belakang panggung — 3 lapis kedalaman (fog meredupkan lapisan jauh) -->
+  {#each mtnFar as m}
+    <T.Group position={[m.x, m.y, m.z]}>
+      <T.Mesh>
+        <T.ConeGeometry args={[m.r, m.h, m.seg]} />
+        <T.MeshToonMaterial color="#c9d3c2" gradientMap={gradient} />
+      </T.Mesh>
+    </T.Group>
+  {/each}
+  {#each mtnMid as m}
+    <T.Group position={[m.x, m.y, m.z]}>
+      <T.Mesh castShadow>
+        <T.ConeGeometry args={[m.r, m.h, m.seg]} />
+        <T.MeshToonMaterial color="#8aa890" gradientMap={gradient} />
+      </T.Mesh>
+    </T.Group>
+  {/each}
+  {#each mtnNear as m}
+    <T.Group position={[m.x, m.y, m.z]}>
+      <T.Mesh castShadow>
+        <T.ConeGeometry args={[m.r, m.h, m.seg]} />
+        <T.MeshToonMaterial color="#6f8b75" gradientMap={gradient} />
+      </T.Mesh>
+    </T.Group>
+  {/each}
+</StaticBatch>
 
 <!-- VEGETASI deferred — not on critical ready path (pop-in after overlay OK) -->
 {#if showDecor}

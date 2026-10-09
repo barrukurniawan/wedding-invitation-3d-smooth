@@ -241,8 +241,8 @@ Commit: `refactor(3d): split environment into venue core and garden surroundings
    - Karakter.
    - Vegetasi `Nature`, karena sudah instanced.
    - Gunung, karena tetap di Surroundings. Bisa dibatch terpisah di Surroundings kalau perlu.
-4. **`HangingLights`**: bohlam diganti `InstancedMesh` dengan warna per instance (`setColorAt`). Satu draw call per kabel, bukan satu per bohlam. Kabel tetap `TubeGeometry`.
-5. Material toon dibuat dari cache bersama (`toonMat(color)` di `utils/toonMaterial.ts`), supaya surroundings venue baru tidak mengulang masalah 424 material.
+4. **`HangingLights`**: ternyata statis, jadi cukup ikut dibungkus `StaticBatch` (bohlam tergabung per warna) tanpa mengubah komponennya.
+5. ~~Cache material `toonMat(color)`~~ Tidak diperlukan: `StaticBatch` sudah mengelompokkan berdasarkan properti material, sehingga material inline tidak lagi menambah draw call.
 6. Bersihkan flag `castShadow` yang tidak berefek, atau dokumentasikan bahwa scene tidak memakai shadow map.
 
 Perkiraan hasil: sekitar 747 draw call dekorasi turun menjadi kira-kira 40–60 kelompok material. Total sekitar 27 karakter + 38 vegetasi + 50 dekorasi + beberapa lampu, sekitar **120–130 draw call**.
@@ -254,7 +254,9 @@ Verifikasi:
 - Kamera tetap tertahan occluder (jalan mepet ke pelaminan dan arch).
 - Tidak ada error/warning baru di console; `npm run check` lolos.
 
-Commit: `perf(3d): batch static venue decor and instance hanging light bulbs`
+Commit: `perf(3d): batch static venue decor into per-material meshes`
+
+**Hasil 0.3 (2026-10-09, lokal):** draw call desktop 812 → **147**, mobile 772 → **130**; material 489 → 129. Pixel diff ≤ 0,87%, dan diff hanya ada di karakter beranimasi (dekorasi statis identik).
 
 #### 0.4 Uji di lokalmu (gate sebelum lanjut Fase 1)
 Checklist yang kamu jalankan sendiri:
