@@ -20,7 +20,9 @@
     type GuestbookStats,
     type WeddingConfig,
   } from '$lib/api-client'
-  import { inputClass } from '$lib/components/admin/styles'
+  import '$lib/components/admin/admin.css'
+  import AdminShell from '$lib/components/admin/ui/AdminShell.svelte'
+  import Icon from '$lib/components/admin/ui/Icon.svelte'
   import MonitoringTab from '$lib/components/admin/MonitoringTab.svelte'
   import VerificationTab from '$lib/components/admin/VerificationTab.svelte'
   import CoupleTab from '$lib/components/admin/CoupleTab.svelte'
@@ -32,20 +34,35 @@
   import StatsTab from '$lib/components/admin/StatsTab.svelte'
   import SecurityTab from '$lib/components/admin/SecurityTab.svelte'
 
-  const TABS = [
-    ['monitoring', 'Monitoring'],
-    ['verifikasi', 'Verifikasi Undangan'],
-    ['pengantin', 'Pengantin'],
-    ['acara', 'Acara'],
-    ['pembayaran', 'Pembayaran'],
-    ['lokasi', 'Lokasi'],
-    ['galeri', 'Galeri'],
-    ['ucapan', 'Ucapan'],
-    ['statistik', 'Statistik'],
-    ['keamanan', 'Keamanan'],
+  const MENUS = [
+    { id: 'ringkasan', label: 'Ringkasan', icon: 'grid' },
+    { id: 'subdomain', label: 'Subdomain', icon: 'globe' },
+    { id: 'trafik', label: 'Trafik', icon: 'chart' },
+    { id: 'konten', label: 'Konten Demo', icon: 'edit' },
+    { id: 'ucapan', label: 'Ucapan', icon: 'message' },
+    { id: 'keamanan', label: 'Keamanan', icon: 'shield' },
   ] as const
 
-  type TabId = (typeof TABS)[number][0]
+  // Konten Demo hanya mengedit undangan #1 (lihat server/routes/admin.js).
+  const CONTENT_TABS = [
+    ['pengantin', 'Pengantin'],
+    ['acara', 'Acara & Musik'],
+    ['pembayaran', 'Amplop Digital'],
+    ['lokasi', 'Lokasi'],
+    ['galeri', 'Galeri'],
+  ] as const
+
+  const SUBTITLES: Record<MenuId, string> = {
+    ringkasan: 'Pantau pertumbuhan platform, verifikasi, dan RSVP dalam satu layar.',
+    subdomain: 'Semua subdomain terdaftar, pemiliknya, trafik, dan verifikasi pembayaran.',
+    trafik: 'Kunjungan ke marryme.web.id dan seluruh subdomain undangan.',
+    konten: 'Ubah isi undangan demo (#1) yang dipakai sebagai contoh.',
+    ucapan: 'Ucapan dan RSVP tamu di undangan demo (#1).',
+    keamanan: 'Kelola akses akun admin.',
+  }
+
+  type MenuId = (typeof MENUS)[number]['id']
+  type ContentTabId = (typeof CONTENT_TABS)[number][0]
 
   let loggedIn = $state(false)
   let loadingSession = $state(true)
@@ -62,7 +79,10 @@
   let adminInvitations = $state<AdminInvitation[]>([])
   let loadingInvitations = $state(false)
   let verifyingId = $state<number | null>(null)
-  let activeTab = $state<TabId>('monitoring')
+  let activeTab = $state<MenuId>('ringkasan')
+  let contentTab = $state<ContentTabId>('pengantin')
+  let refreshKey = $state(0)
+  let refreshing = $state(false)
 
   let stats = $state<GuestbookStats>({ total: 0, hadir: 0, ragu: 0, tidakHadir: 0 })
 
@@ -92,23 +112,28 @@
 
   async function loadDashboard() {
     config = await loadConfig()
-    if (activeTab === 'verifikasi') {
-      void loadAdminInvitations()
-    } else if (activeTab === 'ucapan') {
-      void Promise.all([loadEntries(), loadStats()])
-    } else if (activeTab === 'statistik') {
-      void loadStats()
-    }
+    await loadMenuData(activeTab)
   }
 
-  function handleTabChange(tab: TabId) {
-    activeTab = tab
-    if (tab === 'verifikasi' && adminInvitations.length === 0) {
-      void loadAdminInvitations()
-    } else if (tab === 'ucapan' && entries.length === 0) {
-      void Promise.all([loadEntries(), loadStats()])
-    } else if (tab === 'statistik' && stats.total === 0) {
-      void loadStats()
+  function loadMenuData(menu: MenuId, force = false) {
+    if (menu === 'subdomain' && (force || adminInvitations.length === 0)) return loadAdminInvitations()
+    if (menu === 'ucapan' && (force || entries.length === 0)) return Promise.all([loadEntries(), loadStats()])
+    if (menu === 'ringkasan' && (force || stats.total === 0)) return loadStats()
+  }
+
+  function handleTabChange(menu: MenuId) {
+    activeTab = menu
+    savedMsg = ''
+    void loadMenuData(menu)
+  }
+
+  async function refresh() {
+    refreshing = true
+    try {
+      refreshKey++
+      await Promise.all([loadMenuData(activeTab, true), activeTab === 'konten' ? loadConfig().then((c) => (config = c)) : null])
+    } finally {
+      refreshing = false
     }
   }
 
@@ -247,77 +272,111 @@
     if (url && config) config.bgm_url = url
   }
 
-  const hasSaveButton = $derived(!['monitoring', 'verifikasi', 'ucapan', 'statistik', 'keamanan'].includes(activeTab))
 </script>
 
-<svelte:head><title>Admin — Wedding Dashboard</title></svelte:head>
+<svelte:head><title>Admin — MarryMe</title></svelte:head>
 
-<div class="min-h-screen bg-stone-950 p-4 text-stone-100 md:p-6">
-  <div class="mx-auto max-w-3xl">
-    {#if loadingSession}
-      <p class="mt-20 text-center text-stone-500">Memuat sesi admin...</p>
-    {:else if !loggedIn}
-      <!-- Login -->
-      <div class="mx-auto mt-20 max-w-sm rounded-2xl border border-stone-800 bg-stone-900 p-6">
-        <h1 class="text-xl font-bold text-rose-400">Admin Dashboard</h1>
-        <p class="mt-1 text-xs text-stone-500">Masukkan password untuk mengelola undangan</p>
-        <input bind:value={usernameInput} autocomplete="username" placeholder="Username" class="mt-4 {inputClass}" onkeydown={(e) => e.key === 'Enter' && login()} />
-        <input type="password" bind:value={passwordInput} autocomplete="current-password" placeholder="Password" class="mt-3 {inputClass}" onkeydown={(e) => e.key === 'Enter' && login()} />
-        {#if loginError}<p class="mt-2 text-xs text-red-400">{loginError}</p>{/if}
-        <button class="mt-4 w-full rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white hover:bg-rose-500" onclick={login}>Masuk</button>
-      </div>
-    {:else if config}
-      <!-- Dashboard -->
-      <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold text-rose-400">Admin Dashboard</h1>
-        <button class="rounded-lg bg-stone-800 px-3 py-1.5 text-xs text-stone-400 hover:text-stone-200" onclick={signOut}>Keluar</button>
-      </div>
-
-      <!-- Tabs -->
-      <div class="mt-4 flex flex-wrap gap-2">
-        {#each TABS as [id, label] (id)}
-          <button class="rounded-lg px-3 py-1.5 text-xs font-medium transition {activeTab === id ? 'bg-rose-600 text-white' : 'bg-stone-900 text-stone-400 hover:text-stone-200'}" onclick={() => handleTabChange(id)}>{label}</button>
-        {/each}
-      </div>
-
-      <!-- Content -->
-      <div class="mt-6 rounded-2xl border border-stone-800 bg-stone-900 p-5">
-        {#if activeTab === 'monitoring'}
-          <MonitoringTab />
-        {:else if activeTab === 'verifikasi'}
-          <VerificationTab invitations={adminInvitations} loading={loadingInvitations} verifyingId={verifyingId} onActivate={handleActivate} onReject={handleReject} onRefresh={loadAdminInvitations} />
-        {:else if activeTab === 'pengantin'}
-          <CoupleTab {config} onUploadPhoto={uploadMainPhoto} />
-        {:else if activeTab === 'acara'}
-          <EventsTab {config} onUploadMusic={uploadBgm} />
-        {:else if activeTab === 'pembayaran'}
-          <PaymentTab {config} onUploadQris={uploadQrisPhoto} />
-        {:else if activeTab === 'lokasi'}
-          <LocationTab {config} />
-        {:else if activeTab === 'galeri'}
-          <GalleryTab {config} onUploadPhoto={uploadGalleryPhoto} onRemovePhoto={removePhoto} />
-        {:else if activeTab === 'ucapan'}
-          <GuestbookTab {entries} onRefresh={() => Promise.all([loadEntries(), loadStats()])} onDelete={removeEntry} />
-        {:else if activeTab === 'statistik'}
-          <StatsTab {stats} />
-        {:else if activeTab === 'keamanan'}
-          <SecurityTab />
-        {/if}
-      </div>
-
-      <!-- Save button -->
-      {#if hasSaveButton}
-        <div class="mt-4 flex items-center gap-3">
-          <button class="rounded-lg bg-rose-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50" onclick={save} disabled={saving || uploading}>
-            {saving ? 'Menyimpan...' : uploading ? 'Mengunggah...' : 'Simpan Perubahan'}
-          </button>
-          {#if savedMsg}<span class="text-sm {savedMsg === 'Tersimpan!' ? 'text-green-400' : 'text-red-400'}">{savedMsg}</span>{/if}
+<div class="adm">
+  {#if loadingSession}
+    <p class="adm-empty" style="margin-top: 20vh">Memuat sesi admin...</p>
+  {:else if !loggedIn}
+    <div class="adm-login">
+      <form
+        class="adm-login-card"
+        onsubmit={(event) => {
+          event.preventDefault()
+          void login()
+        }}
+      >
+        <div class="adm-logo" style="display: inline-flex">
+          <span class="adm-logo-mark">M</span>
+          <span>MarryMe <small>Admin</small></span>
         </div>
-      {:else if savedMsg && (activeTab === 'verifikasi')}
-        <p class="mt-4 text-sm text-red-400">{savedMsg}</p>
-      {/if}
-    {:else}
-      <p class="mt-20 text-center text-stone-500">Memuat...</p>
-    {/if}
-  </div>
+        <h1>Masuk ke Admin</h1>
+        <p>Kelola subdomain, verifikasi pembayaran, dan pantau trafik platform.</p>
+        <div class="adm-field">
+          <label class="adm-label" for="admin-username">Username</label>
+          <input id="admin-username" bind:value={usernameInput} autocomplete="username" class="adm-input" />
+        </div>
+        <div class="adm-field" style="margin-top: 12px">
+          <label class="adm-label" for="admin-password">Password</label>
+          <input id="admin-password" type="password" bind:value={passwordInput} autocomplete="current-password" class="adm-input" />
+        </div>
+        {#if loginError}<p class="adm-error" style="margin-top: 10px">{loginError}</p>{/if}
+        <button type="submit" class="adm-btn" style="width: 100%; margin-top: 18px">Masuk</button>
+      </form>
+    </div>
+  {:else if config}
+    <AdminShell
+      menus={MENUS}
+      active={activeTab}
+      onSelect={handleTabChange}
+      subtitle={SUBTITLES[activeTab]}
+      {refreshing}
+      onRefresh={refresh}
+      onSignOut={signOut}
+    >
+      <section class="adm-section">
+        {#key refreshKey}
+          {#if activeTab === 'ringkasan'}
+            <MonitoringTab />
+            <div class="adm-section"><StatsTab {stats} /></div>
+          {:else if activeTab === 'subdomain'}
+            <VerificationTab invitations={adminInvitations} loading={loadingInvitations} verifyingId={verifyingId} onActivate={handleActivate} onReject={handleReject} onRefresh={loadAdminInvitations} />
+            {#if savedMsg}<p class="adm-error" style="margin-top: 12px">{savedMsg}</p>{/if}
+          {:else if activeTab === 'trafik'}
+            <div class="adm-card"><p class="adm-empty">Halaman trafik sedang disiapkan.</p></div>
+          {:else if activeTab === 'konten'}
+            <div class="adm-banner">
+              <Icon name="edit" size={16} />
+              <span>Mengedit <strong>undangan demo (#1)</strong>. Perubahan di sini tidak memengaruhi undangan milik pasangan lain.</span>
+            </div>
+            <div class="adm-subtabs" style="margin-top: 14px">
+              {#each CONTENT_TABS as [id, label] (id)}
+                <button type="button" class="adm-chip" class:active={contentTab === id} onclick={() => (contentTab = id)}>{label}</button>
+              {/each}
+            </div>
+            <div class="adm-card" style="margin-top: 14px">
+              {#if contentTab === 'pengantin'}
+                <CoupleTab {config} onUploadPhoto={uploadMainPhoto} />
+              {:else if contentTab === 'acara'}
+                <EventsTab {config} onUploadMusic={uploadBgm} />
+              {:else if contentTab === 'pembayaran'}
+                <PaymentTab {config} onUploadQris={uploadQrisPhoto} />
+              {:else if contentTab === 'lokasi'}
+                <LocationTab {config} />
+              {:else if contentTab === 'galeri'}
+                <GalleryTab {config} onUploadPhoto={uploadGalleryPhoto} onRemovePhoto={removePhoto} />
+              {/if}
+            </div>
+            <div class="adm-savebar">
+              <span>
+                {#if savedMsg}
+                  <span class={savedMsg === 'Tersimpan!' ? 'msg-ok' : 'msg-err'}>{savedMsg === 'Tersimpan!' ? '✓ Perubahan tersimpan' : savedMsg}</span>
+                {:else if uploading}
+                  Mengunggah file...
+                {:else}
+                  Simpan setelah selesai mengubah isi undangan demo.
+                {/if}
+              </span>
+              <button type="button" class="adm-btn" onclick={save} disabled={saving || uploading}>
+                {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          {:else if activeTab === 'ucapan'}
+            <div class="adm-card">
+              <GuestbookTab {entries} onRefresh={() => Promise.all([loadEntries(), loadStats()])} onDelete={removeEntry} />
+            </div>
+            {#if savedMsg}<p class="adm-error" style="margin-top: 12px">{savedMsg}</p>{/if}
+          {:else if activeTab === 'keamanan'}
+            <div class="adm-card">
+              <SecurityTab />
+            </div>
+          {/if}
+        {/key}
+      </section>
+    </AdminShell>
+  {:else}
+    <p class="adm-empty" style="margin-top: 20vh">Memuat...</p>
+  {/if}
 </div>
