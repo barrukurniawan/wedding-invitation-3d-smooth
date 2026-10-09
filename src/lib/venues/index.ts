@@ -4,7 +4,8 @@ import type { Component } from 'svelte'
 // berbeda per venue hanya sekeliling (lazy-loaded) dan tema langit/kabut/cahaya.
 // Lihat PLAN_VENUE_3D.md.
 
-export type VenueId = 'garden'
+// Harus sinkron dengan server/services/venues.js.
+export type VenueId = 'garden' | 'beach'
 
 export interface SurroundingsProps {
   lowPower?: boolean
@@ -29,7 +30,8 @@ export interface VenueDef {
   loadSurroundings: () => Promise<{ default: Component<SurroundingsProps> }>
 }
 
-export const venues: Record<VenueId, VenueDef> = {
+// Venue yang belum punya definisi di sini otomatis jatuh ke DEFAULT_VENUE.
+export const venues: Partial<Record<VenueId, VenueDef>> = {
   garden: {
     id: 'garden',
     label: 'Taman Musim Panas',
@@ -51,5 +53,5 @@ export const DEFAULT_VENUE: VenueId = 'garden'
 
 // Nilai kosong/tidak dikenal (data lama, typo) selalu jatuh ke venue default.
 export function resolveVenue(id?: string | null): VenueDef {
-  return venues[id as VenueId] ?? venues[DEFAULT_VENUE]
+  return venues[id as VenueId] ?? (venues[DEFAULT_VENUE] as VenueDef)
 }

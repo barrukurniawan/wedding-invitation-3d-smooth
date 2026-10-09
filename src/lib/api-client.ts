@@ -23,6 +23,7 @@ export interface WeddingConfig {
   bgm_url?: string
   bgm_title?: string
   preset?: '3d_summer' | '2d_garden'
+  venue?: VenueId
   slug?: string
   updated_at: string
 }
@@ -124,6 +125,7 @@ export function getCsrfToken() {
 }
 
 import { getFutureDateIso, formatIndonesianDate } from './utils/dateFormatter'
+import type { VenueId } from './venues'
 
 const defaultFutureIso = getFutureDateIso(14)
 const defaultFutureVerbal = formatIndonesianDate(defaultFutureIso)
@@ -153,6 +155,7 @@ export const defaultConfig: WeddingConfig = {
   bgm_url: '/audio/Marry%20You.mp3',
   bgm_title: 'Marry You',
   preset: '3d_summer',
+  venue: 'garden',
   updated_at: '',
 }
 

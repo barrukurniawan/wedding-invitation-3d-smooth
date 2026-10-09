@@ -3,6 +3,7 @@ import { z } from 'zod'
 import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
+import { VENUE_IDS, normalizeVenue } from '../services/venues.js'
 
 const router = Router()
 
@@ -40,6 +41,7 @@ const configSchema = z.object({
   bgm_url: text(2048),
   bgm_title: text(255),
   preset: z.enum(['3d_summer', '2d_garden']),
+  venue: z.enum(VENUE_IDS),
   slug: z.string().optional(),
 }).partial().passthrough()
 
@@ -73,11 +75,13 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'bgm_url',
   'bgm_title',
   'preset',
+  'venue',
 ])
 
 function serializeConfig(config) {
   const result = normalizeMusicConfig(config)
   result.id = Number(result.invitation_id || result.id)
+  result.venue = normalizeVenue(result.venue)
   result.gallery_photos = typeof result.gallery_photos === 'string'
     ? JSON.parse(result.gallery_photos)
     : result.gallery_photos || []

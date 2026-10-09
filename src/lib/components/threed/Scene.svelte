@@ -18,6 +18,8 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   import { getNearbyTrigger } from '../../utils/interaction'
   import { bumpCriticalLoaded } from '../../stores/loadProgress.svelte'
   import { resolveVenue, type SurroundingsProps } from '../../venues'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
+  import { get } from 'svelte/store'
 
   const { scene } = useThrelte()
 
@@ -39,8 +41,10 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   let readySent = false
   let lastTriggerId: string | null = null
 
-  // Fase 1 akan membaca venue dari $weddingConfig; sementara selalu default (garden).
-  const venue = resolveVenue()
+  // Venue dibaca sekali saat scene dibuat (config sudah dimuat TenantBootstrap).
+  // Dev-only: `?venue=beach` untuk mencoba venue tanpa mengubah database.
+  const devVenue = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('venue') : null
+  const venue = resolveVenue(devVenue ?? get(weddingConfig).venue)
 
   onMount(() => {
     // Muat inti venue dan sekelilingnya paralel supaya tidak ada round-trip berantai.
