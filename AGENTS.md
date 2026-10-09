@@ -33,6 +33,7 @@
 ## Admin Dashboard
 - `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.
 - Konten Demo / Ucapan only edit invitation #1 (`server/routes/admin.js` hardcodes `invitation_id = 1`).
+- Support chat (migration 016 `support_messages`, one thread per user): owner widget `platform/SupportChat.svelte` (mounted in `DashboardShell` when logged in) → `/api/support/*` (`server/routes/support.js`, own thread only, CSRF, 10 msg/min); admin menu Pesan (`admin/SupportTab.svelte`) → `/api/admin/support/*`. Polling only, no websockets.
 - Read-only analytics: `GET /api/admin/subdomains`, `/api/admin/subdomains/:id/traffic`, `/api/admin/analytics/traffic` (sources/paths via `server/services/trafficSource.js`).
 
 ## Interaction Contracts

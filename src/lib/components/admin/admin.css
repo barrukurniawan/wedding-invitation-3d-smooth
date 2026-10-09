@@ -117,6 +117,34 @@
   font-weight: 600;
 }
 
+.adm-nav-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #1c1917;
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+.adm-rail-btn {
+  position: relative;
+}
+.adm-rail-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 2px solid var(--adm-surface);
+}
+
 .adm-top-actions {
   display: flex;
   align-items: center;

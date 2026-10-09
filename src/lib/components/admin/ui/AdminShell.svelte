@@ -12,6 +12,7 @@
     refreshing = false,
     onRefresh,
     onSignOut,
+    badges = {},
     children,
   }: {
     menus: readonly Menu[]
@@ -21,6 +22,7 @@
     refreshing?: boolean
     onRefresh: () => void
     onSignOut: () => void
+    badges?: Partial<Record<T, number>>
     children: Snippet
   } = $props()
 
@@ -57,6 +59,7 @@
           onclick={() => onSelect(menu.id)}
         >
           {menu.label}
+          {#if badges[menu.id]}<span class="adm-nav-badge">{badges[menu.id]}</span>{/if}
         </button>
       {/each}
     </nav>
@@ -93,6 +96,7 @@
           onclick={() => onSelect(menu.id)}
         >
           <Icon name={menu.icon} />
+          {#if badges[menu.id]}<span class="adm-rail-dot" aria-hidden="true"></span>{/if}
         </button>
       {/each}
       <span class="adm-rail-sep"></span>

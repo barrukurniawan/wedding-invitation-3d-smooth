@@ -463,6 +463,7 @@ router.get('/support/threads', requireAdmin, async (req, res, next) => {
         name: r.display_name,
         email: r.email,
         slug: r.slug || null,
+        public_url: r.slug ? buildPublicUrl(r.slug) : null,
         total: Number(r.total),
         unread: Number(r.unread || 0),
         last_body: r.last_body,

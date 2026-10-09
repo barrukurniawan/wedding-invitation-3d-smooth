@@ -1,6 +1,6 @@
 # Rencana Chat Bantuan (pengguna ↔ admin)
 
-Status: **disetujui user 2026-10-09**, dikerjakan di branch `support_chat`. Permintaan user (2026-10-09): chat yang sangat sederhana. Setiap pemilik akun bisa mengirim pesan ke admin (misalnya melaporkan error) lewat tombol pop-up di kanan bawah dashboard mereka. Admin membalas dari `/admin`.
+Status: **C1–C4 selesai di lokal (2026-10-09), belum di-deploy.** Branch `support_chat`. Migrasi 016 baru dijalankan di DB lokal. Permintaan user (2026-10-09): chat yang sangat sederhana. Setiap pemilik akun bisa mengirim pesan ke admin (misalnya melaporkan error) lewat tombol pop-up di kanan bawah dashboard mereka. Admin membalas dari `/admin`.
 
 ## 1. Cakupan (versi sederhana)
 - **Satu percakapan per akun.** Tanpa tiket, kategori, lampiran, atau status "selesai".

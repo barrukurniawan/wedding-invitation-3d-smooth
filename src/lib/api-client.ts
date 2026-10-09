@@ -606,6 +606,7 @@ export interface SupportThread {
   name: string | null
   email: string | null
   slug: string | null
+  public_url: string | null
   total: number
   unread: number
   last_body: string

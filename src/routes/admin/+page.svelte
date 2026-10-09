@@ -7,6 +7,7 @@
     getAdminGuestbook,
     getAdminSession,
     getAdminStats,
+    getAdminSupportUnread,
     login as createAdminSession,
     logout,
     updateAdminConfig,
@@ -22,6 +23,7 @@
   import MonitoringTab from '$lib/components/admin/MonitoringTab.svelte'
   import SubdomainsTab from '$lib/components/admin/SubdomainsTab.svelte'
   import TrafficTab from '$lib/components/admin/TrafficTab.svelte'
+  import SupportTab from '$lib/components/admin/SupportTab.svelte'
   import CoupleTab from '$lib/components/admin/CoupleTab.svelte'
   import EventsTab from '$lib/components/admin/EventsTab.svelte'
   import PaymentTab from '$lib/components/admin/PaymentTab.svelte'
@@ -36,7 +38,8 @@
     { id: 'subdomain', label: 'Subdomain', icon: 'globe' },
     { id: 'trafik', label: 'Trafik', icon: 'chart' },
     { id: 'konten', label: 'Konten Demo', icon: 'edit' },
-    { id: 'ucapan', label: 'Ucapan', icon: 'message' },
+    { id: 'pesan', label: 'Pesan', icon: 'message' },
+    { id: 'ucapan', label: 'Ucapan', icon: 'heart' },
     { id: 'keamanan', label: 'Keamanan', icon: 'shield' },
   ] as const
 
@@ -54,6 +57,7 @@
     subdomain: 'Semua subdomain terdaftar, pemiliknya, trafik, dan verifikasi pembayaran.',
     trafik: 'Kunjungan ke marryme.web.id dan seluruh subdomain undangan.',
     konten: 'Ubah isi undangan demo (#1) yang dipakai sebagai contoh.',
+    pesan: 'Pesan bantuan dari pemilik akun. Balas langsung dari sini.',
     ucapan: 'Ucapan dan RSVP tamu di undangan demo (#1).',
     keamanan: 'Kelola akses akun admin.',
   }
@@ -77,6 +81,23 @@
   let contentTab = $state<ContentTabId>('pengantin')
   let refreshKey = $state(0)
   let refreshing = $state(false)
+  let supportUnread = $state(0)
+
+  // Badge menu Pesan: jumlah pesan pengguna yang belum dibaca (cek tiap 30 dtk).
+  async function loadSupportUnread() {
+    try {
+      supportUnread = (await getAdminSupportUnread()).unread
+    } catch {
+      supportUnread = 0
+    }
+  }
+
+  $effect(() => {
+    if (!loggedIn) return
+    void loadSupportUnread()
+    const timer = setInterval(() => !document.hidden && loadSupportUnread(), 30000)
+    return () => clearInterval(timer)
+  })
 
   let stats = $state<GuestbookStats>({ total: 0, hadir: 0, ragu: 0, tidakHadir: 0 })
 
@@ -268,6 +289,7 @@
       {refreshing}
       onRefresh={refresh}
       onSignOut={signOut}
+      badges={{ pesan: supportUnread }}
     >
       <section class="adm-section">
         {#key refreshKey}
@@ -314,6 +336,8 @@
                 {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
             </div>
+          {:else if activeTab === 'pesan'}
+            <SupportTab onUnreadChange={loadSupportUnread} />
           {:else if activeTab === 'ucapan'}
             <StatsTab {stats} />
             <div class="adm-card adm-section">
