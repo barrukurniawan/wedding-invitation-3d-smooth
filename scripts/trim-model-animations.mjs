@@ -1,5 +1,3 @@
-// Catatan: setelah menjalankan skrip ini, jalankan `npm run models:wave` untuk
-// menambahkan lagi animasi Wave pengantin (lihat scripts/add-wave-animation.mjs).
 import { copyFile, mkdir, mkdtemp, readFile, rename, rm, stat } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'

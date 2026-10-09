@@ -19,14 +19,6 @@
   const S = 0.62
   const STAGE_Y = 0.7
 
-  // Gerakan pengantin: 'Wave' (melambai ke tamu; wanita tangan kanan, pria tangan kiri)
-  // atau 'Victory' (dua tangan terangkat). Keduanya ada di model; ganti di sini.
-  // Dev-only: `?gesture=victory` / `?gesture=wave` untuk membandingkan langsung.
-  type CoupleGesture = 'Wave' | 'Victory'
-  const COUPLE_GESTURE: CoupleGesture = 'Wave'
-  const devGesture = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('gesture') : null
-  const coupleClip: CoupleGesture = devGesture === 'victory' ? 'Victory' : devGesture === 'wave' ? 'Wave' : COUPLE_GESTURE
-
   const skinCream = { skin: '#f0c8a0', hair: '#3a2418' }
   const staffUniform = {
     clothes: '#fffaf2',
@@ -64,7 +56,7 @@
     position={[-0.72, STAGE_Y, -18.6]}
     rotationY={0.3}
     scale={S}
-    clip={coupleClip}
+    clip="Victory"
     appearance={bride}
     weddingSkirt={true}
     bridalVeil={true}
@@ -83,7 +75,7 @@
     position={[0.72, STAGE_Y, -18.6]}
     rotationY={-0.3}
     scale={S}
-    clip={coupleClip}
+    clip="Victory"
     appearance={groom}
     onReady={onGroomReady}
     onError={onError}
