@@ -30,6 +30,12 @@
 - Per-invitation settings live in `wedding_configs`. `preset` (`'3d_summer' | '2d_garden'`, default `3d_summer`) is exposed by `routes/config.js`, updated via `PATCH /api/my/config` (`routes/tenant-config.js`: zod enum + allowed-fields list), set on create in `routes/invitations.js`. Keep the TS union in `api-client.ts` in sync.
 - Migrations: `database/migrations/NNN_snake_case.sql`, sequential. Must also be appended to the hardcoded array in `server/scripts/migrate.js`. The runner stores checksums: never edit an applied migration; add a new one. Write migrations idempotent (INFORMATION_SCHEMA checks, see `012_preset_theme.sql`).
 
+## Landing Page (root host, logged out)
+- Composed in `DashboardShell.svelte` from `src/lib/components/platform/landing/*` (LandingNav, PromoBar, Hero, DesignCatalog, FeatureBlocks, Steps, Pricing, Faq, ClosingCta, WhatsAppFab, LoginModal; shared tokens in `landing/landing-v2.css`). Logged-in dashboard markup/CSS (`dashboard.css`) is untouched.
+- Pricing/promo come from `GET /api/public/pricing` (`server/services/pricing.js`, env: `PRICE_NORMAL_IDR`, `INVITATION_PRICE_IDR`, `PRICE_AFTER_PROMO_IDR`, `PROMO_LABEL`, `PROMO_ENDS_AT`, `WHATSAPP_NUMBER`); promo UI hides itself after the deadline. Social-proof numbers from `GET /api/public/stats`. Never hardcode prices in the frontend.
+- Landing assets: `static/media/designs/*.webp`, `static/media/features/*.webp`, `hero.mp4` (keep ≤ 1 MB; regenerate from local scenes with puppeteer, see PLAN_LANDING_PAGE.md).
+- MySQL TIMESTAMP columns come back as `Date` (pool uses `dateStrings` only for DATETIME): serialize with `toIsoString()` from `server/services/dates.js`, never `String(date)`.
+
 ## Admin Dashboard
 - `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.
 - Konten Demo / Ucapan only edit invitation #1 (`server/routes/admin.js` hardcodes `invitation_id = 1`).

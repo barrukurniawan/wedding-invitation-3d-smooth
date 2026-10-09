@@ -61,9 +61,9 @@
     <figure class="browser">
       <div class="chrome"><span></span><span></span><span></span><i>kia-toni.marryme.web.id</i></div>
       {#if playVideo}
-        <video src="/media/preview.mp4" poster="/media/preview-poster.jpg" autoplay loop muted playsinline preload="metadata"></video>
+        <video src="/media/hero.mp4" poster="/media/hero-poster.jpg" autoplay loop muted playsinline preload="metadata"></video>
       {:else}
-        <img src="/media/preview-poster.jpg" alt="" loading="eager" decoding="async" />
+        <img src="/media/hero-poster.jpg" alt="" loading="eager" decoding="async" />
       {/if}
     </figure>
     <figure class="phone">

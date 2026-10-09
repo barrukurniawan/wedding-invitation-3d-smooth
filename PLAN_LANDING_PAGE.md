@@ -1,6 +1,6 @@
 # Rencana Landing Page Baru (marryme.web.id)
 
-Status: **disetujui 2026-10-09**, dikerjakan di branch `landing_v2` (dari `new_staging` fb65175).
+Status: **L1–L6 selesai di lokal (2026-10-09), belum di-deploy.** Branch `landing_v2` (dari `new_staging` fb65175).
 
 Keputusan user (2026-10-09):
 - **Jalur B**: gratis selama promo peluncuran, hitung mundur ke **14 Oktober 2026 23:59 WIB**.
@@ -100,3 +100,10 @@ Deploy setelah kamu setuju; backup dulu seperti biasa. Branch: `landing_v2` dari
 3. Nomor WhatsApp untuk CTA (opsional).
 4. Testimoni asli (nama + 1–2 kalimat + boleh dicantumkan) — bisa menyusul; bagian ini disembunyikan sampai ada.
 5. Instagram/TikTok MarryMe untuk footer (opsional).
+
+## 9. Catatan hasil
+- Harga/promo dibaca dari `GET /api/public/pricing` (env server), angka bukti sosial dari `GET /api/public/stats` (cache 5 menit). `VITE_PAYMENT_MODE`/`VITE_INVITATION_PRICE_IDR` dihapus; ganti harga/tanggal promo = edit `server/.env.docker` lalu `docker compose up -d api`.
+- Bug lama ikut diperbaiki: `created_at` TIMESTAMP diserialisasi sebagai `String(Date)` → "Invalid Date" di Buku Tamu/kontak dashboard pengguna dan daftar undangan admin (`server/services/dates.js`).
+- Video hero dikompres 7,1 MB → 0,65 MB (`hero.mp4`, 960px, 14 dtk); video lama & demo 2D (53 MB, tidak terpakai) dihapus dari repo.
+- Kode landing lama (`LandingPage.svelte`, `LandingShell.svelte`, `landing.css`, 142 rule di `dashboard.css`) dihapus; dashboard login diverifikasi tidak berubah.
+- Testimoni belum ada → bagian testimoni tidak dibuat; demo venue Pantai belum ada subdomain live → kartu Pantai tanpa tombol Demo (saran: buat subdomain demo pantai setelah deploy).

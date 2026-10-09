@@ -16,7 +16,7 @@
   const year = new Date().getFullYear()
 </script>
 
-<section class="closing">
+<section class="lp-closing">
   <div class="lp-container">
     <div class="box">
       <h2>Siap membuat undangan yang dikenang tamu?</h2>
@@ -64,7 +64,7 @@
 </footer>
 
 <style>
-  .closing {
+  .lp-closing {
     padding-block: clamp(32px, 5vw, 64px) clamp(48px, 6vw, 80px);
   }
   .box {
