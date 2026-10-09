@@ -12,6 +12,9 @@
 
   const parts = $derived(countdown.parts)
   const show = $derived(Boolean(pricing?.promoActive && countdown.active))
+  const compact = $derived(
+    parts ? (parts.days > 0 ? `${parts.days} hari ${parts.hours} jam` : `${parts.hours} jam ${parts.minutes} mnt`) : '',
+  )
   const pct = $derived(pricing?.normalPrice ? discountPct(pricing.normalPrice, pricing.currentPrice) : 0)
   const endsLabel = $derived(
     pricing?.promoEndsAt
@@ -24,7 +27,11 @@
   <section class="promo" id="promo" aria-label="{pricing.promoLabel}">
     <div class="inner">
       <div class="copy">
-        <span class="tag">🎉 {pricing.promoLabel}</span>
+        <span class="pill" aria-label="{pricing.promoLabel}, berakhir dalam {compact}">
+          <span class="dot" aria-hidden="true"></span>
+          <span>{pricing.promoLabel}</span>
+          <span class="time">⏱ {compact}</span>
+        </span>
         <p class="price">
           <s>{fmtIdr(pricing.normalPrice ?? 0)}</s>
           <strong>{pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)}</strong>
@@ -68,15 +75,36 @@
     margin: 0 auto;
     padding: 22px 24px;
   }
-  .tag {
-    display: inline-block;
-    padding: 4px 10px;
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px 7px 10px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.14);
-    font-size: 0.75rem;
+    background: var(--lp-ink);
+    color: #fff;
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--lp-gold);
+    animation: pulse 1.8s ease-out infinite;
+  }
+  .time {
+    color: var(--lp-gold);
+    font-variant-numeric: tabular-nums;
+  }
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(245, 185, 66, 0.6);
+    }
+    100% {
+      box-shadow: 0 0 0 8px rgba(245, 185, 66, 0);
+    }
   }
   .price {
     display: flex;
@@ -151,6 +179,11 @@
     }
     .lp-btn {
       justify-self: center;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot {
+      animation: none;
     }
   }
   @media (max-width: 420px) {

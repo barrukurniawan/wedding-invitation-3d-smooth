@@ -424,7 +424,7 @@
   <div class="blob blob-gold" aria-hidden="true"></div>
 
   {#if !user && !loading}
-    <LandingNav {pricing} {busy} onLogin={openLogin} />
+    <LandingNav {busy} onLogin={openLogin} />
   {/if}
 
   <!-- Topbar Header (dashboard) -->
