@@ -1,23 +1,23 @@
 <script lang="ts">
-  // Laut toon di belakang pelaminan: gradasi dangkal->dalam, garis ombak yang
-  // bergerak, dan buih di bibir pantai. Satu plane + shader murah; ikut kabut.
+  // Laut toon yang mengelilingi pulau pasir: gradasi dangkal->dalam, garis ombak
+  // yang bergerak, dan buih di keempat tepi pulau. Satu plane + shader murah; ikut kabut.
   import { T, useTask } from '@threlte/core'
   import * as THREE from 'three'
   import { onDestroy } from 'svelte'
 
+  type Island = { minX: number; maxX: number; minZ: number; maxZ: number }
+
   let {
-    shoreZ = -25,
+    island,
     shallow = '#5fc4c6',
     deep = '#2f7fae',
     foam = '#fff6e8'
-  }: { shoreZ?: number; shallow?: string; deep?: string; foam?: string } = $props()
+  }: { island: Island; shallow?: string; deep?: string; foam?: string } = $props()
 
-  const DEPTH = 100
-  const WIDTH = 240
-  const geometry = new THREE.PlaneGeometry(WIDTH, DEPTH, 1, 1)
+  // Cukup luas sampai tertutup kabut di segala arah; pasir menutupi bagian tengahnya.
+  const SIZE = 320
+  const geometry = new THREE.PlaneGeometry(SIZE, SIZE, 1, 1)
   geometry.rotateX(-Math.PI / 2)
-  // Mulai 1 m di bawah pasir supaya buih surut terlihat masuk ke bawah tepi pasir.
-  geometry.translate(0, 0, -DEPTH / 2 + 1)
 
   const material = new THREE.ShaderMaterial({
     fog: true,
@@ -25,7 +25,8 @@
       THREE.UniformsLib.fog,
       {
         uTime: { value: 0 },
-        uShoreZ: { value: 0 },
+        uIslandMin: { value: new THREE.Vector2() },
+        uIslandMax: { value: new THREE.Vector2() },
         uShallow: { value: new THREE.Color() },
         uDeep: { value: new THREE.Color() },
         uFoam: { value: new THREE.Color() }
@@ -45,22 +46,26 @@
     fragmentShader: /* glsl */ `
       #include <fog_pars_fragment>
       uniform float uTime;
-      uniform float uShoreZ;
+      uniform vec2 uIslandMin;
+      uniform vec2 uIslandMax;
       uniform vec3 uShallow;
       uniform vec3 uDeep;
       uniform vec3 uFoam;
       varying vec3 vWorld;
       void main() {
-        float dist = uShoreZ - vWorld.z; // 0 di bibir pantai, makin jauh makin besar
+        // Jarak ke tepi pulau (persegi panjang): 0 di bibir pantai, makin jauh makin besar.
+        vec2 outside = max(uIslandMin - vWorld.xz, vWorld.xz - uIslandMax);
+        float dist = length(max(outside, 0.0)) + min(max(outside.x, outside.y), 0.0);
         vec3 color = mix(uShallow, uDeep, smoothstep(2.0, 30.0, dist));
 
         // Garis ombak bergelombang yang bergerak pelan ke arah pantai.
-        float wave = vWorld.z * 0.32 + sin(vWorld.x * 0.18 + uTime * 0.5) * 0.7 + uTime * 0.35;
+        float wave = dist * 0.32 + sin((vWorld.x + vWorld.z) * 0.18 + uTime * 0.5) * 0.7 - uTime * 0.35;
         float band = step(0.9, fract(wave));
         color = mix(color, uFoam, band * 0.35 * (1.0 - smoothstep(6.0, 40.0, dist)));
 
         // Buih di bibir pantai: tepinya maju-mundur seperti ombak pecah.
-        float edge = 1.4 + 0.55 * sin(uTime * 1.1 + vWorld.x * 0.22) + 0.25 * sin(vWorld.x * 0.7 - uTime * 0.6);
+        float along = vWorld.x + vWorld.z;
+        float edge = 1.0 + 0.45 * sin(uTime * 1.1 + along * 0.22) + 0.2 * sin(along * 0.7 - uTime * 0.6);
         float foamMask = 1.0 - smoothstep(edge - 0.25, edge, dist);
         color = mix(color, uFoam, foamMask * 0.9);
 
@@ -72,7 +77,8 @@
   })
 
   $effect(() => {
-    material.uniforms.uShoreZ.value = shoreZ
+    material.uniforms.uIslandMin.value.set(island.minX, island.minZ)
+    material.uniforms.uIslandMax.value.set(island.maxX, island.maxZ)
     material.uniforms.uShallow.value.set(shallow)
     material.uniforms.uDeep.value.set(deep)
     material.uniforms.uFoam.value.set(foam)
@@ -88,4 +94,4 @@
   })
 </script>
 
-<T.Mesh {geometry} {material} position={[0, -0.07, shoreZ]} name="beach-sea" />
+<T.Mesh {geometry} {material} position={[0, -0.07, 0]} name="beach-sea" />

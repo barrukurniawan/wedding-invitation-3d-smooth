@@ -13,10 +13,13 @@
   let { lowPower = false, renderQuality = 'desktop' }: SurroundingsProps = $props()
 
   const PACK = '/nature/gltf/beach-pack.glb'
+  // Pulau pasir dikelilingi laut. Depan (z=+20) melewati batas jalan pemain
+  // (HALF_WORLD=18) supaya pemain tidak pernah berdiri di atas air.
   const SHORE_Z = -25
-  // Pasir dari depan spawn (z=+10) sampai bibir pantai.
-  const SAND_LENGTH = 10 - SHORE_Z
-  const SAND_CENTER_Z = (10 + SHORE_Z) / 2
+  const FRONT_Z = 20
+  const SAND_LENGTH = FRONT_Z - SHORE_Z
+  const SAND_CENTER_Z = (FRONT_Z + SHORE_Z) / 2
+  const island = { minX: -27, maxX: 27, minZ: SHORE_Z, maxZ: FRONT_Z }
 
   const gradient = getToonGradient()
   let showDecor = $state(false)
@@ -89,9 +92,29 @@
 
   // === DEKORASI PANTAI di sisi luar jalur ===
   // Satu variasi dipakai berulang (instancing) supaya draw call tetap hemat.
-  const umbrellas = [
-    { name: 'Beach_Umbrella_1', instances: [at(-11.5, -3.5, 0.3), at(-12.5, -15.5, 1.1)] },
-    { name: 'Beach_Umbrella_3', instances: [at(12, -8.5, -0.5)] }
+  // Payung putih-biru & putih-merah dicampur (warna asli model terlalu oranye/monoton).
+  const UMBRELLA_BLUE = '#2f6fd1'
+  const UMBRELLA_RED = '#d8403a'
+  const UMBRELLA_WHITE = '#fbf7f0'
+  const umbrellas: { key: string; name: string; colors: Record<string, string>; instances: Instance[] }[] = [
+    {
+      key: 'umbrella-blue',
+      name: 'Beach_Umbrella_1',
+      colors: { Pink: UMBRELLA_WHITE, Blue: UMBRELLA_BLUE, LightBlue: UMBRELLA_WHITE },
+      instances: [at(-11.5, -3.5, 0.3)]
+    },
+    {
+      key: 'umbrella-red',
+      name: 'Beach_Umbrella_3',
+      colors: { LightBlue: UMBRELLA_WHITE, Orange_003: UMBRELLA_RED, Pink: UMBRELLA_WHITE },
+      instances: [at(12, -8.5, -0.5)]
+    },
+    {
+      key: 'umbrella-red-2',
+      name: 'Beach_Umbrella_1',
+      colors: { Pink: UMBRELLA_WHITE, Blue: UMBRELLA_RED, LightBlue: UMBRELLA_WHITE },
+      instances: [at(-12.5, -15.5, 1.1)]
+    }
   ]
   const chairs = [
     { name: 'Beach_Chair_1', instances: [at(-10.5, -5, -0.3), at(13.2, -10, 0.4), at(-12.6, -5.2, 0.2), at(-11.2, -17.2, -0.5)] }
@@ -174,7 +197,7 @@
   </T.Mesh>
 </StaticBatch>
 
-<Sea shoreZ={SHORE_Z} />
+<Sea {island} />
 
 <!-- Matahari terbenam di kiri pelaminan; tidak terkena kabut supaya tetap bersinar. -->
 <T.Mesh position={[-26, 13, -96]}>
@@ -191,7 +214,10 @@
     <Nature url={PACK} modelName={palm.name} tint="#ffffff" instances={palm.instances} />
   {/each}
   <Nature url={PACK} modelName="Beach_Palm_5" tint="#ffffff" instances={leaningPalms} />
-  {#each [...umbrellas, ...chairs, ...towels, ...surfboards, ...floats] as item (item.name)}
+  {#each umbrellas as umbrella (umbrella.key)}
+    <Nature url={PACK} modelName={umbrella.name} tint="#ffffff" materialColors={umbrella.colors} instances={umbrella.instances} />
+  {/each}
+  {#each [...chairs, ...towels, ...surfboards, ...floats] as item (item.name)}
     <Nature url={PACK} modelName={item.name} tint="#ffffff" instances={item.instances} />
   {/each}
   <Nature url={PACK} modelName="Beach_Rocks" tint="#ffffff" instances={rocks} />
