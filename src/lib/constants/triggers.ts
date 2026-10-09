@@ -92,13 +92,17 @@ export const lightPoleColliders = lightPoles.map((p) => ({
   maxZ: p.position[2] + LIGHT_POLE_COLLISION_RADIUS
 }))
 
-export const colliders = [
-  // Light poles (prevent walking through 10 poles)
-  ...lightPoleColliders,
+export type Collider = { minX: number; maxX: number; minZ: number; maxZ: number }
+
+// Collider inti yang ada di semua venue (meja resepsionis, kotak ucapan).
+export const coreColliders: Collider[] = [
   // Meja resepsionis (world bounds di z≈−10: x~3.58-4.42, z~-11.3–-8.7)
   { minX: 3.5, maxX: 4.45, minZ: -11.3, maxZ: -8.7 },
   { minX: -5.6, maxX: -4.4, minZ: -10.6, maxZ: -9.4 }
 ]
+
+// Default (venue dengan tiang lampu): tiang + collider inti.
+export const colliders: Collider[] = [...lightPoleColliders, ...coreColliders]
 
 // Wedding arch di kaki tangga (world z≈-14.9). Dua tiang kokoh di X±4.5 (di
 // luar jalur jalan ±1.0), crossbar atas di Y≈3.9. Dipakai VenueCore (visual +

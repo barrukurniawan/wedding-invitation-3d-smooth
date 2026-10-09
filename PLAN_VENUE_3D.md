@@ -273,7 +273,7 @@ Lanjut ke Fase 1 hanya setelah kamu menyatakan OK.
 #### Opsional setelah Fase 0
 - Merge `new_staging_refactor` (hanya Fase 0) ke `new_staging` dan deploy lebih dulu, sebelum ada fitur venue. Semua tamu langsung mendapat versi yang lebih ringan, dan risiko rilis venue nanti lebih kecil. Ini perlu persetujuanmu.
 
-> **Status 2026-10-09:** Fase 1 selesai (commit `d655c88`). Fase 2 selesai di lokal: venue pantai, palet coral, `beach-pack.glb` 193 KB, kredit di modal pelaminan + `CREDITS.md`. Draw call pantai 156 desktop / 138 mobile (sedikit di atas 150; garden tetap 147/130). Catatan lanjutan: pohon/kelapa belum punya collider (pemain bisa menembus batang, sudah begitu juga di garden); pemilih venue di dashboard = Fase 3.
+> **Status 2026-10-09:** Fase 1 selesai (commit `d655c88`). Fase 2 selesai di lokal: venue pantai, palet coral, `beach-pack.glb` 193 KB, kredit di modal pelaminan + `CREDITS.md`. Revisi user (2026-10-09): karpet & runner biru laut, corak kerang/bintang laut, gugusan batu-karang-kerang menggantikan semak, tiang lampu kiri-kanan + kabelnya dihapus (arch tetap). Draw call pantai 160 desktop / 144 mobile (garden tetap 147/130); ~40 mesh tunggal yang belum ter-batch ada di kedua venue (peluang optimasi berikutnya). Catatan lanjutan: pohon/kelapa belum punya collider (pemain bisa menembus batang, sudah begitu juga di garden); pemilih venue di dashboard = Fase 3.
 
 ### Fase 1: Data venue end-to-end
 1. `database/migrations/015_wedding_venue.sql`: tambah kolom `venue` secara idempotent (pola cek `INFORMATION_SCHEMA` seperti 012) dan daftarkan di `server/scripts/migrate.js`.

@@ -13,7 +13,7 @@
   import Confetti from './Confetti.svelte'
 import Labels from './Labels.svelte'
   import RenderDiagnostics from './RenderDiagnostics.svelte'
-  import { tick, playerPos } from '../../stores/playerMovement.svelte'
+  import { tick, playerPos, setLightPoleCollidersEnabled } from '../../stores/playerMovement.svelte'
 import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/gameState.svelte'
   import { getNearbyTrigger } from '../../utils/interaction'
   import { bumpCriticalLoaded } from '../../stores/loadProgress.svelte'
@@ -45,6 +45,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
   // Dev-only: `?venue=beach` untuk mencoba venue tanpa mengubah database.
   const devVenue = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('venue') : null
   const venue = resolveVenue(devVenue ?? get(weddingConfig).venue)
+  setLightPoleCollidersEnabled(venue.theme.coreLayout?.lightPoles ?? true)
 
   onMount(() => {
     // Muat inti venue dan sekelilingnya paralel supaya tidak ada round-trip berantai.
@@ -91,6 +92,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
     {renderQuality}
     {Surroundings}
     palette={venue.theme.corePalette}
+    layout={venue.theme.coreLayout}
     onReady={() => {
       if (envCriticalReady) return
       envCriticalReady = true

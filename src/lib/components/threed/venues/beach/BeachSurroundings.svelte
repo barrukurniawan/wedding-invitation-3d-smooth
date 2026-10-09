@@ -69,8 +69,8 @@
 
   // === KELAPA — berjajar renggang di batas venue (|X|≈7.5) + rumpun di sisi luar ===
   const palmsLining = [4, -4, -12, -19].flatMap((z, i) => [
-    at(-7.6, z, 0.4 + i * 1.3, 0.85 + (i % 3) * 0.08),
-    at(7.6, z + 1, -0.6 - i * 1.1, 0.88 + ((i + 1) % 3) * 0.07)
+    at(-8.8, z, 0.4 + i * 1.3, 0.85 + (i % 3) * 0.08),
+    at(8.8, z + 1, -0.6 - i * 1.1, 0.88 + ((i + 1) % 3) * 0.07)
   ])
   const palmsOuter = [
     at(-12, 5, 1.2, 1.0), at(12.5, 3, -2.1, 0.95), at(-14, -6, 2.6, 1.1), at(15, -5, -0.4, 1.05),
@@ -110,11 +110,22 @@
   const yacht = [at(-16, -46, 1.1)]
   const floats = [{ name: 'Beach_Float_1', instances: [at(7, -29, 0.4), at(-5.5, -31, 1.2)] }]
 
-  // Semak bunga di tepi jalur (sama dengan garden), bunga bernuansa coral.
-  const aisleFlowerBushes = Array.from({ length: 8 }, (_, i) => 7.5 - i * 2.8).flatMap((z, i) => [
-    { position: [-2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 },
-    { position: [2.5, 0.02, z] as [number, number, number], rotationY: i % 2 === 0 ? 0.12 : -0.12 }
+  // Gugusan batu laut + karang + kerang di tepi jalur (posisi sama dengan semak garden).
+  const aisleClusters = Array.from({ length: 8 }, (_, i) => 7.5 - i * 2.8).flatMap((z, i) => [
+    { position: [-2.5, 0, z] as [number, number, number], rotationY: 0.4 + i * 1.3, variant: i % 3 },
+    { position: [2.5, 0, z] as [number, number, number], rotationY: -0.9 - i * 1.1, variant: (i + 1) % 3 }
   ])
+  const rockGeo = new THREE.DodecahedronGeometry(0.3, 0)
+  const branchGeo = new THREE.CylinderGeometry(0.035, 0.06, 0.55, 5)
+  const brainCoralGeo = new THREE.SphereGeometry(0.2, 8, 6)
+  const shellGeo = new THREE.SphereGeometry(0.09, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2)
+  // Warna sengaja sama dengan corak jalur (VenueCore) supaya ter-batch jadi satu draw call.
+  const rockColors = ['#8f979c', '#a9a297', '#8f979c']
+  const coralColors = ['#f08c6c', '#f7a1b5', '#ffa45c']
+  // Cabang karang: [x, z, tinggi, miring-x, miring-z]
+  const branches: [number, number, number, number, number][] = [
+    [0.05, -0.05, 1.0, 0.25, 0.1], [-0.12, 0.02, 0.8, -0.35, 0.2], [0.18, 0.1, 0.7, 0.4, -0.3], [-0.02, 0.16, 0.6, -0.1, -0.45]
+  ]
 </script>
 
 <StaticBatch>
@@ -131,6 +142,31 @@
     <T.PlaneGeometry args={[23.4, SAND_LENGTH]} />
     <T.MeshToonMaterial color="#ffffff" map={sandRight} gradientMap={gradient} />
   </T.Mesh>
+  <!-- Gugusan batu laut, karang, dan kerang di kanan-kiri jalur -->
+  {#each aisleClusters as cluster}
+    <T.Group position={cluster.position} rotation.y={cluster.rotationY}>
+      <T.Mesh geometry={rockGeo} position={[-0.32, 0.12, 0.05]} scale={[1.1, 0.55, 0.9]}>
+        <T.MeshToonMaterial color={rockColors[cluster.variant]} gradientMap={gradient} />
+      </T.Mesh>
+      <T.Mesh geometry={rockGeo} position={[0.36, 0.08, -0.12]} scale={[0.7, 0.4, 0.75]}>
+        <T.MeshToonMaterial color={rockColors[(cluster.variant + 1) % 3]} gradientMap={gradient} />
+      </T.Mesh>
+      {#each branches as [x, z, h, tiltX, tiltZ]}
+        <T.Mesh geometry={branchGeo} position={[x, 0.27 * h, z]} scale={[1, h, 1]} rotation.x={tiltX} rotation.z={tiltZ}>
+          <T.MeshToonMaterial color={coralColors[cluster.variant]} gradientMap={gradient} />
+        </T.Mesh>
+      {/each}
+      <T.Mesh geometry={brainCoralGeo} position={[0.12, 0.1, 0.3]} scale={[1, 0.65, 1]}>
+        <T.MeshToonMaterial color={coralColors[(cluster.variant + 2) % 3]} gradientMap={gradient} />
+      </T.Mesh>
+      <T.Mesh geometry={shellGeo} position={[-0.15, 0, 0.38]} scale={[1, 0.6, 1.2]}>
+        <T.MeshToonMaterial color="#ffe2cf" gradientMap={gradient} />
+      </T.Mesh>
+      <T.Mesh geometry={shellGeo} position={[0.42, 0, 0.22]} scale={[0.7, 0.5, 0.9]}>
+        <T.MeshToonMaterial color="#ffd2b5" gradientMap={gradient} />
+      </T.Mesh>
+    </T.Group>
+  {/each}
   <!-- Pasir basah di bibir pantai -->
   <T.Mesh rotation.x={-Math.PI / 2} position={[0, -0.035, SHORE_Z + 1.2]}>
     <T.PlaneGeometry args={[54, 2.4]} />
@@ -161,12 +197,4 @@
   <Nature url={PACK} modelName="Beach_Rocks" tint="#ffffff" instances={rocks} />
   <Nature url={PACK} modelName="Beach_Lifeguard_Tower" tint="#ffffff" instances={tower} />
   <Nature url={PACK} modelName="Beach_Yacht" tint="#ffffff" instances={yacht} />
-  <Nature
-    url="/nature/gltf/Bush_Common_Flowers.gltf"
-    scale={0.55}
-    tint="#ffffff"
-    materialColors={{ Flowers: '#FF8A73' }}
-    materialDuotones={{ Leaves_NormalTree: { light: '#F5EDD8', dark: '#D4BA8A' } }}
-    instances={aisleFlowerBushes}
-  />
 {/if}

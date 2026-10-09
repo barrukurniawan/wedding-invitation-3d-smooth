@@ -2,6 +2,8 @@ import { writable } from 'svelte/store'
 import { browser } from '$app/environment'
 import {
   colliders,
+  coreColliders,
+  type Collider,
   STAGE,
   STAGE_ENTRY_HALF_WIDTH,
   RAMP,
@@ -176,7 +178,13 @@ function groundHeightAt(x: number, z: number) {
   return ((RAMP.maxZ - z) / (RAMP.maxZ - RAMP.minZ)) * RAMP.height
 }
 
-function overlapsCollider(x: number, z: number, c: typeof colliders[number]) {
+// Venue tanpa tiang lampu (mis. pantai) tidak boleh punya collider tiang tak terlihat.
+let activeColliders: Collider[] = colliders
+export function setLightPoleCollidersEnabled(enabled: boolean) {
+  activeColliders = enabled ? colliders : coreColliders
+}
+
+function overlapsCollider(x: number, z: number, c: Collider) {
   return (
     x + PLAYER_RADIUS > c.minX &&
     x - PLAYER_RADIUS < c.maxX &&
@@ -186,7 +194,7 @@ function overlapsCollider(x: number, z: number, c: typeof colliders[number]) {
 }
 
 function canMoveTo(x: number, z: number) {
-  if (colliders.some((c) => overlapsCollider(x, z, c))) return false
+  if (activeColliders.some((c) => overlapsCollider(x, z, c))) return false
 
   const currentOnStage = isOnStage(playerPos.x, playerPos.z)
   const nextOnStage = isOnStage(x, z)

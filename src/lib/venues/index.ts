@@ -15,6 +15,12 @@ export interface SurroundingsProps {
 // Peta warna inti (hex garden -> hex venue) untuk VenueCore; kosong = warna asli.
 export type CorePalette = Record<string, string>
 
+// Variasi elemen inti per venue. Default = garden (tiang lampu + corak bunga).
+export interface CoreLayout {
+  lightPoles?: boolean
+  aisleMotif?: 'flower' | 'shell'
+}
+
 export interface VenueTheme {
   background: string
   fog: { color: string; near: number; far: number; nearLowPower: number; farLowPower: number }
@@ -25,6 +31,7 @@ export interface VenueTheme {
     sun: { position: [number, number, number]; intensity: number; color?: string }
   }
   corePalette?: CorePalette
+  coreLayout?: CoreLayout
 }
 
 // Atribusi aset pihak ketiga (wajib untuk CC-BY); ditampilkan di modal pelaminan.
@@ -74,10 +81,10 @@ export const venues: Partial<Record<VenueId, VenueDef>> = {
       },
       // Pelaminan, karpet, dan bunga bernuansa coral; emas, ivory, dan daun tetap.
       corePalette: {
-        '#b91c3c': '#e2634f', // karpet
+        '#b91c3c': '#2b86b0', // karpet menuju pelaminan: biru laut
         '#9c3a52': '#cf5a45', // lantai panggung
         '#6b2a3a': '#8f3b2c', // sub-base panggung
-        '#9c2a40': '#d4553f', // runner & anak tangga
+        '#9c2a40': '#23729a', // runner panggung & anak tangga: biru laut
         '#d96b7a': '#ff8a73', // drapery
         '#c97f93': '#f09a82', // landing carpet & panel meja
         '#d1677e': '#f07a63', // kotak surat
@@ -94,7 +101,8 @@ export const venues: Partial<Record<VenueId, VenueDef>> = {
         '#70975d': '#d6b07c', // alas kotak surat (rumput -> pasir)
         '#d9899d': '#f08c78', // motif jalur
         '#f4b8c7': '#ffc4b3'
-      }
+      },
+      coreLayout: { lightPoles: false, aisleMotif: 'shell' }
     },
     credits: [
       {
