@@ -1,6 +1,9 @@
 <script lang="ts">
   import { activeModal, guestName, openModal, closeModal } from '../../stores/gameState.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
+  import { resolveVenue } from '../../venues'
+
+  const credits = $derived(resolveVenue($weddingConfig.venue).credits ?? [])
 
   let showPayment = $state(false)
   let activeTab = $state<'info' | 'gallery'>('info')
@@ -204,6 +207,19 @@
              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13" /></svg>
           </button>
         </div>
+        {#if credits.length}
+          <details class="px-4 pb-3 text-[10px] leading-relaxed text-[var(--deep-rose)]/60">
+            <summary class="cursor-pointer select-none text-center">Kredit aset 3D</summary>
+            <ul class="mt-1 space-y-0.5 text-center">
+              {#each credits as credit (credit.url)}
+                <li>
+                  "<a href={credit.url} target="_blank" rel="noopener noreferrer" class="underline">{credit.title}</a>"
+                  oleh {credit.author}, {credit.license}
+                </li>
+              {/each}
+            </ul>
+          </details>
+        {/if}
       {/if}
     </div>
   </div>

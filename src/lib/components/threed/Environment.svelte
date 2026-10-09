@@ -3,15 +3,17 @@
   import { onMount, type Component } from 'svelte'
   import VenueCore from './venue/VenueCore.svelte'
   import VenueOccluders from './venue/VenueOccluders.svelte'
-  import type { SurroundingsProps } from '../../venues'
+  import type { CorePalette, SurroundingsProps } from '../../venues'
 
   let {
     lowPower = false,
     renderQuality = 'desktop',
     Surroundings,
+    palette,
     onReady
   }: SurroundingsProps & {
     Surroundings: Component<SurroundingsProps>
+    palette?: CorePalette
     onReady?: () => void
   } = $props()
 
@@ -30,5 +32,5 @@
 </script>
 
 <Surroundings {lowPower} {renderQuality} />
-<VenueCore />
+<VenueCore {palette} />
 <VenueOccluders />

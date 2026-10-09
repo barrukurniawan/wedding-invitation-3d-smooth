@@ -90,6 +90,7 @@ import { setNearbyTrigger, setSceneLoadError, guestGender } from '../../stores/g
     {lowPower}
     {renderQuality}
     {Surroundings}
+    palette={venue.theme.corePalette}
     onReady={() => {
       if (envCriticalReady) return
       envCriticalReady = true

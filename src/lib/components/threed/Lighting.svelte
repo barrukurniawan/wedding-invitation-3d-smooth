@@ -15,5 +15,6 @@
 
 <T.DirectionalLight
   position={lighting.sun.position}
+  color={lighting.sun.color ?? '#ffffff'}
   intensity={lighting.sun.intensity}
 />

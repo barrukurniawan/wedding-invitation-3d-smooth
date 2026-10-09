@@ -12,6 +12,9 @@ export interface SurroundingsProps {
   renderQuality?: 'mobile' | 'desktop' | 'desktop-retina'
 }
 
+// Peta warna inti (hex garden -> hex venue) untuk VenueCore; kosong = warna asli.
+export type CorePalette = Record<string, string>
+
 export interface VenueTheme {
   background: string
   fog: { color: string; near: number; far: number; nearLowPower: number; farLowPower: number }
@@ -19,14 +22,24 @@ export interface VenueTheme {
   lighting: {
     hemisphere: { sky: string; ground: string; intensity: number }
     ambient: { color: string; intensity: number }
-    sun: { position: [number, number, number]; intensity: number }
+    sun: { position: [number, number, number]; intensity: number; color?: string }
   }
+  corePalette?: CorePalette
+}
+
+// Atribusi aset pihak ketiga (wajib untuk CC-BY); ditampilkan di modal pelaminan.
+export interface AssetCredit {
+  title: string
+  author: string
+  url: string
+  license: string
 }
 
 export interface VenueDef {
   id: VenueId
   label: string
   theme: VenueTheme
+  credits?: AssetCredit[]
   loadSurroundings: () => Promise<{ default: Component<SurroundingsProps> }>
 }
 
@@ -46,6 +59,58 @@ export const venues: Partial<Record<VenueId, VenueDef>> = {
       }
     },
     loadSurroundings: () => import('../components/threed/venues/garden/GardenSurroundings.svelte')
+  },
+  beach: {
+    id: 'beach',
+    label: 'Pantai Sunset',
+    theme: {
+      background: '#f6b48f',
+      fog: { color: '#f7cdb0', near: 34, far: 80, nearLowPower: 28, farLowPower: 64 },
+      sky: { horizon: '#ffcfa3', top: '#8a8fd6' },
+      lighting: {
+        hemisphere: { sky: '#ffdcbc', ground: '#c9a27a', intensity: 1.9 },
+        ambient: { color: '#ffe6cf', intensity: 0.5 },
+        sun: { position: [-10, 14, 12], intensity: 2.1, color: '#ffd9b0' }
+      },
+      // Pelaminan, karpet, dan bunga bernuansa coral; emas, ivory, dan daun tetap.
+      corePalette: {
+        '#b91c3c': '#e2634f', // karpet
+        '#9c3a52': '#cf5a45', // lantai panggung
+        '#6b2a3a': '#8f3b2c', // sub-base panggung
+        '#9c2a40': '#d4553f', // runner & anak tangga
+        '#d96b7a': '#ff8a73', // drapery
+        '#c97f93': '#f09a82', // landing carpet & panel meja
+        '#d1677e': '#f07a63', // kotak surat
+        '#d68a9b': '#f4a28c', // sandaran kursi
+        '#c95778': '#ef6a55', // hati tengah
+        '#f9d7df': '#ffe0d6', // hati dalam
+        '#ef8daa': '#ff8f7a', // bunga backdrop
+        '#f7bfd0': '#ffc2b0',
+        '#e6a8d2': '#ffb38a',
+        '#d96f91': '#f2725c', // bunga buket
+        '#f3a7bd': '#ffa891',
+        '#d99ac8': '#ffb07a',
+        '#ef829f': '#ff7f6b',
+        '#70975d': '#d6b07c', // alas kotak surat (rumput -> pasir)
+        '#d9899d': '#f08c78', // motif jalur
+        '#f4b8c7': '#ffc4b3'
+      }
+    },
+    credits: [
+      {
+        title: 'Low Poly Beach Assets',
+        author: 'EdwinRC',
+        url: 'https://sketchfab.com/3d-models/low-poly-beach-assets-66c18ecd7a834d4a99dabc46b5ee6e4a',
+        license: 'CC BY 4.0'
+      },
+      {
+        title: 'Palm Tree Low Poly',
+        author: 'Connor_Appleton',
+        url: 'https://sketchfab.com/3d-models/palm-tree-low-poly-6198f5dd302644a2bc5e1d31fef46fb0',
+        license: 'CC BY 4.0'
+      }
+    ],
+    loadSurroundings: () => import('../components/threed/venues/beach/BeachSurroundings.svelte')
   }
 }
 

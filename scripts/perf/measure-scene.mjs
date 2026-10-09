@@ -9,6 +9,7 @@
 //   --url <url>        default http://kia-toni.localhost:5173/
 //   --profiles a,b     default desktop-retina,desktop,mobile
 //   --no-throttle      lewati uji FPS dengan CPU diperlambat
+//   --venue <id>       paksa venue (dev-only ?venue=), mis. beach
 // Hasil: .perf/<label>/report.json + <profile>-<spawn>.png (+ diff-*.png saat --compare)
 
 import fs from 'node:fs'
@@ -25,6 +26,7 @@ const flag = (name) => args.includes(`--${name}`)
 const label = opt('label', 'run')
 const compare = opt('compare')
 const baseUrl = opt('url', 'http://kia-toni.localhost:5173/')
+const venue = opt('venue')
 const chromePath = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const outDir = path.resolve('.perf', label)
 fs.mkdirSync(outDir, { recursive: true })
@@ -71,6 +73,7 @@ async function openScene(profile, spawn) {
   const url = new URL(baseUrl)
   url.searchParams.set('perf', '')
   if (spawn !== 'default') url.searchParams.set('spawn', spawn)
+  if (venue) url.searchParams.set('venue', venue)
   await page.goto(url.toString(), { waitUntil: 'domcontentloaded' })
 
   // Tunggu sampai draw call stabil (vegetasi deferred ikut termuat).
