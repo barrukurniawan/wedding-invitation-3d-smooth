@@ -118,7 +118,6 @@
   function loadMenuData(menu: MenuId, force = false) {
     if (menu === 'subdomain' && (force || adminInvitations.length === 0)) return loadAdminInvitations()
     if (menu === 'ucapan' && (force || entries.length === 0)) return Promise.all([loadEntries(), loadStats()])
-    if (menu === 'ringkasan' && (force || stats.total === 0)) return loadStats()
   }
 
   function handleTabChange(menu: MenuId) {
@@ -319,8 +318,7 @@
       <section class="adm-section">
         {#key refreshKey}
           {#if activeTab === 'ringkasan'}
-            <MonitoringTab />
-            <div class="adm-section"><StatsTab {stats} /></div>
+            <MonitoringTab onNavigate={handleTabChange} />
           {:else if activeTab === 'subdomain'}
             <VerificationTab invitations={adminInvitations} loading={loadingInvitations} verifyingId={verifyingId} onActivate={handleActivate} onReject={handleReject} onRefresh={loadAdminInvitations} />
             {#if savedMsg}<p class="adm-error" style="margin-top: 12px">{savedMsg}</p>{/if}

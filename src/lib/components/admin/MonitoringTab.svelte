@@ -1,13 +1,29 @@
 <script lang="ts">
+  // Ringkasan platform: KPI, grafik kunjungan, RSVP, registrasi, dan subdomain terbaru.
   import { onMount } from 'svelte'
-  import { getAnalyticsSummary, getAnalyticsVisitors, type AnalyticsSummary, type AnalyticsVisitors } from '$lib/api-client'
-  import StatCard from './StatCard.svelte'
-  import { fmtIdr } from './format'
+  import {
+    getAdminSubdomains,
+    getAnalyticsSummary,
+    getAnalyticsVisitors,
+    getPlatformTraffic,
+    type AdminSubdomain,
+    type AnalyticsSummary,
+    type AnalyticsVisitors,
+    type PlatformTraffic,
+  } from '$lib/api-client'
+  import BarChart from './ui/BarChart.svelte'
+  import Icon from './ui/Icon.svelte'
+  import KpiCard from './ui/KpiCard.svelte'
+  import { fmtDayLabel, fmtIdr, fmtNumber, fmtRelative, fmtShortDate, initials, statusMeta } from './format'
+
+  let { onNavigate }: { onNavigate: (menu: 'subdomain' | 'trafik') => void } = $props()
 
   const POLL_MS = 30000
 
   let summary = $state<AnalyticsSummary | null>(null)
   let visitors = $state<AnalyticsVisitors | null>(null)
+  let traffic = $state<PlatformTraffic | null>(null)
+  let subdomains = $state<AdminSubdomain[]>([])
   let range = $state<7 | 30>(7)
   let loading = $state(true)
   let errorMsg = $state('')
@@ -16,13 +32,15 @@
   async function load() {
     if (typeof document !== 'undefined' && document.hidden) return
     try {
-      const [s, v] = await Promise.all([getAnalyticsSummary(), getAnalyticsVisitors(range)])
+      const [s, v, t, d] = await Promise.all([getAnalyticsSummary(), getAnalyticsVisitors(7), getPlatformTraffic(range), getAdminSubdomains(30)])
       summary = s
       visitors = v
+      traffic = t
+      subdomains = d.items
       errorMsg = ''
-      updatedAt = new Date().toLocaleTimeString('id-ID')
+      updatedAt = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     } catch {
-      errorMsg = 'Gagal memuat data monitoring.'
+      errorMsg = 'Gagal memuat data ringkasan.'
     } finally {
       loading = false
     }
@@ -39,127 +57,346 @@
     return () => clearInterval(interval)
   })
 
-  const maxViews = $derived(Math.max(1, ...(visitors?.series.map((p) => p.views) ?? [1])))
+  const totalViews = $derived(traffic?.totals.views ?? 0)
+  const totalUniques = $derived(traffic?.totals.uniques ?? 0)
+  const chartPoints = $derived(
+    (traffic?.series ?? []).map((p) => ({
+      label: fmtDayLabel(p.date),
+      title: fmtDayLabel(p.date, true),
+      values: [p.invitationViews, p.platformViews],
+    })),
+  )
+  const latest = $derived([...subdomains].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? '')).slice(0, 6))
+  const rsvpPct = (n: number) => (summary && summary.rsvps.total > 0 ? (n / summary.rsvps.total) * 100 : 0)
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-2">
-  <h2 class="text-lg font-semibold text-rose-300">Monitoring Platform</h2>
-  <span class="text-xs text-stone-500">
-    {#if loading}Memuat...{:else}Diperbarui {updatedAt}{/if}
-  </span>
-</div>
+{#if errorMsg}<p class="adm-error" style="margin-bottom: 12px">{errorMsg}</p>{/if}
 
-{#if errorMsg}<p class="mt-2 text-xs text-red-400">{errorMsg}</p>{/if}
-
-{#if summary}
-  <div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-    <StatCard label="Total User" value={summary.users.total} sub="+{summary.users.new30d} dalam 30 hari" tone="blue" />
-    <StatCard label="Undangan Aktif" value={summary.tenants.active} sub="{summary.tenants.total} total subdomain" tone="green" />
-    <StatCard label="Menunggu Verifikasi" value={summary.tenants.pending} sub="{summary.tenants.draft} draft" tone="yellow" />
-    <StatCard
-      label="Pembayaran Diterima"
-      value={summary.payments.receivedCount}
-      sub={fmtIdr(summary.payments.amountReceived)}
-      tone="green"
-    />
-    <StatCard label="RSVP Hadir" value={summary.rsvps.hadir} sub="dari {summary.rsvps.total} ucapan" tone="green" />
-    <StatCard label="RSVP Ragu-ragu" value={summary.rsvps.ragu} sub="belum pasti hadir" tone="yellow" />
-    <StatCard label="RSVP Tidak Hadir" value={summary.rsvps.tidakHadir} sub="konfirmasi tidak hadir" tone="rose" />
-    <StatCard label="Pembayaran Pending" value={summary.payments.pendingCount} sub="menunggu validasi" tone="blue" />
-  </div>
-{/if}
-
-{#if visitors}
-  <div class="mt-5 rounded-xl border border-stone-800 bg-stone-950 p-4">
-    <div class="flex items-center justify-between">
-      <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Kunjungan {range} Hari Terakhir</p>
-      <div class="flex gap-1">
-        <button
-          class="rounded-md px-2 py-0.5 text-xs font-medium {range === 7 ? 'bg-rose-600 text-white' : 'bg-stone-800 text-stone-400 hover:text-stone-200'}"
-          onclick={() => switchRange(7)}>7H</button
-        >
-        <button
-          class="rounded-md px-2 py-0.5 text-xs font-medium {range === 30 ? 'bg-rose-600 text-white' : 'bg-stone-800 text-stone-400 hover:text-stone-200'}"
-          onclick={() => switchRange(30)}>30H</button
-        >
+{#if loading && !summary}
+  <div class="adm-card"><p class="adm-empty">Memuat ringkasan...</p></div>
+{:else if summary}
+  <div class="adm-grid adm-grid-hero">
+    <!-- Total subdomain -->
+    <div class="adm-card">
+      <div class="adm-card-head" style="margin-bottom: 6px">
+        <span class="adm-card-sub" style="margin: 0">Total Subdomain</span>
+        <span class="adm-pill">Diperbarui {updatedAt || '-'}</span>
+      </div>
+      <p class="big-number">{fmtNumber(summary.tenants.total)}</p>
+      <div class="adm-kpi-foot" style="margin-top: 6px">
+        <span class="adm-pill green">+{summary.users.new30d} user</span>
+        <span>dalam 30 hari terakhir</span>
+      </div>
+      <div class="quick-actions">
+        <button type="button" class="adm-btn" onclick={() => onNavigate('subdomain')}><Icon name="globe" size={16} /> Lihat Subdomain</button>
+        <button type="button" class="adm-btn ghost" onclick={() => onNavigate('trafik')}><Icon name="chart" size={16} /> Trafik</button>
+      </div>
+      <div class="adm-card-soft" style="margin-top: 14px">
+        <p class="mini-title">Status undangan</p>
+        <div class="status-tiles">
+          <div class="status-tile">
+            <span class="adm-status" style="--dot: #16a34a">Aktif</span>
+            <strong>{summary.tenants.active}</strong>
+          </div>
+          <div class="status-tile">
+            <span class="adm-status" style="--dot: #d97706">Menunggu</span>
+            <strong>{summary.tenants.pending}</strong>
+          </div>
+          <div class="status-tile">
+            <span class="adm-status" style="--dot: #a8a29e">Draft</span>
+            <strong>{summary.tenants.draft}</strong>
+          </div>
+        </div>
       </div>
     </div>
 
-    {#if visitors.series.length === 0}
-      <p class="py-8 text-center text-sm text-stone-500">Belum ada data kunjungan.</p>
-    {:else}
-      <svg viewBox="0 0 {visitors.series.length * 24} 120" class="mt-3 h-32 w-full" preserveAspectRatio="none" role="img" aria-label="Grafik kunjungan harian">
-        {#each visitors.series as point, i (point.date)}
-          {@const barWidth = 9}
-          {@const viewHeight = Math.max(2, Math.round((point.views / maxViews) * 100))}
-          {@const uniqueHeight = Math.max(2, Math.round((point.uniques / maxViews) * 100))}
-          <rect x={i * 24 + 1} y={110 - viewHeight} width={barWidth} height={viewHeight} rx="2" fill="#fb7185"></rect>
-          <rect x={i * 24 + 12} y={110 - uniqueHeight} width={barWidth - 2} height={uniqueHeight} rx="2" fill="#78350f"></rect>
-        {/each}
-      </svg>
-      <div class="mt-2 flex items-center gap-4 text-[11px] text-stone-500">
-        <span class="flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-sm bg-rose-400"></span> Pageviews</span>
-        <span class="flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-sm bg-yellow-900"></span> Visitor unik</span>
-        <span class="ml-auto">{visitors.series[0].date} — {visitors.series[visitors.series.length - 1].date}</span>
+    <!-- KPI 2x2 -->
+    <div class="adm-card kpi-card">
+      <div class="kpi-grid">
+        <KpiCard hero label="Undangan Aktif" value={fmtNumber(summary.tenants.active)} icon="globe" badge="{summary.tenants.total} subdomain" note="terdaftar" />
+        <KpiCard label="Total User" value={fmtNumber(summary.users.total)} icon="users" badge="+{summary.users.new30d}" badgeTone="green" note="30 hari" />
+        <KpiCard label="Kunjungan" value={fmtNumber(totalViews)} icon="eye" badge="{fmtNumber(totalUniques)} unik" badgeTone="rose" note="{range} hari" />
+        <KpiCard
+          label="Pembayaran"
+          value={fmtNumber(summary.payments.receivedCount)}
+          icon="wallet"
+          badge={summary.payments.pendingCount > 0 ? `${summary.payments.pendingCount} pending` : fmtIdr(summary.payments.amountReceived)}
+          badgeTone={summary.payments.pendingCount > 0 ? 'amber' : ''}
+          note="diterima"
+        />
       </div>
-    {/if}
+    </div>
+
+    <!-- Grafik kunjungan -->
+    <div class="adm-card chart-card">
+      <div class="adm-card-head">
+        <div>
+          <h2 class="adm-card-title">Kunjungan</h2>
+          <p class="adm-card-sub">Pageviews semua web per hari, undangan vs platform</p>
+        </div>
+        <div class="adm-seg" role="group" aria-label="Rentang waktu">
+          <button type="button" class:active={range === 7} onclick={() => switchRange(7)}>7H</button>
+          <button type="button" class:active={range === 30} onclick={() => switchRange(30)}>30H</button>
+        </div>
+      </div>
+      <div class="adm-card-soft">
+        <div class="legend">
+          <span><i style="background: var(--adm-accent)"></i>Undangan</span>
+          <span><i style="background: var(--adm-ink)"></i>marryme.web.id</span>
+        </div>
+        {#if totalViews === 0}
+          <p class="adm-empty">Belum ada kunjungan dalam {range} hari terakhir.</p>
+        {:else}
+          <BarChart
+            points={chartPoints}
+            series={[
+              { name: 'Undangan', color: 'var(--adm-accent)', striped: true },
+              { name: 'marryme.web.id', color: 'var(--adm-ink)' },
+            ]}
+            stacked
+            height={190}
+          />
+        {/if}
+      </div>
+    </div>
   </div>
 
-  <div class="mt-5 grid gap-4 md:grid-cols-2">
-    <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Subdomain Terpopuler</p>
-      {#if visitors.topSlugs.length === 0}
-        <p class="py-6 text-center text-sm text-stone-500">Belum ada kunjungan undangan.</p>
-      {:else}
-        <table class="mt-3 w-full text-left text-sm">
+  <div class="adm-grid adm-grid-split adm-section">
+    <div class="adm-grid" style="align-content: start">
+      <!-- RSVP -->
+      <div class="adm-card">
+        <div class="adm-card-head">
+          <div>
+            <h2 class="adm-card-title">RSVP Semua Undangan</h2>
+            <p class="adm-card-sub">{fmtNumber(summary.rsvps.total)} ucapan dari tamu</p>
+          </div>
+          <span class="adm-kpi-icon static"><Icon name="heart" size={16} /></span>
+        </div>
+        <div class="rsvp-bar" aria-hidden="true">
+          <span style="width: {rsvpPct(summary.rsvps.hadir)}%; background: var(--adm-accent)"></span>
+          <span style="width: {rsvpPct(summary.rsvps.ragu)}%; background: var(--adm-rose)"></span>
+          <span style="width: {rsvpPct(summary.rsvps.tidakHadir)}%; background: var(--adm-ink)"></span>
+        </div>
+        <div class="rsvp-legend">
+          <span><i style="background: var(--adm-accent)"></i>Hadir <b>{summary.rsvps.hadir}</b></span>
+          <span><i style="background: var(--adm-rose)"></i>Ragu <b>{summary.rsvps.ragu}</b></span>
+          <span><i style="background: var(--adm-ink)"></i>Tidak <b>{summary.rsvps.tidakHadir}</b></span>
+        </div>
+      </div>
+
+      <!-- Registrasi terbaru -->
+      <div class="adm-card">
+        <div class="adm-card-head">
+          <h2 class="adm-card-title">Registrasi Terbaru</h2>
+        </div>
+        {#if !visitors || visitors.recentUsers.length === 0}
+          <p class="adm-empty">Belum ada registrasi.</p>
+        {:else}
+          <ul class="people">
+            {#each visitors.recentUsers as user, i (user.email ?? i)}
+              <li>
+                <span class="adm-avatar">{initials(user.displayName)}</span>
+                <span class="people-text">
+                  <strong>{user.displayName}</strong>
+                  <span>{user.email || '—'}</span>
+                </span>
+                <span class="people-date">{fmtShortDate(user.createdAt)}</span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Subdomain terbaru -->
+    <div class="adm-card" style="align-self: start">
+      <div class="adm-card-head">
+        <div>
+          <h2 class="adm-card-title">Subdomain Terbaru</h2>
+          <p class="adm-card-sub">Pendaftaran terakhir beserta email pembuatnya</p>
+        </div>
+        <button type="button" class="adm-btn ghost sm" onclick={() => onNavigate('subdomain')}>Lihat semua ({subdomains.length})</button>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
           <thead>
-            <tr class="text-xs uppercase tracking-wider text-stone-500">
-              <th class="pb-2 font-semibold">Subdomain</th>
-              <th class="pb-2 text-right font-semibold">Views</th>
-              <th class="pb-2 text-right font-semibold">Unik</th>
+            <tr>
+              <th>Subdomain</th>
+              <th>Pemilik</th>
+              <th>Status</th>
+              <th class="num">Kunjungan 30H</th>
+              <th>Terakhir dikunjungi</th>
             </tr>
           </thead>
           <tbody>
-            {#each visitors.topSlugs as item (item.slug)}
-              <tr class="border-t border-stone-800">
-                <td class="py-1.5 font-medium text-stone-200">{item.slug}</td>
-                <td class="py-1.5 text-right text-stone-300">{item.views}</td>
-                <td class="py-1.5 text-right text-stone-400">{item.uniques}</td>
+            {#each latest as item (item.id)}
+              {@const meta = statusMeta(item.status)}
+              <tr>
+                <td>
+                  <a class="slug-link" href={item.public_url} target="_blank" rel="noreferrer">{item.slug}</a>
+                  <span class="cell-sub">Dibuat {fmtShortDate(item.created_at)}</span>
+                </td>
+                <td>
+                  <span class="cell-main">{item.owner_name || '—'}</span>
+                  <span class="cell-sub">{item.owner_email || 'tanpa email'}</span>
+                </td>
+                <td><span class="adm-status" style="--dot: {meta.color}">{meta.label}</span></td>
+                <td class="num">{fmtNumber(item.views)}</td>
+                <td class="cell-muted">{fmtRelative(item.last_visit)}</td>
               </tr>
+            {:else}
+              <tr><td colspan="5" class="adm-empty">Belum ada subdomain.</td></tr>
             {/each}
           </tbody>
         </table>
-      {/if}
-    </div>
-
-    <div class="rounded-xl border border-stone-800 bg-stone-950 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Registrasi Terbaru</p>
-      {#if visitors.recentUsers.length === 0}
-        <p class="py-6 text-center text-sm text-stone-500">Belum ada registrasi.</p>
-      {:else}
-        <ul class="mt-3 space-y-2.5">
-          {#each visitors.recentUsers as user, i (user.email ?? i)}
-            <li class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="truncate text-sm font-medium text-stone-200">{user.displayName}</p>
-                <p class="truncate text-xs text-stone-500">{user.email || '—'}</p>
-              </div>
-              <span class="shrink-0 text-[11px] text-stone-500">{new Date(user.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    </div>
-  </div>
-
-  {#if visitors.topPaths.length > 0}
-    <div class="mt-5 rounded-xl border border-stone-800 bg-stone-950 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Halaman Terkunjungi</p>
-      <div class="mt-3 flex flex-wrap gap-2">
-        {#each visitors.topPaths as p (p.path)}
-          <span class="rounded-lg bg-stone-800 px-2.5 py-1 text-xs text-stone-300">{p.path} <span class="font-semibold text-rose-300">{p.views}</span></span>
-        {/each}
       </div>
     </div>
-  {/if}
+  </div>
 {/if}
+
+<style>
+  .big-number {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .mini-title {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    color: var(--adm-muted);
+  }
+  .status-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .status-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--adm-surface);
+  }
+  .status-tile strong {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .status-tile .adm-status {
+    font-size: 12px;
+  }
+  .kpi-card {
+    padding: 10px;
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    height: 100%;
+  }
+  .legend,
+  .rsvp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--adm-ink-2);
+  }
+  .legend {
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .legend span,
+  .rsvp-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend i,
+  .rsvp-legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+  }
+  .rsvp-bar {
+    display: flex;
+    gap: 3px;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: repeating-linear-gradient(135deg, var(--adm-soft) 0 6px, var(--adm-line) 6px 8px);
+  }
+  .rsvp-bar span {
+    height: 100%;
+    border-radius: 999px;
+  }
+  .rsvp-legend {
+    margin-top: 12px;
+  }
+  .adm-kpi-icon.static {
+    position: static;
+  }
+  .people {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .people li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .people-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .people-text strong,
+  .people-text span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .people-text strong {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .people-text span,
+  .people-date {
+    font-size: 12px;
+    color: var(--adm-muted);
+  }
+  .people-date {
+    white-space: nowrap;
+  }
+  .slug-link {
+    font-weight: 600;
+    color: var(--adm-ink);
+  }
+  .slug-link:hover {
+    color: var(--adm-accent);
+    text-decoration: underline;
+  }
+  .cell-main,
+  .cell-sub {
+    display: block;
+    white-space: nowrap;
+  }
+  .cell-sub,
+  .cell-muted {
+    font-size: 12px;
+    color: var(--adm-muted);
+    white-space: nowrap;
+  }
+</style>
