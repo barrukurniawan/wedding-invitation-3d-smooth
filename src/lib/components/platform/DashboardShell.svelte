@@ -414,7 +414,7 @@
 
 <svelte:head>
   <title>MarryMe — Undangan Pernikahan 3D yang Bisa Dijelajahi Tamu</title>
-  <meta name="description" content="Undangan pernikahan 3D interaktif: tamu berjalan ke pelaminan, menulis ucapan, dan RSVP dari satu link. Gratis selama promo peluncuran." />
+  <meta name="description" content="Undangan pernikahan 3D interaktif: tamu berjalan ke pelaminan, menulis ucapan, dan RSVP dari satu link. Gratis selama Promo Launching." />
 </svelte:head>
 
 <main class="onboarding">

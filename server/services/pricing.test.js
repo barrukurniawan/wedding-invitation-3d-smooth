@@ -7,7 +7,7 @@ const base = {
   INVITATION_PRICE_IDR: '0',
   PRICE_NORMAL_IDR: '299999',
   PRICE_AFTER_PROMO_IDR: '49999',
-  PROMO_LABEL: 'Promo Peluncuran',
+  PROMO_LABEL: 'Promo Launching',
   PROMO_ENDS_AT: '2026-10-14T23:59:59+07:00',
   WHATSAPP_NUMBER: '0821-2212-6254',
 }
@@ -22,7 +22,7 @@ test('promo active before the deadline exposes strikethrough and countdown', () 
   assert.equal(p.afterPromoPrice, 49999)
   assert.equal(p.promoActive, true)
   assert.equal(p.promoEndsAt, '2026-10-14T16:59:59.000Z')
-  assert.equal(p.promoLabel, 'Promo Peluncuran')
+  assert.equal(p.promoLabel, 'Promo Launching')
 })
 
 test('promo hides itself after the deadline', () => {

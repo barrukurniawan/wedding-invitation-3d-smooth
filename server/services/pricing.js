@@ -30,7 +30,7 @@ export function pricingInfo(env = process.env, now = new Date()) {
     normalPrice: promoActive ? normalPrice : null,
     afterPromoPrice: promoActive ? afterPromoPrice : null,
     promoActive,
-    promoLabel: promoActive ? String(env.PROMO_LABEL || 'Promo Peluncuran') : null,
+    promoLabel: promoActive ? String(env.PROMO_LABEL || 'Promo Launching') : null,
     promoEndsAt: promoActive ? promoEndsAt.toISOString() : null,
     whatsapp,
   }

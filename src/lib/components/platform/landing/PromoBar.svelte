@@ -29,7 +29,7 @@
       <div class="copy">
         <span class="pill" aria-label="{pricing.promoLabel}, berakhir dalam {compact}">
           <span class="dot" aria-hidden="true"></span>
-          <span>{pricing.promoLabel}</span>
+          <span class="label-text">{pricing.promoLabel}</span>
           <span class="time">⏱ {compact}</span>
         </span>
         <p class="price">
@@ -94,6 +94,7 @@
     background: var(--lp-gold);
     animation: pulse 1.8s ease-out infinite;
   }
+  .pill .label-text,
   .time {
     color: var(--lp-gold);
     font-variant-numeric: tabular-nums;
