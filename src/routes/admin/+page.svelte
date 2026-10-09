@@ -1,21 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import {
-    activateInvitation,
     ApiError,
     deleteAdminGuestbookEntry,
     getAdminConfig,
     getAdminGuestbook,
-    getAdminInvitations,
     getAdminSession,
     getAdminStats,
     login as createAdminSession,
     logout,
-    rejectInvitation,
     updateAdminConfig,
     uploadAdminPhoto,
     uploadAdminMusic,
-    type AdminInvitation,
     type GuestbookEntry,
     type GuestbookStats,
     type WeddingConfig,
@@ -24,7 +20,7 @@
   import AdminShell from '$lib/components/admin/ui/AdminShell.svelte'
   import Icon from '$lib/components/admin/ui/Icon.svelte'
   import MonitoringTab from '$lib/components/admin/MonitoringTab.svelte'
-  import VerificationTab from '$lib/components/admin/VerificationTab.svelte'
+  import SubdomainsTab from '$lib/components/admin/SubdomainsTab.svelte'
   import CoupleTab from '$lib/components/admin/CoupleTab.svelte'
   import EventsTab from '$lib/components/admin/EventsTab.svelte'
   import PaymentTab from '$lib/components/admin/PaymentTab.svelte'
@@ -76,9 +72,6 @@
   let uploading = $state(false)
 
   let entries = $state<GuestbookEntry[]>([])
-  let adminInvitations = $state<AdminInvitation[]>([])
-  let loadingInvitations = $state(false)
-  let verifyingId = $state<number | null>(null)
   let activeTab = $state<MenuId>('ringkasan')
   let contentTab = $state<ContentTabId>('pengantin')
   let refreshKey = $state(0)
@@ -116,7 +109,6 @@
   }
 
   function loadMenuData(menu: MenuId, force = false) {
-    if (menu === 'subdomain' && (force || adminInvitations.length === 0)) return loadAdminInvitations()
     if (menu === 'ucapan' && (force || entries.length === 0)) return Promise.all([loadEntries(), loadStats()])
   }
 
@@ -133,44 +125,6 @@
       await Promise.all([loadMenuData(activeTab, true), activeTab === 'konten' ? loadConfig().then((c) => (config = c)) : null])
     } finally {
       refreshing = false
-    }
-  }
-
-  async function loadAdminInvitations() {
-    loadingInvitations = true
-    try {
-      adminInvitations = await getAdminInvitations()
-    } catch {
-      adminInvitations = []
-    } finally {
-      loadingInvitations = false
-    }
-  }
-
-  async function handleActivate(id: number) {
-    if (!confirm('Aktifkan undangan ini?')) return
-    verifyingId = id
-    try {
-      await activateInvitation(id)
-      await loadAdminInvitations()
-    } catch (error) {
-      savedMsg = error instanceof ApiError ? `Gagal: ${error.message}` : 'Gagal mengaktifkan'
-    } finally {
-      verifyingId = null
-    }
-  }
-
-  async function handleReject(id: number) {
-    const reason = window.prompt('Alasan penolakan pembayaran:')?.trim()
-    if (!reason) return
-    verifyingId = id
-    try {
-      await rejectInvitation(id, reason)
-      await loadAdminInvitations()
-    } catch (error) {
-      savedMsg = error instanceof ApiError ? `Gagal: ${error.message}` : 'Gagal menolak'
-    } finally {
-      verifyingId = null
     }
   }
 
@@ -320,8 +274,7 @@
           {#if activeTab === 'ringkasan'}
             <MonitoringTab onNavigate={handleTabChange} />
           {:else if activeTab === 'subdomain'}
-            <VerificationTab invitations={adminInvitations} loading={loadingInvitations} verifyingId={verifyingId} onActivate={handleActivate} onReject={handleReject} onRefresh={loadAdminInvitations} />
-            {#if savedMsg}<p class="adm-error" style="margin-top: 12px">{savedMsg}</p>{/if}
+            <SubdomainsTab />
           {:else if activeTab === 'trafik'}
             <div class="adm-card"><p class="adm-empty">Halaman trafik sedang disiapkan.</p></div>
           {:else if activeTab === 'konten'}

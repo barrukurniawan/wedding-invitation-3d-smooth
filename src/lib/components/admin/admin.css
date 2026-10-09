@@ -751,6 +751,9 @@ textarea.adm-input {
   color: var(--adm-muted);
   line-height: 1.5;
 }
+.adm-dialog p.adm-error {
+  color: var(--adm-red);
+}
 .adm-dialog-actions {
   display: flex;
   justify-content: flex-end;
