@@ -304,6 +304,7 @@ export function createInvitation(input: {
   groom_name?: string
   reception_at?: string
   preset?: '3d_summer' | '2d_garden'
+  venue?: VenueId
 }) {
   return request<{ invitation: OwnerInvitation }>('/invitations', {
     method: 'POST',

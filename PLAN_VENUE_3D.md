@@ -293,10 +293,15 @@ Lanjut ke Fase 1 hanya setelah kamu menyatakan OK.
 4. Cek performa mobile (mode lowPower) dan bandingkan FPS dengan garden.
 
 ### Fase 3: Pemilih venue di dashboard
-1. `DashboardShell.svelte` pengaturan: kartu pilihan venue (thumbnail + nama), hanya tampil saat preset 3D.
-2. `OnboardingWizard.svelte`: pilihan venue setelah memilih preset 3D (opsional, bisa diubah nanti).
-3. Thumbnail `static/media/venues/{garden,beach}.webp` (diambil dari screenshot scene).
-4. (Opsional) Katalog di landing page menampilkan venue pantai.
+Keputusan user (2026-10-09): semua venue **gratis** (tanpa premium/gembok). Venue dipilih pengantin sendiri.
+
+1. **3.1 Backend create:** `POST /api/invitations` menerima `venue` (zod `VENUE_IDS`, default `garden`) dan menyimpannya saat insert `wedding_configs`; `createInvitation()` di `api-client.ts` ikut. Tes API.
+2. **3.2 Thumbnail:** `static/media/venues/{garden,beach}.webp` diambil dari screenshot scene lokal (puppeteer, sekali jalan).
+3. **3.3 Onboarding:** di `OnboardingWizard.svelte`, saat kartu 3D dipilih muncul pilihan venue Taman / Pantai Sunset (default Taman) di form yang sama, sebelum subdomain. Disembunyikan untuk 2D.
+4. **3.4 Pengaturan:** di `DashboardShell.svelte` tab Pengaturan, kartu "Venue Dunia 3D" tepat di bawah pengalih preset (hanya saat preset 3D). Klik = simpan (`saveConfig`, sama seperti pengalih preset).
+5. (Opsional, nanti) Katalog landing page menampilkan venue pantai.
+
+Catatan: `WorkspaceDashboard.svelte` tidak dipakai (dashboard aktif ada di `DashboardShell.svelte`).
 
 ### Fase 4: Rilis
 1. Merge `new_staging_refactor` → `new_staging` (branch live di VPS) setelah disetujui.
@@ -322,6 +327,6 @@ Lanjut ke Fase 1 hanya setelah kamu menyatakan OK.
 ## 7. Pertanyaan Terbuka
 
 1. ~~**Branch deploy:**~~ Terjawab: VPS live memakai `new_staging` (dicek 2026-10-08). Rilis = merge `new_staging_refactor` → `new_staging`.
-2. **Siapa yang memilih venue:** pengantin di dashboard (rekomendasi) atau hanya admin?
-3. **Monetisasi:** apakah venue tertentu berbayar/premium? Kalau ya, perlu flag di registry + pengecekan di API.
-4. **Palet inti di beach:** pelaminan dan bunga tetap pink-krem, atau disesuaikan (coral/putih)?
+2. ~~**Siapa yang memilih venue:**~~ Terjawab: pengantin sendiri di dashboard.
+3. ~~**Monetisasi:**~~ Terjawab (2026-10-09): semua venue gratis.
+4. ~~**Palet inti di beach:**~~ Terjawab: coral.

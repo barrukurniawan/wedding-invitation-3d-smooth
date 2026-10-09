@@ -5,6 +5,7 @@ import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.j
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { isFreeManualPackage } from '../services/paymentConfig.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
+import { DEFAULT_VENUE, VENUE_IDS } from '../services/venues.js'
 
 const router = Router()
 
@@ -17,6 +18,7 @@ const createSchema = z.object({
     'Tanggal resepsi tidak valid.',
   ).optional(),
   preset: z.enum(['3d_summer', '2d_garden']).optional(),
+  venue: z.enum(VENUE_IDS).optional(),
 }).strict()
 
 function serializeInvitation(row) {
@@ -129,6 +131,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
   const brideName = parsed.data.bride_name || 'Mempelai Wanita'
   const groomName = parsed.data.groom_name || 'Mempelai Pria'
   const preset = parsed.data.preset || '3d_summer'
+  const venue = parsed.data.venue || DEFAULT_VENUE
   const connection = await pool.getConnection()
 
   try {
@@ -179,14 +182,14 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
          invitation_id, bride_name, groom_name, bride_parents, groom_parents,
          wedding_photo, wedding_date, akad_date, akad_time, akad_location,
          resepsi_date, resepsi_time, resepsi_location, qris_image, bank_name,
-         bank_account, bank_holder, maps_url, venue_address, gallery_photos, quote, preset
+         bank_account, bank_holder, maps_url, venue_address, gallery_photos, quote, preset, venue
        ) VALUES (
          ?, ?, ?, 'Bpk. ... & Ibu. ...', 'Bpk. ... & Ibu. ...',
          '', ?, ?, '08:00 - 10:00 WIB', 'Kediaman Mempelai Wanita',
          ?, '11:00 - 14:00 WIB', 'Gedung Serbaguna', '', 'BCA',
-         '', ?, '', '', CAST('[]' AS JSON), '', ?
+         '', ?, '', '', CAST('[]' AS JSON), '', ?, ?
        )`,
-      [invitationId, brideName, groomName, receptionMysql, defaultEventDateIndo, defaultEventDateIndo, groomName, preset],
+      [invitationId, brideName, groomName, receptionMysql, defaultEventDateIndo, defaultEventDateIndo, groomName, preset, venue],
     )
 
     if (isFreeManualPackage()) {
