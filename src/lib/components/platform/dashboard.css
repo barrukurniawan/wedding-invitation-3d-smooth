@@ -254,7 +254,6 @@
     line-height: 1.45;
   }
 
-  .skeleton-line,
   @keyframes shimmer {
     to {
       background-position: -200% 0;

@@ -76,6 +76,7 @@
   }
   .box h2 {
     margin: 0 auto;
+    color: #fff;
     max-width: 18ch;
     font-family: 'Playfair Display', Georgia, serif;
     font-size: clamp(1.9rem, 4vw, 2.9rem);
