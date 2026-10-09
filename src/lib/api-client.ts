@@ -641,3 +641,30 @@ export function getAdminSupportMessages(userId: number, after = 0) {
 export function sendAdminSupportReply(userId: number, body: string) {
   return request<{ message: SupportMessage }>(`/admin/support/threads/${userId}/messages`, { method: 'POST', body: JSON.stringify({ body }) })
 }
+
+export interface PublicPricing {
+  mode: string
+  currency: 'IDR'
+  currentPrice: number
+  isFree: boolean
+  normalPrice: number | null
+  afterPromoPrice: number | null
+  promoActive: boolean
+  promoLabel: string | null
+  promoEndsAt: string | null
+  whatsapp: string | null
+}
+
+export interface PublicStats {
+  couples: number
+  guestVisits: number
+  wishes: number
+}
+
+export function getPublicPricing() {
+  return request<PublicPricing>('/public/pricing')
+}
+
+export function getPublicStats() {
+  return request<PublicStats>('/public/stats')
+}

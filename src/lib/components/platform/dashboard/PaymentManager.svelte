@@ -1,25 +1,37 @@
 <script lang="ts">
   import type { OwnerInvitation, WeddingConfig } from '$lib/api-client'
-  import { ApiError, checkoutPayment, uploadPaymentProof } from '$lib/api-client'
+  import { ApiError, checkoutPayment, getPublicPricing, uploadPaymentProof, type PublicPricing } from '$lib/api-client'
   import { onMount } from 'svelte'
 
-  const PAYMENT_MODE = ((import.meta.env.VITE_PAYMENT_MODE as string | undefined) || 'manual').toLowerCase()
-  const PACKAGE_AMOUNT = Number(import.meta.env.VITE_INVITATION_PRICE_IDR ?? 0)
-  const MIDTRANS_CLIENT_KEY = PAYMENT_MODE === 'midtrans'
-    ? import.meta.env.VITE_MIDTRANS_CLIENT_KEY as string | undefined
-    : undefined
+  // Harga & mode pembayaran dari API (bisa diubah di server tanpa rebuild web).
+  let pricing = $state<PublicPricing | null>(null)
+  const PAYMENT_MODE = $derived((pricing?.mode || 'manual').toLowerCase())
+  const PACKAGE_AMOUNT = $derived(pricing?.currentPrice ?? 0)
+  const MIDTRANS_CLIENT_KEY = $derived(
+    PAYMENT_MODE === 'midtrans' ? (import.meta.env.VITE_MIDTRANS_CLIENT_KEY as string | undefined) : undefined,
+  )
   const MIDTRANS_SANDBOX = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION !== 'true'
 
   let snapScriptLoaded = $state(false)
 
   onMount(() => {
-    if (!MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY')) return
+    getPublicPricing()
+      .then((p) => (pricing = p))
+      .catch(() => (pricing = { mode: 'manual', currency: 'IDR', currentPrice: 0, isFree: true, normalPrice: null, afterPromoPrice: null, promoActive: false, promoLabel: null, promoEndsAt: null, whatsapp: null }))
+  })
+
+  $effect(() => {
+    const key = MIDTRANS_CLIENT_KEY
+    if (!key || key.includes('YOUR_CLIENT_KEY')) return
     const script = document.createElement('script')
     script.src = MIDTRANS_SANDBOX
       ? 'https://app.sandbox.midtrans.com/snap/snap.js'
       : 'https://app.midtrans.com/snap/snap.js'
-    script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY)
-    script.onload = () => { snapScriptLoaded = true }
+    script.setAttribute('data-client-key', key)
+    script.onload = () => {
+      snapScriptLoaded = true
+      paymentMode = 'snap'
+    }
     document.head.appendChild(script)
     return () => {
       if (document.head.contains(script)) document.head.removeChild(script)
@@ -35,9 +47,8 @@
   let { invitation, myConfig, fmtDate, onStatusChange }: Props = $props()
 
   // Payment mode: 'snap' = Midtrans Snap, 'transfer' = manual upload bukti
-  let paymentMode = $state<'snap' | 'transfer'>(
-    MIDTRANS_CLIENT_KEY && !MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY') ? 'snap' : 'transfer'
-  )
+  // Default transfer manual; beralih ke Snap begitu kunci Midtrans tersedia dari API.
+  let paymentMode = $state<'snap' | 'transfer'>('transfer')
 
   let submittingPayment = $state(false)
   let paymentMsg = $state('')
@@ -110,11 +121,9 @@
     }
   }
 
-  const isFreePackage = PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0
-  const isConfigure = PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY')
-  const formattedPrice = PACKAGE_AMOUNT === 0
-    ? 'Gratis'
-    : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`
+  const isFreePackage = $derived(PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0)
+  const isConfigure = $derived(PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY'))
+  const formattedPrice = $derived(PACKAGE_AMOUNT === 0 ? 'Gratis' : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`)
 </script>
 
 <div class="workspace-panel">

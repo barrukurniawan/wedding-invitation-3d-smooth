@@ -16,6 +16,7 @@ import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
 import supportRoutes from './routes/support.js'
+import publicRoutes from './routes/public.js'
 import trackRoutes from './routes/track.js'
 import multiplayerRoutes from './routes/multiplayer.js'
 import pool from './db.js'
@@ -53,6 +54,7 @@ app.use('/api/track', trackRoutes)
 app.get('/api/public/photos/:filename', servePublicPhoto)
 app.get('/api/my/photos/:filename', servePublicPhoto)
 app.get('/api/public/music/:filename', servePublicMusic)
+app.use('/api/public', publicRoutes)
 app.use('/api/guestbook', requirePublicInvitation, guestbookRoutes)
 app.use('/api/config', requirePublicInvitation, configRoutes)
 app.use('/api/auth', requireRootHost, authRoutes)
