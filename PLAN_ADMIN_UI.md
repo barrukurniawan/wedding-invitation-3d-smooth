@@ -1,6 +1,6 @@
 # Rencana Redesain Admin Dashboard (`/admin`)
 
-Status: disetujui 2026-10-09, dikerjakan di branch `admin_ui` (dibuat dari `new_staging_refactor`, sehingga venue pantai bisa dirilis duluan).
+Status: **A1–A7 selesai di lokal (2026-10-09), belum di-deploy.** Dikerjakan di branch `admin_ui` (dibuat dari `new_staging_refactor`, sehingga venue pantai bisa dirilis duluan).
 
 ## 1. Tujuan
 Tampilan admin (`localhost:5173/admin`, `marryme.web.id/admin`) dirombak total mengikuti referensi "Finexy" dari user:
@@ -178,3 +178,9 @@ Deploy ke VPS hanya setelah user setuju (frontend + endpoint baca, tanpa migrasi
 1. Warna aksen: **marun MarryMe** dengan tata letak referensi.
 2. Menu: **6 menu** (Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan).
 3. Branch: **`admin_ui`** terpisah.
+
+## 7. Catatan hasil
+- Statistik ucapan undangan demo dipindah ke menu **Ucapan** (bukan Ringkasan) supaya tidak tertukar dengan RSVP seluruh platform.
+- Tombol Aktifkan/Tolak hanya muncul untuk status `pending_verification` (satu-satunya status yang diterima API; UI lama menampilkan Aktifkan untuk semua status non-aktif dan berakhir 409).
+- Waktu dari endpoint baru dikirim dengan zona eksplisit (TIMESTAMP lewat `UNIX_TIMESTAMP`, DATETIME UTC diberi `Z`) karena zona sesi MySQL lokal (+07) dan VPS bisa berbeda.
+- Ditemukan, belum diperbaiki: `/api/public/photos/<file>` membalas 500 (bukan 404) bila file foto tidak ada.

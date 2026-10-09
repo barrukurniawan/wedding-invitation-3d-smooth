@@ -30,6 +30,11 @@
 - Per-invitation settings live in `wedding_configs`. `preset` (`'3d_summer' | '2d_garden'`, default `3d_summer`) is exposed by `routes/config.js`, updated via `PATCH /api/my/config` (`routes/tenant-config.js`: zod enum + allowed-fields list), set on create in `routes/invitations.js`. Keep the TS union in `api-client.ts` in sync.
 - Migrations: `database/migrations/NNN_snake_case.sql`, sequential. Must also be appended to the hardcoded array in `server/scripts/migrate.js`. The runner stores checksums: never edit an applied migration; add a new one. Write migrations idempotent (INFORMATION_SCHEMA checks, see `012_preset_theme.sql`).
 
+## Admin Dashboard
+- `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.
+- Konten Demo / Ucapan only edit invitation #1 (`server/routes/admin.js` hardcodes `invitation_id = 1`).
+- Read-only analytics: `GET /api/admin/subdomains`, `/api/admin/subdomains/:id/traffic`, `/api/admin/analytics/traffic` (sources/paths via `server/services/trafficSource.js`).
+
 ## Interaction Contracts
 - Same as the prior Nuxt repo: `triggerZones` define interactive locations; `action` matches `ModalType`; NPC zones require `npcData`.
 - Opening `weddingStage` enables confetti; always close via `closeModal()` to reset modal, NPC data, and confetti.

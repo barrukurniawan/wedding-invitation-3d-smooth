@@ -31,6 +31,13 @@
     return 'Selamat malam'
   }
   const hello = greeting(new Date().getHours())
+
+  // Di layar sempit nav bisa di-scroll; pastikan menu aktif selalu terlihat.
+  let nav = $state<HTMLElement | null>(null)
+  $effect(() => {
+    void active
+    nav?.querySelector<HTMLElement>('.adm-nav-btn.active')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  })
 </script>
 
 <div class="adm-frame">
@@ -40,7 +47,7 @@
       <span>MarryMe <small>Admin</small></span>
     </div>
 
-    <nav class="adm-nav" aria-label="Menu admin">
+    <nav class="adm-nav" aria-label="Menu admin" bind:this={nav}>
       {#each menus as menu (menu.id)}
         <button
           type="button"

@@ -846,6 +846,10 @@ textarea.adm-input {
     font-size: 26px;
   }
   .adm-savebar {
-    border-radius: 20px;
+    flex-wrap: nowrap;
+    padding: 8px 8px 8px 16px;
+  }
+  .adm-savebar-hint {
+    display: none;
   }
 }

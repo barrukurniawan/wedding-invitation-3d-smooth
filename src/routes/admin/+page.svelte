@@ -307,7 +307,7 @@
                 {:else if uploading}
                   Mengunggah file...
                 {:else}
-                  Simpan setelah selesai mengubah isi undangan demo.
+                  <span class="adm-savebar-hint">Simpan setelah selesai mengubah isi undangan demo.</span>
                 {/if}
               </span>
               <button type="button" class="adm-btn" onclick={save} disabled={saving || uploading}>
