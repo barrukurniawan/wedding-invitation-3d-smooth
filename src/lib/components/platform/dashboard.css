@@ -3013,6 +3013,33 @@
   background: rgba(143, 29, 69, 0.12);
   color: var(--accent-deep);
 }
+.venue-switch-card {
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 10px;
+}
+.venue-switch-card .theme-switch-head {
+  gap: 8px;
+  margin-bottom: 0;
+}
+.venue-switch-card:disabled {
+  cursor: wait;
+}
+.venue-switch-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.venue-switch-msg {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.venue-switch-msg a {
+  color: var(--accent-deep);
+  font-weight: 600;
+}
 .badge-active.green {
   background: rgba(16, 185, 129, 0.15);
   color: #065f46;

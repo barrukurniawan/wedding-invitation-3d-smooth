@@ -28,6 +28,7 @@
   import PaymentManager from './dashboard/PaymentManager.svelte'
   import InvitationSender from './dashboard/InvitationSender.svelte'
   import OnboardingWizard from './OnboardingWizard.svelte'
+  import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
   let busy = $state(false)
@@ -38,6 +39,7 @@
   let brideInput = $state('')
   let groomInput = $state('')
   let onboardingPreset = $state<'3d_summer' | '2d_garden'>('3d_summer')
+  let onboardingVenue = $state<VenueId>('garden')
   const slugPattern = '[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?'
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
@@ -208,6 +210,7 @@
         bride_name: brideInput.trim() || undefined,
         groom_name: groomInput.trim() || undefined,
         preset: onboardingPreset,
+        venue: onboardingPreset === '3d_summer' ? onboardingVenue : undefined,
       })
       invitation = result.invitation
       slugInput = ''
@@ -233,6 +236,23 @@
       configSavedMsg = err instanceof ApiError ? `Gagal: ${err.message}` : 'Gagal menyimpan perubahan.'
     } finally {
       savingConfig = false
+    }
+  }
+
+  let venueMsg = $state('')
+
+  async function switchVenue(id: VenueId) {
+    if (!myConfig || (myConfig.venue ?? 'garden') === id) return
+    const previous = myConfig.venue
+    myConfig.venue = id
+    venueMsg = 'Menyimpan...'
+    await saveConfig()
+    if (configSavedMsg.startsWith('Gagal')) {
+      if (myConfig) myConfig.venue = previous
+      venueMsg = configSavedMsg
+    } else {
+      venueMsg = `✓ Venue diganti ke ${resolveVenue(id).label}`
+      setTimeout(() => (venueMsg = ''), 3500)
     }
   }
 
@@ -1206,6 +1226,39 @@
                 </div>
               </div>
 
+              {#if myConfig?.preset === '3d_summer' || !myConfig?.preset}
+                <div class="settings-card col-span-2">
+                  <h4>Venue Dunia 3D</h4>
+                  <p class="section-desc" style="margin-bottom: 14px;">Pilih lokasi pernikahan di dunia 3D. Isi undangan, posisi tamu, dan pelaminan tetap sama.</p>
+                  <div class="preset-theme-switch-grid" role="radiogroup" aria-label="Pilih venue dunia 3D">
+                    {#each venueOptions as option (option.id)}
+                      {@const active = (myConfig?.venue ?? 'garden') === option.id}
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        class="theme-switch-card venue-switch-card"
+                        class:active
+                        disabled={savingConfig}
+                        onclick={() => switchVenue(option.id)}
+                      >
+                        <img src={option.thumbnail} alt="Venue {resolveVenue(option.id).label}" class="venue-switch-thumb" loading="lazy" />
+                        <div class="theme-switch-head">
+                          <strong>{option.emoji} {resolveVenue(option.id).label}</strong>
+                          {#if active}
+                            <span class="badge-active">Aktif Digunakan</span>
+                          {/if}
+                        </div>
+                        <p class="theme-switch-desc">{option.description}</p>
+                      </button>
+                    {/each}
+                  </div>
+                  {#if venueMsg}
+                    <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
+                  {/if}
+                </div>
+              {/if}
+
               <div class="settings-card">
                 <h4>Status Subdomain</h4>
                 <p>Alamat: <code>{invitation.slug}.marryme.web.id</code></p>
@@ -1274,7 +1327,7 @@
 
       {:else}
         <!-- Logged In Form Create Invitation (If No Invitation Yet) -->
-        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput bind:presetInput={onboardingPreset} {busy} errorMessage={error} {handleCreate} />
+        <OnboardingWizard bind:slugInput bind:brideInput bind:groomInput bind:presetInput={onboardingPreset} bind:venueInput={onboardingVenue} {busy} errorMessage={error} {handleCreate} />
 
       {/if}
     </section>

@@ -128,3 +128,26 @@ export const DEFAULT_VENUE: VenueId = 'garden'
 export function resolveVenue(id?: string | null): VenueDef {
   return venues[id as VenueId] ?? (venues[DEFAULT_VENUE] as VenueDef)
 }
+
+// Kartu pilihan venue di dashboard (onboarding + Pengaturan). Semua venue gratis.
+export interface VenueOption {
+  id: VenueId
+  emoji: string
+  description: string
+  thumbnail: string
+}
+
+export const venueOptions: VenueOption[] = [
+  {
+    id: 'garden',
+    emoji: '🌳',
+    description: 'Taman hijau dengan pepohonan, pegunungan, dan lampu gantung.',
+    thumbnail: '/media/venues/garden.webp'
+  },
+  {
+    id: 'beach',
+    emoji: '🌅',
+    description: 'Pulau pasir di tengah laut, pohon kelapa, dan matahari terbenam.',
+    thumbnail: '/media/venues/beach.webp'
+  }
+]

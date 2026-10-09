@@ -1,18 +1,20 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition'
+  import { fade, slide } from 'svelte/transition'
+  import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   type Props = {
     slugInput: string
     brideInput: string
     groomInput: string
     presetInput?: '3d_summer' | '2d_garden'
+    venueInput?: VenueId
     busy: boolean
     errorMessage?: string
     slugPattern?: string
     handleCreate: () => Promise<void>
   }
   
-  let { slugInput = $bindable(), brideInput = $bindable(), groomInput = $bindable(), presetInput = $bindable('3d_summer'), busy, errorMessage = '', handleCreate }: Props = $props()
+  let { slugInput = $bindable(), brideInput = $bindable(), groomInput = $bindable(), presetInput = $bindable('3d_summer'), venueInput = $bindable('garden'), busy, errorMessage = '', handleCreate }: Props = $props()
 </script>
 
 <!-- Ambient Dynamic Theme Scenery Background (Changes with Selected Preset) -->
@@ -151,6 +153,31 @@
           </div>
         </button>
       </div>
+
+      {#if presetInput === '3d_summer'}
+        <div class="space-y-2" transition:slide={{ duration: 250 }}>
+          <span class="block text-sm font-semibold text-slate-700 ml-1">Pilih Venue Dunia 3D</span>
+          <div class="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Pilih venue dunia 3D">
+            {#each venueOptions as option (option.id)}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={venueInput === option.id}
+                class="relative flex flex-col items-stretch text-left rounded-xl border-2 overflow-hidden transition-all duration-300 {venueInput === option.id ? 'border-amber-500 ring-4 ring-amber-400/20 shadow-md' : 'border-slate-200 bg-white/90 hover:border-slate-300'}"
+                onclick={() => (venueInput = option.id)}
+              >
+                <img src={option.thumbnail} alt="Venue {resolveVenue(option.id).label}" class="w-full aspect-[16/10] object-cover" loading="lazy" />
+                {#if venueInput === option.id}
+                  <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">✓ Terpilih</span>
+                {/if}
+                <span class="block px-2.5 py-2 text-xs sm:text-sm font-bold text-slate-800">
+                  {option.emoji} {resolveVenue(option.id).label}
+                </span>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
 
       <p class="text-xs text-slate-400 ml-1">
         💡 Tenang, kalian bisa beralih tema kapan saja di menu pengaturan tanpa kehilangan data.

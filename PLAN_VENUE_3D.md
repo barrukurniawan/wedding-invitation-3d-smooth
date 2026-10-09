@@ -301,6 +301,8 @@ Keputusan user (2026-10-09): semua venue **gratis** (tanpa premium/gembok). Venu
 4. **3.4 Pengaturan:** di `DashboardShell.svelte` tab Pengaturan, kartu "Venue Dunia 3D" tepat di bawah pengalih preset (hanya saat preset 3D). Klik = simpan (`saveConfig`, sama seperti pengalih preset).
 5. (Opsional, nanti) Katalog landing page menampilkan venue pantai.
 
+> **Status 2026-10-09:** 3.1–3.4 selesai di lokal (tes klik: onboarding pantai tersimpan `beach`, ganti ke Taman di Pengaturan tersimpan `garden`). Belum di-deploy.
+
 Catatan: `WorkspaceDashboard.svelte` tidak dipakai (dashboard aktif ada di `DashboardShell.svelte`).
 
 ### Fase 4: Rilis
