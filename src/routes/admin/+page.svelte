@@ -158,7 +158,6 @@
   }
 
   async function removeEntry(id: string) {
-    if (!confirm('Hapus ucapan ini secara permanen?')) return
     try {
       await deleteAdminGuestbookEntry(id)
       await Promise.all([loadEntries(), loadStats()])
@@ -316,8 +315,9 @@
               </button>
             </div>
           {:else if activeTab === 'ucapan'}
-            <div class="adm-card">
-              <GuestbookTab {entries} onRefresh={() => Promise.all([loadEntries(), loadStats()])} onDelete={removeEntry} />
+            <StatsTab {stats} />
+            <div class="adm-card adm-section">
+              <GuestbookTab {entries} onDelete={removeEntry} />
             </div>
             {#if savedMsg}<p class="adm-error" style="margin-top: 12px">{savedMsg}</p>{/if}
           {:else if activeTab === 'keamanan'}

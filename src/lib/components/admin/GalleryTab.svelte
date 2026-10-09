@@ -1,24 +1,71 @@
 <script lang="ts">
   import type { WeddingConfig } from '$lib/api-client'
+  import FilePick from './ui/FilePick.svelte'
+  import Icon from './ui/Icon.svelte'
 
   let { config, onUploadPhoto, onRemovePhoto }: { config: WeddingConfig; onUploadPhoto: (e: Event) => void; onRemovePhoto: (idx: number) => void } = $props()
-
-  const fileInputClass =
-    'block w-full cursor-pointer text-sm text-stone-400 file:mr-4 file:rounded-lg file:border-0 file:bg-rose-600 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-rose-500'
 </script>
 
-<h2 class="text-lg font-semibold text-rose-300">Galeri Foto</h2>
-<div class="mt-4">
-  <input type="file" accept="image/*" onchange={onUploadPhoto} class={fileInputClass} />
-  <p class="mt-1 text-xs text-stone-500">Pilih foto satu per satu untuk diunggah (Maks 2MB per foto).</p>
+<div class="head">
+  <div>
+    <h2 class="adm-card-title">Galeri Foto</h2>
+    <p class="adm-card-sub">{config.gallery_photos.length} foto · unggah satu per satu, maks. 2 MB per foto.</p>
+  </div>
+  <FilePick label="Tambah foto" accept="image/*" onChange={onUploadPhoto} />
 </div>
-<div class="mt-4 grid grid-cols-3 gap-3">
+
+<div class="grid">
   {#each config.gallery_photos as photo, i (photo)}
-    <div class="relative">
-      <img src={photo} alt="Foto {i + 1}" class="aspect-square w-full rounded-lg object-cover" />
-      <button class="absolute right-1 top-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white hover:bg-red-600" onclick={() => onRemovePhoto(i)}>✕</button>
-    </div>
+    <figure>
+      <img src={photo} alt="Foto galeri {i + 1}" />
+      <button type="button" class="remove" aria-label="Hapus foto {i + 1}" onclick={() => onRemovePhoto(i)}><Icon name="trash" size={14} /></button>
+    </figure>
   {:else}
-    <p class="col-span-3 py-8 text-center text-sm text-stone-500">Belum ada foto.</p>
+    <p class="adm-empty empty">Belum ada foto.</p>
   {/each}
 </div>
+
+<style>
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  figure {
+    position: relative;
+    margin: 0;
+  }
+  img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+  .remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--adm-red);
+  }
+  .remove:hover {
+    background: var(--adm-red);
+    color: #fff;
+  }
+  .empty {
+    grid-column: 1 / -1;
+  }
+</style>

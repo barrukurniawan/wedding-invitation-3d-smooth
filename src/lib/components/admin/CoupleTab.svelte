@@ -1,32 +1,70 @@
 <script lang="ts">
   import type { WeddingConfig } from '$lib/api-client'
-  import { inputClass, labelClass } from './styles'
+  import FilePick from './ui/FilePick.svelte'
+  import Icon from './ui/Icon.svelte'
 
   let { config, onUploadPhoto }: { config: WeddingConfig; onUploadPhoto: (e: Event) => void } = $props()
-
-  const fileInputClass =
-    'block w-full cursor-pointer text-sm text-stone-400 file:mr-4 file:rounded-lg file:border-0 file:bg-rose-600 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-rose-500'
 </script>
 
-<h2 class="text-lg font-semibold text-rose-300">Data Pengantin</h2>
-<div class="mt-4 grid grid-cols-2 gap-4">
-  <div><label for="bride-name" class={labelClass}>Nama Mempelai Wanita</label><input id="bride-name" bind:value={config.bride_name} class={inputClass} /></div>
-  <div><label for="groom-name" class={labelClass}>Nama Mempelai Pria</label><input id="groom-name" bind:value={config.groom_name} class={inputClass} /></div>
-  <div><label for="bride-parents" class={labelClass}>Orangtua Wanita</label><input id="bride-parents" bind:value={config.bride_parents} class={inputClass} /></div>
-  <div><label for="groom-parents" class={labelClass}>Orangtua Pria</label><input id="groom-parents" bind:value={config.groom_parents} class={inputClass} /></div>
+<h2 class="adm-card-title">Data Pengantin</h2>
+<p class="adm-card-sub">Nama mempelai, orang tua, foto utama, dan kutipan pembuka.</p>
 
-  <div class="col-span-2">
-    <label class={labelClass}>Foto Utama Pernikahan</label>
-    <div class="flex items-center gap-4">
+<div class="form-grid">
+  <div class="adm-field"><label class="adm-label" for="bride-name">Nama mempelai wanita</label><input id="bride-name" bind:value={config.bride_name} class="adm-input" /></div>
+  <div class="adm-field"><label class="adm-label" for="groom-name">Nama mempelai pria</label><input id="groom-name" bind:value={config.groom_name} class="adm-input" /></div>
+  <div class="adm-field"><label class="adm-label" for="bride-parents">Orang tua mempelai wanita</label><input id="bride-parents" bind:value={config.bride_parents} class="adm-input" /></div>
+  <div class="adm-field"><label class="adm-label" for="groom-parents">Orang tua mempelai pria</label><input id="groom-parents" bind:value={config.groom_parents} class="adm-input" /></div>
+
+  <div class="adm-field span-2">
+    <span class="adm-label">Foto utama pernikahan</span>
+    <div class="photo-row">
       {#if config.wedding_photo}
-        <img src={config.wedding_photo} alt="Foto Utama" class="h-24 w-24 rounded-xl border border-stone-700 object-cover" />
+        <img src={config.wedding_photo} alt="Foto utama" class="photo" />
+      {:else}
+        <span class="photo empty"><Icon name="image" /></span>
       {/if}
-      <div class="flex-1">
-        <input type="file" accept="image/*" onchange={onUploadPhoto} class={fileInputClass} />
-        <p class="mt-1 text-xs text-stone-500">Maks. 2MB (JPG/PNG/WebP)</p>
-      </div>
+      <FilePick label={config.wedding_photo ? 'Ganti foto' : 'Unggah foto'} accept="image/*" onChange={onUploadPhoto} hint="Maks. 2 MB (JPG/PNG/WebP)" />
     </div>
   </div>
 
-  <div class="col-span-2"><label for="quote" class={labelClass}>Ayat / Quotes Pembuka</label><textarea id="quote" bind:value={config.quote} class="{inputClass} min-h-24 resize-y" placeholder="Maha suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan..."></textarea></div>
+  <div class="adm-field span-2">
+    <label class="adm-label" for="quote">Ayat / kutipan pembuka</label>
+    <textarea id="quote" bind:value={config.quote} class="adm-input" placeholder="Maha suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan..."></textarea>
+  </div>
 </div>
+
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .span-2 {
+    grid-column: 1 / -1;
+  }
+  .photo-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .photo {
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 1px solid var(--adm-line);
+  }
+  .photo.empty {
+    display: grid;
+    place-items: center;
+    background: var(--adm-soft);
+    color: var(--adm-muted);
+  }
+  @media (max-width: 640px) {
+    .form-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
