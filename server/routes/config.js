@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { assetCdnBase } from '../services/assetCdn.js'
 import pool from '../db.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { normalizeVenue } from '../services/venues.js'
@@ -26,6 +27,7 @@ router.get('/', async (req, res) => {
     row.wedding_date = row.wedding_date ? String(row.wedding_date).replace(' ', 'T') : ''
     row.bgm_url ||= '/audio/Marry%20You.mp3'
     row.bgm_title ||= 'Marry You'
+    row.asset_cdn = assetCdnBase()
     res.json(row)
   } catch (err) {
     console.error('GET /api/config error:', err.message)

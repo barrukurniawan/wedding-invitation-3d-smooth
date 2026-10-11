@@ -24,6 +24,8 @@ export interface WeddingConfig {
   bgm_title?: string
   preset?: '3d_summer' | '2d_garden'
   venue?: VenueId
+  /** Base URL CDN aset (jsDelivr) dari server; null/undefined = pakai server sendiri. */
+  asset_cdn?: string | null
   slug?: string
   updated_at: string
 }
