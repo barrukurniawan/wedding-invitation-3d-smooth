@@ -27,22 +27,138 @@
   let mediaSignature = '';
   let gameScriptLoaded = false;
 
+  // "muhammad andhika putra" -> "Muhammad Andhika Putra"; kata yang sudah berkapital dibiarkan.
+  const titleCase = (value) =>
+    String(value || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map((w) => (w && w === w.toLowerCase() ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+      .join(' ');
+
+  // Judul di peta: mengecil otomatis, dan pecah jadi 2 baris ("A" / "& B") bila tetap tidak muat,
+  // supaya nama panjang tidak terpotong atau tertutup tombol musik/bantuan.
+  let measureCtx = null;
+  function fitMapTitle() {
+    const strong = $('.map-wedding-title strong');
+    if (!strong || !strong.dataset.groom) return;
+    const groom = strong.dataset.groom;
+    const bride = strong.dataset.bride;
+    const vw = window.innerWidth;
+    const shortLandscape = window.innerHeight <= 500 && vw > window.innerHeight;
+    const compact = vw <= 760 && !shortLandscape;
+    const tools = $('.game-tools')?.getBoundingClientRect();
+    const available = compact ? (tools && tools.width ? tools.left - 24 - 10 : vw - 24 - 92) : vw - 300;
+    const base = shortLandscape ? 29 : vw <= 360 ? 28 : compact ? 31 : 36;
+    const min = compact ? 18 : 20;
+    measureCtx = measureCtx || document.createElement('canvas').getContext('2d');
+    const fits = (text, size) => {
+      measureCtx.font = `800 ${size}px Nunito, ui-rounded, sans-serif`;
+      return measureCtx.measureText(text).width <= available;
+    };
+    const oneLine = `${groom} & ${bride}`;
+    strong.replaceChildren();
+    for (let size = base; size >= Math.max(min, base - 6); size--) {
+      if (fits(oneLine, size)) {
+        strong.style.fontSize = `${size}px`;
+        strong.textContent = oneLine;
+        return;
+      }
+    }
+    let size = base;
+    while (size > min && !(fits(groom, size) && fits(`& ${bride}`, size))) size--;
+    strong.style.fontSize = `${size}px`;
+    for (const text of [groom, `& ${bride}`]) {
+      const line = document.createElement('span');
+      line.className = 'title-line';
+      line.textContent = text;
+      strong.append(line);
+    }
+  }
+  window.addEventListener('resize', fitMapTitle);
+  // Ukur ulang setelah Nunito benar-benar termuat (font cadangan lebih lebar -> judul kekecilan).
+  document.fonts?.load?.('800 31px Nunito').then(fitMapTitle).catch(() => {});
+  document.fonts?.ready?.then(fitMapTitle);
+
+  // Kartu default (tanpa foto): nama & tahun pasangan ditulis di atas gambar kartu kosong.
+  // Nama lengkap dipakai bila muat; kalau tidak, nama depan (melewati "Muhammad", "Siti", dll.).
+  const NAME_PREFIXES = new Set(['muhammad', 'muhamad', 'mohammad', 'mohamad', 'mochammad', 'moch', 'moch.', 'moh', 'moh.', 'm', 'm.', 'siti']);
+  const shortName = (full) => {
+    const words = full.split(' ').filter(Boolean);
+    const rest = words.length > 1 && NAME_PREFIXES.has(words[0].toLowerCase()) ? words.slice(1) : words;
+    return rest[0] || full;
+  };
+  const cardState = { groom: '', bride: '', year: '' };
+  function fitCard() {
+    const img = $('#titleCardImage');
+    const nameEl = $('#cardName');
+    if (!img || !nameEl || !cardState.groom) return;
+    const w = img.clientWidth;
+    if (!w) return;
+    const yearEl = $('#cardYear');
+    const serialEl = $('#cardSerial');
+    yearEl.textContent = cardState.year;
+    let yearSize = w * 0.06;
+    yearEl.style.fontSize = `${yearSize}px`;
+    while (yearEl.scrollWidth > yearEl.clientWidth && yearSize > w * 0.035) {
+      yearSize -= 0.5;
+      yearEl.style.fontSize = `${yearSize}px`;
+    }
+    serialEl.textContent = `001/${cardState.year}`;
+    serialEl.style.fontSize = `${w * 0.024}px`;
+    const candidates = [
+      `${cardState.groom} & ${cardState.bride}`,
+      `${shortName(cardState.groom)} & ${shortName(cardState.bride)}`,
+    ];
+    const max = w * 0.058;
+    const min = w * 0.036;
+    for (const [i, text] of candidates.entries()) {
+      nameEl.textContent = text;
+      let size = max;
+      nameEl.style.fontSize = `${size}px`;
+      while (nameEl.scrollWidth > nameEl.clientWidth && size > min) {
+        size -= 0.5;
+        nameEl.style.fontSize = `${size}px`;
+      }
+      if (nameEl.scrollWidth <= nameEl.clientWidth || i === candidates.length - 1) break;
+    }
+  }
+  window.addEventListener('resize', fitCard);
+  document.fonts?.load?.('900 20px Nunito').then(fitCard).catch(() => {});
+  $('#titleCardImage')?.addEventListener('load', fitCard);
+
+  const yearFrom = (config) => {
+    const texts = JSON.stringify(config.places || []);
+    const match = texts.match(/\b(20\d{2})\b/);
+    return match ? match[1] : String(new Date().getFullYear());
+  };
+
   function apply(config) {
     if (!config || !config.profile) return;
+    config.profile.groom = titleCase(config.profile.groom);
+    config.profile.bride = titleCase(config.profile.bride);
     const name = config.profile.groom + ' & ' + config.profile.bride;
     document.title = config.profile.titlePrefix + ' ' + name;
 
     const kicker = $('#titleScreen .opening-kicker');
     if (kicker) kicker.textContent = config.profile.titlePrefix;
     const h1 = $('#titleScreen h1');
-    if (h1) h1.textContent = name;
+    if (h1) {
+      h1.textContent = name;
+      h1.classList.toggle('long-name', name.length > 24);
+      h1.classList.toggle('very-long-name', name.length > 36);
+    }
     const contBtn = $('#continueButton');
     if (contBtn) contBtn.textContent = config.profile.startButton || 'Mulai Permainan';
 
     const mapTitleSpan = $('.map-wedding-title span');
     if (mapTitleSpan) mapTitleSpan.textContent = config.profile.titlePrefix;
     const mapTitleStrong = $('.map-wedding-title strong');
-    if (mapTitleStrong) mapTitleStrong.textContent = name;
+    if (mapTitleStrong) {
+      mapTitleStrong.dataset.groom = config.profile.groom;
+      mapTitleStrong.dataset.bride = config.profile.bride;
+      fitMapTitle();
+    }
     const mapTitle = $('.map-wedding-title');
     if (mapTitle) mapTitle.setAttribute('aria-label', document.title);
 
@@ -65,9 +181,15 @@
       const coverImg = $('.title-card img');
       const titleCard = $('.title-card');
       if (coverImg && a.cover) {
-        coverImg.src = a.cover;
+        // Kartu contoh lama (berisi nama "Faris & Eliza") diganti kartu kosong + nama asli.
+        const cover = a.cover.includes('assets/wedding-card.') ? 'assets/wedding-card-blank.webp' : a.cover;
+        if (coverImg.getAttribute('src') !== cover) coverImg.src = cover;
         coverImg.alt = 'Kartu pernikahan ' + name;
-        if (a.cover && !a.cover.includes('assets/wedding-card.')) {
+        cardState.groom = config.profile.groom;
+        cardState.bride = config.profile.bride;
+        cardState.year = yearFrom(config);
+        fitCard();
+        if (!a.cover.includes('assets/wedding-card.')) {
           titleCard?.classList.add('has-custom-photo');
           coverImg.classList.add('has-custom-photo');
         } else {
