@@ -41,6 +41,8 @@
 - nginx marks every `.js/.css/.png/...` immutable for 1 year (Cloudflare too). Non-hashed preset files must be referenced with `?v=YYYYMMDD` (bump on change); the preset `index.html` itself is `no-store`.
 - Service worker does no bulk precache (it used to pull ~57 MB per new visitor); it caches on demand only. It is registered as `/service-worker.js?v=…` and nginx serves it `no-cache`; bump the query if Cloudflare ever caches a bad copy.
 - 3D asset preloads in `TenantBootstrap.svelte` are emitted only for 3D presets.
+- 2D "instant garden": the full-screen "Membuka taman" loader no longer covers the title/name screens; the garden loads behind them (small pill indicator). A character chosen before the garden is ready is queued (`pendingCharacter`, loader shows with `.ml-waiting`). Early "Mulai" clicks before game.js binds are queued by an inline script in the preset `index.html` (`__PENDING_CONTINUE`).
+- `app.html` fast path: invitation hosts fetch `/api/config` before the app bundle (`window.__EARLY_CONFIG`, consumed once by `getPublicConfig`) and preload core 2D images when the preset is 2D.
 
 ## Admin Dashboard
 - `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.

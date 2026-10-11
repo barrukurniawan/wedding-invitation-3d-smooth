@@ -50,9 +50,12 @@ self.addEventListener('fetch', (event) => {
   async function respond() {
     const cache = await caches.open(CACHE)
 
-    // Build ber-hash, model 3D, audio, media: cache-on-demand (cache-first)
+    // Build ber-hash, aset taman 2D (+ file preset bertanda ?v=), model 3D, audio, media:
+    // cache-on-demand (cache-first). Cache dibuang otomatis tiap deploy (nama cache = versi build).
     if (
       url.pathname.startsWith('/_app/immutable/') ||
+      url.pathname.startsWith('/presets/garden-2d/assets/') ||
+      (url.pathname.startsWith('/presets/garden-2d/') && url.search.includes('v=')) ||
       url.pathname.startsWith('/models/') ||
       url.pathname.startsWith('/nature/') ||
       url.pathname.startsWith('/audio/') ||

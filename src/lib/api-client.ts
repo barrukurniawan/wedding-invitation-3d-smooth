@@ -227,7 +227,19 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>
 }
 
-export function getPublicConfig() {
+export async function getPublicConfig() {
+  // Pakai sekali request yang sudah dimulai di app.html (jalur cepat); selebihnya request biasa.
+  const w = typeof window !== 'undefined' ? (window as Window & { __EARLY_CONFIG?: Promise<Response> }) : undefined
+  const early = w?.__EARLY_CONFIG
+  if (early) {
+    w.__EARLY_CONFIG = undefined
+    try {
+      const response = await early
+      if (response.ok) return (await response.json()) as WeddingConfig
+    } catch {
+      // jatuh ke request biasa (dengan penanganan error standar)
+    }
+  }
   return request<WeddingConfig>('/config')
 }
 

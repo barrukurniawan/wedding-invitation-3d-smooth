@@ -536,6 +536,7 @@ function setLoadingProgress(percent){
   if(bar)bar.style.width=`${Math.max(4,percent)}%`;
   if(pct)pct.textContent=`${percent}%`;
   if(track)track.setAttribute('aria-valuenow',String(percent));
+  const mini=$('#miniLoadBar');if(mini)mini.style.width=`${Math.max(4,percent)}%`;
 }
 function assetLoaded(){
   const percent = Math.min(100, Math.round((++loaded / 7) * 100));
@@ -550,6 +551,8 @@ function assetLoaded(){
   const pairCtx=$('#pairPreview').getContext('2d');pairCtx.imageSmoothingEnabled=false;
   pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);
   document.querySelectorAll('[data-character]').forEach(b=>b.disabled=false);
+  document.body.classList.add('garden-ready');
+  if(pendingCharacter){const b=pendingCharacter;pendingCharacter=null;setTimeout(()=>b.click(),360);}
 }}
 function assetError(){const l=$('#loading');l?.classList.add('ml-error');const t=$('#loadingText');if(t)t.textContent='Taman belum berhasil dimuat. Muat ulang halaman untuk mencoba lagi.';}
 hostSprites.onload=assetLoaded;hostSprites.onerror=assetError;hostSprites.src=window.WEDDING.assets.hosts;
@@ -557,11 +560,13 @@ seatedSprites.onload=assetLoaded;seatedSprites.onerror=assetError;seatedSprites.
 guestSprites.onload=assetLoaded;guestSprites.onerror=assetError;guestSprites.src=window.WEDDING.assets.guests;
 frontGate.onload=assetLoaded;frontGate.onerror=assetError;frontGate.src=window.WEDDING.assets.gate;
 map.onload=()=>{prepareWater();assetLoaded();};map.onerror=assetError;map.src=window.WEDDING.assets.map;
-for(const c of Object.values(characters)){c.image.onload=assetLoaded;c.image.onerror=assetError;c.image.src=c.atlas;}
+for(const c of Object.values(characters)){c.image.onload=()=>{assetLoaded();try{drawCharacterPreviews();}catch{}};c.image.onerror=assetError;c.image.src=c.atlas;}
 function showPhase(next){phase=next;document.body.dataset.phase=next;$('#titleScreen').hidden=next!=='title';$('#characterScreen').hidden=next!=='choose';$('#opening').hidden=next==='playing';canvas.inert=next!=='playing';clearMovement();}
 $('#continueButton').onclick=()=>{startMusic();showPhase('choose');$('#playerName').focus({preventScroll:true});};
+window.__GAME_BOUND=true;if(window.__PENDING_CONTINUE)setTimeout(()=>{window.__PENDING_CONTINUE=false;$('#continueButton').classList.remove('is-pending');$('#continueButton').click();},0);
 $('#playerName').addEventListener('input',()=>{$('#nameError').hidden=true;$('#playerName').removeAttribute('aria-invalid');});
-document.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{if(!ready)return;const name=$('#playerName').value.trim().replace(/\s+/g,' ');if(!name){$('#nameError').textContent='Isi namamu dulu, ya.';$('#nameError').hidden=false;$('#playerName').setAttribute('aria-invalid','true');$('#playerName').focus();return;}playerName=name;player.x=744+Math.random()*48;player.y=890+Math.random()*48;pairMode=b.dataset.character==='pair';selectedCharacter=pairMode?'men':b.dataset.character;player.dir='south';player.walking=false;walkClock=0;resetCompanion();showPhase('playing');canvas.focus({preventScroll:true});startWelcome();});
+let pendingCharacter=null;
+document.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{const name=$('#playerName').value.trim().replace(/\s+/g,' ');if(!name){$('#nameError').textContent='Isi namamu dulu, ya.';$('#nameError').hidden=false;$('#playerName').setAttribute('aria-invalid','true');$('#playerName').focus();return;}if(!ready){pendingCharacter=b;$('#loading')?.classList.add('ml-waiting');return;}playerName=name;player.x=744+Math.random()*48;player.y=890+Math.random()*48;pairMode=b.dataset.character==='pair';selectedCharacter=pairMode?'men':b.dataset.character;player.dir='south';player.walking=false;walkClock=0;resetCompanion();showPhase('playing');canvas.focus({preventScroll:true});startWelcome();});
 requestAnimationFrame(frame);
 // Music is enabled by default; Continue provides the browser's required audio gesture.
 const audio=$('#gardenMusic');let sound=true,playRequest=0;
