@@ -1,6 +1,6 @@
 # Rencana Perbaikan Tampilan Undangan 2D (3 issue)
 
-Status: **rencana, belum ada kode.** Dilaporkan user 2026-10-11 dari HP (diikaatikaa, salman-raisa).
+Status: **P1–P4 selesai di lokal (2026-10-11), belum di-deploy.** P5 (nama panggilan) ditunda. Branch `polish_2d`. Dilaporkan user 2026-10-11 dari HP (diikaatikaa, salman-raisa).
 
 ## Issue 1: Kartu judul selalu "Faris & Eliza"
 **Penyebab:** jika pasangan belum mengunggah foto utama (`wedding_photo` kosong), preset memakai gambar contoh `wedding-card.webp`, yang nama "Faris & Eliza" serta tahun 2025-nya tercetak di dalam gambar. Data diikaatikaa: `wedding_photo` kosong.

@@ -21,6 +21,16 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
 
   const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 
+  // Pratinjau kartu pembuka undangan 2D saat belum ada foto utama (lihat garden-2d/cms-bootstrap.js).
+  const NAME_PREFIXES = new Set(['muhammad', 'muhamad', 'mohammad', 'mohamad', 'mochammad', 'moch', 'moch.', 'moh', 'moh.', 'm', 'm.', 'siti'])
+  function shortName(full: string) {
+    const words = (full || '').trim().split(/\s+/).filter(Boolean)
+    const rest = words.length > 1 && NAME_PREFIXES.has(words[0].toLowerCase()) ? words.slice(1) : words
+    const word = rest[0] || ''
+    return word ? word.charAt(0).toUpperCase() + word.slice(1) : ''
+  }
+  const cardName = $derived(`${shortName(config.groom_name) || 'Pria'} & ${shortName(config.bride_name) || 'Wanita'}`)
+
   function validateFile(file: File): string | null {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       return 'Format harus JPG, PNG, atau WebP.'
@@ -192,6 +202,19 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
           <span class="upload-hint">Klik untuk pilih foto utama pasangan</span>
            <span class="upload-sub">JPG, PNG, atau WebP · Otomatis dioptimalkan hingga 2 MB</span>
         {/if}
+      </div>
+    {/if}
+
+    {#if !config.wedding_photo && config.preset === '2d_garden'}
+      <div class="card-hint">
+        <div class="card-thumb" aria-hidden="true">
+          <img src="/presets/garden-2d/assets/wedding-card-blank.webp" alt="" loading="lazy" />
+          <span class="card-thumb-name">{cardName}</span>
+        </div>
+        <div class="card-hint-text">
+          <strong>Belum ada foto utama</strong>
+          <p>Tamu akan melihat kartu ilustrasi ini dengan nama kalian di layar pembuka. Unggah foto utama agar kartu memakai foto kalian sendiri.</p>
+        </div>
       </div>
     {/if}
 
@@ -523,4 +546,49 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
   }
   .upload-msg.success { background: #f0faf4; color: #1a5c3a; }
   .upload-msg.error { background: #fff4f6; color: #8f1d45; }
+  .card-hint {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #fdf6f0;
+    border: 1px dashed #e8c9bf;
+  }
+  .card-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 86px;
+    transform: rotate(-3deg);
+  }
+  .card-thumb img {
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.35);
+  }
+  .card-thumb-name {
+    position: absolute;
+    left: 21.6%;
+    top: 3.9%;
+    width: 40.6%;
+    height: 4.9%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 1px;
+    color: #0e1638;
+    font: 900 4.6px/1 Nunito, 'Outfit', sans-serif;
+  }
+  .card-hint-text strong {
+    font-size: 0.9rem;
+  }
+  .card-hint-text p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #7a6a66;
+  }
 </style>
