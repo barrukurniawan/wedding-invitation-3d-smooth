@@ -76,7 +76,7 @@
   </script>
   <script>
     // Jalur cepat undangan: minta data undangan sebelum JavaScript aplikasi selesai diunduh.
-    // Bila undangan 2D, aset inti taman langsung mulai diunduh (cache dipakai bersama iframe).
+    // Bila undangan 2D, peta taman langsung mulai diunduh (cache dipakai bersama iframe).
     (function () {
       var h = location.hostname.toLowerCase()
       if (h === 'localhost' || h === '127.0.0.1' || h === 'marryme.web.id' || h === 'www.marryme.web.id') return
@@ -85,10 +85,9 @@
       window.__EARLY_CONFIG = p
       p.then(function (r) { return r.ok ? r.clone().json() : null }).then(function (c) {
         if (!c || c.preset !== '2d_garden') return
-        var base = '/presets/garden-2d/assets/'
-        ;['garden.webp', 'front-gate.webp', 'wedding-guests-v2.webp', 'seated-guests.webp', 'wedding-hosts.webp', 'character-atlas.png', 'woman-atlas.png', 'wedding-card-blank.webp'].forEach(function (f) {
-          var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = base + f; document.head.appendChild(l)
-        })
+        // Hanya peta (file terbesar) yang dimulai lebih awal; sisanya diminta iframe sendiri.
+        // Preload terlalu banyak membuat iframe mengunduh ulang file yang belum selesai.
+        var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = '/presets/garden-2d/assets/garden.webp'; document.head.appendChild(l)
       }).catch(function () {})
     })()
   </script>
