@@ -41,6 +41,11 @@
      #startup-shell .bar::after { display: block; width: 32%; height: 100%; border-radius: inherit; background: #d96b7a; content: ""; animation: startup-load 1.4s ease-in-out infinite; }
      @keyframes startup-load { from { transform: translateX(-120%); } to { transform: translateX(340%); } }
      @media (prefers-reduced-motion: reduce) { #startup-shell .bar::after { animation-duration: 2.5s; } }
+    #startup-shell.is-platform { background: #fdf8f4; }
+    #startup-shell.is-platform .mark { display: none; }
+    #startup-shell.is-platform h1 { margin: 0; color: #292321; font: 600 clamp(2rem, 7vw, 2.6rem)/1 "Playfair Display", Georgia, serif; letter-spacing: -0.035em; }
+    #startup-shell.is-platform h1 span { color: #8f1d45; }
+    #startup-shell.is-platform .bar { width: min(10rem, 50vw); margin-top: 1.4rem; }
   </style>
   <!-- DNS prefetch & preconnect for Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -55,6 +60,20 @@
     <p>Memuat ruang interaktif.</p>
     <div class="bar" aria-hidden="true"></div>
   </div>
+  <script>
+    // Layar awal ini dipakai semua halaman. Teks "Menyiapkan undangan" hanya untuk subdomain
+    // undangan; di marryme.web.id dan /admin cukup logo (logika sama dengan routing/host.ts).
+    (function () {
+      var h = location.hostname.toLowerCase()
+      var root = h === 'localhost' || h === '127.0.0.1' || h === 'marryme.web.id' || h === 'www.marryme.web.id'
+      if (!root && location.pathname.indexOf('/admin') !== 0) return
+      var shell = document.getElementById('startup-shell')
+      if (!shell) return
+      shell.classList.add('is-platform')
+      shell.querySelector('h1').innerHTML = 'Marry<span>Me</span>'
+      shell.querySelector('p').remove()
+    })()
+  </script>
   <div style="display: contents">%sveltekit.body%</div>
 </body>
 
