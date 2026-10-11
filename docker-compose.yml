@@ -87,6 +87,8 @@ services:
       context: .
       dockerfile: Dockerfile.web
     restart: unless-stopped
+    # nginx menunggu koneksi keep-alive Cloudflare saat dimatikan; jangan biarkan 10 dtk.
+    stop_grace_period: 3s
     ports:
       - "80:80"
       - "443:443"
