@@ -23,6 +23,70 @@
   };
   const contentApiUrl = `/api/multiplayer/content?site=${encodeURIComponent(window.CMS_SITE)}${window.CMS_PREVIEW ? '&preview=1' : ''}`;
 
+  // ── CDN aset (jsDelivr) dengan cadangan ke server sendiri ─────────────────────────────
+  // Lapis 1: server mengirim `assetCdn` (kosong = mati). Lapis 2: cek cdn-ok.json (≤2,5 dtk);
+  // gagal → seluruh kunjungan pakai server sendiri. Lapis 3: tiap file yang gagal dari CDN
+  // diminta ulang dari server sendiri (window.__ASSET_FALLBACK, dipakai juga oleh game.js).
+  window.__ASSET_FALLBACK = window.__ASSET_FALLBACK || {};
+  let cdnBase = null;
+  const cdnChecks = {};
+  function checkCdn(base) {
+    if (!base) return Promise.resolve(null);
+    if (cdnChecks[base]) return cdnChecks[base];
+    const key = 'marryme_cdn_ok:' + base;
+    try {
+      const memo = sessionStorage.getItem(key);
+      if (memo === '1') return (cdnChecks[base] = Promise.resolve(base));
+      if (memo === '0') return (cdnChecks[base] = Promise.resolve(null));
+    } catch {}
+    const version = base.split('@').pop();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2500);
+    cdnChecks[base] = fetch(base + '/cdn-ok.json', { signal: ctrl.signal, cache: 'force-cache' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (d && d.version === version ? base : null))
+      .catch(() => null)
+      .then((ok) => {
+        clearTimeout(timer);
+        try { sessionStorage.setItem(key, ok ? '1' : '0'); } catch {}
+        return ok;
+      });
+    return cdnChecks[base];
+  }
+  const toCdn = (value) => {
+    if (!cdnBase || typeof value !== 'string' || !value.startsWith('assets/')) return value;
+    const url = cdnBase + '/presets/garden-2d/' + value;
+    window.__ASSET_FALLBACK[url] = value;
+    return url;
+  };
+  function rewriteAssets(config) {
+    if (!config || !cdnBase) return config;
+    if (config.assets) for (const k of Object.keys(config.assets)) config.assets[k] = toCdn(config.assets[k]);
+    if (config.characters) for (const c of Object.values(config.characters)) if (c) c.atlas = toCdn(c.atlas);
+    return config;
+  }
+  // Gambar <img> yang gagal dari CDN → ambil dari server sendiri.
+  document.addEventListener('error', (event) => {
+    const el = event.target;
+    if (!(el instanceof HTMLImageElement)) return;
+    const fallback = window.__ASSET_FALLBACK[el.currentSrc || el.src];
+    if (fallback && el.getAttribute('src') !== fallback) el.src = fallback;
+  }, true);
+  // Mulai unduh gambar inti taman sesegera mode CDN/lokal diketahui.
+  let preloaded = false;
+  function preloadCore(config) {
+    if (preloaded || !config?.assets) return;
+    preloaded = true;
+    const a = config.assets, c = config.characters || {};
+    for (const href of [a.map, a.gate, a.guests, a.seated, a.hosts, c.men?.atlas, c.woman?.atlas]) {
+      if (!href) continue;
+      const l = document.createElement('link');
+      l.rel = 'preload'; l.as = 'image'; l.href = href; l.fetchPriority = 'high';
+      if (href.startsWith('http')) l.crossOrigin = 'anonymous';
+      document.head.append(l);
+    }
+  }
+
   let revision = null;
   let mediaSignature = '';
   let gameScriptLoaded = false;
@@ -184,7 +248,8 @@
       const titleCard = $('.title-card');
       if (coverImg && a.cover) {
         // Kartu contoh lama (berisi nama "Faris & Eliza") diganti kartu kosong + nama asli.
-        const cover = a.cover.includes('assets/wedding-card.') ? 'assets/wedding-card-blank.webp' : a.cover;
+        const cover = a.cover.includes('assets/wedding-card.') ? toCdn('assets/wedding-card-blank.webp') : a.cover;
+        if (cover.startsWith('http') && cover.includes('cdn.jsdelivr.net')) coverImg.crossOrigin = 'anonymous';
         if (coverImg.getAttribute('src') !== cover) coverImg.src = cover;
         coverImg.alt = 'Kartu pernikahan ' + name;
         cardState.groom = config.profile.groom;
@@ -367,15 +432,19 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261011d';
+    script.src = 'game.js?v=20261012a';
     document.body.append(script);
   }
 
   // Handle postMessage from parent SvelteKit app
-  window.addEventListener('message', (event) => {
+  window.addEventListener('message', async (event) => {
     if (event.data?.type === 'SET_WEDDING_CONFIG' && event.data.config) {
+      // Tunggu keputusan CDN dulu supaya kartu/gambar tidak sempat diunduh dari server sendiri.
+      const decided = await checkCdn(event.data.config.asset_cdn || null);
+      if (decided) cdnBase = decided;
       const transformed = transformMarryMeConfig(event.data.config);
       if (transformed) {
+        rewriteAssets(transformed);
         window.WEDDING = transformed;
         apply(transformed);
         window.dispatchEvent(new CustomEvent('wedding-content-updated', { detail: { mediaChanged: true } }));
@@ -397,6 +466,9 @@
     const response = early || (await fetch(contentApiUrl, { cache: 'no-store' }));
     if (response.ok) {
       const data = await response.json();
+      cdnBase = await checkCdn(data.assetCdn || null);
+      rewriteAssets(data.config);
+      preloadCore(data.config);
       window.WEDDING = data.config;
       revision = data.revision;
       mediaSignature = JSON.stringify([data.config.assets, data.config.characters]);
@@ -431,6 +503,7 @@
       if (!r.ok) return;
       const data = await r.json();
       if (data.revision === revision) return;
+      rewriteAssets(data.config);
       const signature = JSON.stringify([data.config.assets, data.config.characters]);
       const mediaChanged = signature !== mediaSignature;
       mediaSignature = signature;

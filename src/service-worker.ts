@@ -50,6 +50,15 @@ self.addEventListener('fetch', (event) => {
   async function respond() {
     const cache = await caches.open(CACHE)
 
+    // CDN aset (jsDelivr, URL dikunci per versi): cache-first.
+    if (url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('/marryme-assets@')) {
+      const cached = await cache.match(event.request)
+      if (cached) return cached
+      const response = await fetch(event.request)
+      if (response.ok) cache.put(event.request, response.clone())
+      return response
+    }
+
     // Build ber-hash, aset taman 2D (+ file preset bertanda ?v=), model 3D, audio, media:
     // cache-on-demand (cache-first). Cache dibuang otomatis tiap deploy (nama cache = versi build).
     if (

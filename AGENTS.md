@@ -44,6 +44,12 @@
 - 2D "instant garden": the full-screen "Membuka taman" loader no longer covers the title/name screens; the garden loads behind them (small pill indicator). A character chosen before the garden is ready is queued (`pendingCharacter`, loader shows with `.ml-waiting`). Early "Mulai" clicks before game.js binds are queued by an inline script in the preset `index.html` (`__PENDING_CONTINUE`).
 - `app.html` fast path: invitation hosts fetch `/api/config` before the app bundle (`window.__EARLY_CONFIG`, consumed once by `getPublicConfig`) and preload core 2D images when the preset is 2D.
 
+## Asset CDN (jsDelivr)
+- Design assets (2D preset images, models, nature, media) are mirrored to the public repo `barrukurniawan/marryme-assets` and served from `cdn.jsdelivr.net/gh/.../marryme-assets@<tag>` (Cloudflare Jakarta edge). Publish + byte-verify with `npm run assets:publish` (allowlist in `scripts/assets/cdn-manifest.mjs`; never add user uploads or private data).
+- Kill switch: server env `ASSET_CDN_BASE` (pinned tag only, validated in `server/services/assetCdn.js`), exposed as `asset_cdn` in `/api/config` and `assetCdn` in `/api/multiplayer/content`. Empty = everything from origin.
+- 2D preset: `cms-bootstrap.js` health-checks `cdn-ok.json` (2.5 s, sessionStorage) then rewrites `assets/...` URLs; every CDN URL has an origin fallback in `window.__ASSET_FALLBACK` (img error listener, game.js `withFallback`/`loadImage`). Files stay on the origin forever.
+- After changing any CDN-listed asset: publish a new tag, then update `ASSET_CDN_BASE` and restart api.
+
 ## Admin Dashboard
 - `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.
 - Konten Demo / Ucapan only edit invitation #1 (`server/routes/admin.js` hardcodes `invitation_id = 1`).

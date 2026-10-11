@@ -13,7 +13,7 @@ const buttonSoundPool=Array.from({length:4},()=>{
 let nextButtonSound=0;
 function playButtonSound(){
   const clip=buttonSoundPool[nextButtonSound++%buttonSoundPool.length];
-  if(!clip.src)clip.src=window.WEDDING.assets.click;
+  if(!clip.src){clip.src=window.WEDDING.assets.click;clip.onerror=()=>{const f=window.__ASSET_FALLBACK?.[clip.src];if(f)clip.src=f;};}
   clip.pause();clip.currentTime=0;clip.play().catch(()=>{});
 }
 document.addEventListener('click',event=>{
@@ -518,7 +518,7 @@ window.addEventListener('wedding-content-updated',async event=>{
   updateCountdown();
  welcomeLines[0].text=`Selamat datang di taman pernikahan ${window.WEDDING.profile.groom} & ${window.WEDDING.profile.bride}! Kami senang kamu hadir. Yuk, kenali tamannya sebentar.`;
  if(!event.detail?.mediaChanged)return;
- const loadImage=src=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});
+ const loadImage=src=>new Promise((resolve,reject)=>{const img=new Image();if(/^https?:/.test(src))img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>{const f=window.__ASSET_FALLBACK?.[src];if(f&&img.src!==new URL(f,location.href).href){img.src=f;}else reject();};img.src=src;});
  try{const a=window.WEDDING.assets,c=window.WEDDING.characters;const images=await Promise.all([a.map,a.gate,a.guests,a.seated,a.hosts,c.men.atlas,c.woman.atlas].map(loadImage));[map,frontGate,guestSprites,seatedSprites,hostSprites]=images;characters.men.image=images[5];characters.woman.image=images[6];prepareWater();for(const clip of buttonSoundPool)if(clip.src)clip.src=a.click;drawCharacterPreviews();if(sound&&phase==='playing')startMusic();}
  catch{$('#travelStatus').textContent='Gambar baru belum dapat dimuat. Muat ulang halaman untuk mencoba lagi.';}
 });
@@ -554,13 +554,16 @@ function assetLoaded(){
   document.body.classList.add('garden-ready');
   if(pendingCharacter){const b=pendingCharacter;pendingCharacter=null;setTimeout(()=>b.click(),360);}
 }}
+// Gambar inti gagal dari CDN → coba sekali dari server sendiri sebelum menampilkan error.
+function withFallback(img,onload){img.onerror=()=>{const f=window.__ASSET_FALLBACK?.[img.src];if(f){img.onerror=assetError;img.src=f;}else assetError();};img.onload=onload;}
+function setSrc(img,src){if(/^https?:/.test(src))img.crossOrigin='anonymous';img.src=src;}
 function assetError(){const l=$('#loading');l?.classList.add('ml-error');const t=$('#loadingText');if(t)t.textContent='Taman belum berhasil dimuat. Muat ulang halaman untuk mencoba lagi.';}
-hostSprites.onload=assetLoaded;hostSprites.onerror=assetError;hostSprites.src=window.WEDDING.assets.hosts;
-seatedSprites.onload=assetLoaded;seatedSprites.onerror=assetError;seatedSprites.src=window.WEDDING.assets.seated;
-guestSprites.onload=assetLoaded;guestSprites.onerror=assetError;guestSprites.src=window.WEDDING.assets.guests;
-frontGate.onload=assetLoaded;frontGate.onerror=assetError;frontGate.src=window.WEDDING.assets.gate;
-map.onload=()=>{prepareWater();assetLoaded();};map.onerror=assetError;map.src=window.WEDDING.assets.map;
-for(const c of Object.values(characters)){c.image.onload=()=>{assetLoaded();try{drawCharacterPreviews();}catch{}};c.image.onerror=assetError;c.image.src=c.atlas;}
+withFallback(hostSprites,assetLoaded);setSrc(hostSprites,window.WEDDING.assets.hosts);
+withFallback(seatedSprites,assetLoaded);setSrc(seatedSprites,window.WEDDING.assets.seated);
+withFallback(guestSprites,assetLoaded);setSrc(guestSprites,window.WEDDING.assets.guests);
+withFallback(frontGate,assetLoaded);setSrc(frontGate,window.WEDDING.assets.gate);
+withFallback(map,()=>{prepareWater();assetLoaded();});setSrc(map,window.WEDDING.assets.map);
+for(const c of Object.values(characters)){withFallback(c.image,()=>{assetLoaded();try{drawCharacterPreviews();}catch{}});setSrc(c.image,c.atlas);}
 function showPhase(next){phase=next;document.body.dataset.phase=next;$('#titleScreen').hidden=next!=='title';$('#characterScreen').hidden=next!=='choose';$('#opening').hidden=next==='playing';canvas.inert=next!=='playing';clearMovement();}
 $('#continueButton').onclick=()=>{startMusic();showPhase('choose');$('#playerName').focus({preventScroll:true});};
 window.__GAME_BOUND=true;if(window.__PENDING_CONTINUE)setTimeout(()=>{window.__PENDING_CONTINUE=false;$('#continueButton').classList.remove('is-pending');$('#continueButton').click();},0);

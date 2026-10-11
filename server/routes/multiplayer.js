@@ -1,6 +1,7 @@
 import express from 'express'
 import crypto from 'node:crypto'
 import pool from '../db.js'
+import { assetCdnBase } from '../services/assetCdn.js'
 
 const router = express.Router()
 
@@ -459,7 +460,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
           ],
         }
 
-        return res.setHeader('Cache-Control', 'no-store').json({ site, revision: 1, config })
+        return res.setHeader('Cache-Control', 'no-store').json({ site, revision: 1, config, assetCdn: assetCdnBase() })
       }
     } catch {
       // Fall through to default
@@ -613,7 +614,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
       ],
     }
 
-    return res.setHeader('Cache-Control', 'no-store').json({ site, revision: 1, config: defaultConfig })
+    return res.setHeader('Cache-Control', 'no-store').json({ site, revision: 1, config: defaultConfig, assetCdn: assetCdnBase() })
   } catch (err) {
     console.error('Content fetch error:', err)
     return res.status(500).json({ error: 'Gagal memuat konten' })

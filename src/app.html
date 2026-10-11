@@ -87,7 +87,11 @@
         if (!c || c.preset !== '2d_garden') return
         // Hanya peta (file terbesar) yang dimulai lebih awal; sisanya diminta iframe sendiri.
         // Preload terlalu banyak membuat iframe mengunduh ulang file yang belum selesai.
-        var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = '/presets/garden-2d/assets/garden.webp'; document.head.appendChild(l)
+        var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'
+        // Ikuti CDN bila aktif (mode crossorigin harus sama dengan loader di iframe agar cache terpakai).
+        if (c.asset_cdn) { l.href = c.asset_cdn + '/presets/garden-2d/assets/garden.webp'; l.crossOrigin = 'anonymous' }
+        else l.href = '/presets/garden-2d/assets/garden.webp'
+        document.head.appendChild(l)
       }).catch(function () {})
     })()
   </script>

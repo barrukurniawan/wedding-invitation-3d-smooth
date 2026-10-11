@@ -1,6 +1,6 @@
 # Rencana CDN Aset via jsDelivr (dengan cadangan ke server sendiri)
 
-Status: **rencana (2026-10-12), belum ada kode.** Branch: `cdn_jsdelivr`.
+Status: **J1–J4 selesai di lokal (2026-10-11).** Versi aset pertama `v2026.10.11-1` (178 file, terverifikasi). Branch `cdn_jsdelivr`. Belum di-deploy; J5 menunggu izin.
 
 ## 1. Latar belakang (diukur dari koneksi user, Indonesia)
 | | Dilayani dari | Kecepatan |
@@ -98,3 +98,14 @@ Selain itu:
 ## 8. Yang perlu dari user
 1. Buat repo GitHub **publik** `marryme-assets` (boleh kosong).
 2. Akses push dari mesin ini: Personal Access Token (fine-grained, hanya repo itu, izin Contents: Read & Write) atau SSH key. `gh` CLI belum terpasang di mesin ini.
+
+## 9. Hasil tes J4 (build produksi lokal, service worker dinonaktifkan agar pemblokiran berlaku)
+| Skenario | Hasil |
+|---|---|
+| A. CDN normal | gambar inti, kartu, pengantin dari jsDelivr |
+| B. CDN diblokir total | cek kesehatan gagal → seluruh kunjungan dari server sendiri |
+| C. CDN lambat (cdn-ok > 2,5 dtk) | → server sendiri |
+| D. Peta 404 dari CDN | peta saja dari server, sisanya CDN (cadangan per file) |
+| E. Versi cdn-ok tidak cocok | → server sendiri |
+| F. Saklar mati (env kosong) | semua dari server sendiri (perilaku lama) |
+Semua: taman siap, tamu masuk taman, air bergerak (kanvas tidak ter-taint), tanpa error. Undangan 3D tidak terpengaruh.
