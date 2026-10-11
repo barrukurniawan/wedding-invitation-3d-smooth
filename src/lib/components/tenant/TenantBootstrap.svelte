@@ -8,13 +8,16 @@
   let InvitationApp = $state<Component>()
 
   async function bootstrap() {
+    // Komponen 2D kecil (~2 KB): diunduh bersamaan dengan config supaya undangan 2D tidak
+    // menunggu satu putaran lagi. Komponen 3D (besar, three.js) tetap baru dimuat bila perlu.
+    const garden2d = import('../twod/Garden2DApp.svelte')
     await loadConfig()
     if ($configStatus !== 'ready') {
       stopFakeProgress()
       return
     }
     if ($weddingConfig?.preset === '2d_garden') {
-      const module = await import('../twod/Garden2DApp.svelte')
+      const module = await garden2d
       InvitationApp = module.default
     } else {
       const module = await import('../../../App.svelte')

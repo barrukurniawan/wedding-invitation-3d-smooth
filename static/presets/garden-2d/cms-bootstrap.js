@@ -367,7 +367,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261011b';
+    script.src = 'game.js?v=20261011c';
     document.body.append(script);
   }
 
@@ -392,7 +392,9 @@
 
   // Fetch initial config from backend API or fallback to static config.js
   try {
-    const response = await fetch(contentApiUrl, { cache: 'no-store' });
+    // Pakai request yang sudah dimulai di <head> index.html bila URL-nya sama.
+    const early = window.__CMS_CONTENT_URL === contentApiUrl ? await window.__CMS_CONTENT : null;
+    const response = early || (await fetch(contentApiUrl, { cache: 'no-store' }));
     if (response.ok) {
       const data = await response.json();
       window.WEDDING = data.config;
