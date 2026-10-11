@@ -8,11 +8,12 @@ function setStyle(element,key,value){if(element.style[key]!==value)element.style
 function setAttribute(element,key,value){if(element.getAttribute(key)!==value)element.setAttribute(key,value);}
 // A small reusable pool allows quick successive clicks without cutting off the last pop.
 const buttonSoundPool=Array.from({length:4},()=>{
-  const clip=new Audio(window.WEDDING.assets.click);clip.preload='auto';clip.volume=.34;return clip;
+  const clip=new Audio();clip.preload='none';clip.volume=.34;return clip;
 });
 let nextButtonSound=0;
 function playButtonSound(){
   const clip=buttonSoundPool[nextButtonSound++%buttonSoundPool.length];
+  if(!clip.src)clip.src=window.WEDDING.assets.click;
   clip.pause();clip.currentTime=0;clip.play().catch(()=>{});
 }
 document.addEventListener('click',event=>{
@@ -439,6 +440,7 @@ function positionPianist(){
 }
 pianistButton.onclick=()=>{if(phase!=='playing'||document.querySelector('dialog[open]'))return;if(Math.hypot(player.x-pianist.x,player.y-pianist.y)<proximityRadius)interactTarget(pianist);else routeTo(pianist.x,pianist.y,pianist);};
 function syncPianist(playing){
+  if(!ready){pianistButton.dataset.state=playing?'playing':'idle';return;}
   for(const image of [pianistImage,$('#singerImage')]){
     const next=playing?image.dataset.playing:image.dataset.idle;
     if(image.getAttribute('src')!==next)image.setAttribute('src',next);
@@ -517,7 +519,7 @@ window.addEventListener('wedding-content-updated',async event=>{
  welcomeLines[0].text=`Selamat datang di taman pernikahan ${window.WEDDING.profile.groom} & ${window.WEDDING.profile.bride}! Kami senang kamu hadir. Yuk, kenali tamannya sebentar.`;
  if(!event.detail?.mediaChanged)return;
  const loadImage=src=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});
- try{const a=window.WEDDING.assets,c=window.WEDDING.characters;const images=await Promise.all([a.map,a.gate,a.guests,a.seated,a.hosts,c.men.atlas,c.woman.atlas].map(loadImage));[map,frontGate,guestSprites,seatedSprites,hostSprites]=images;characters.men.image=images[5];characters.woman.image=images[6];prepareWater();for(const clip of buttonSoundPool)clip.src=a.click;drawCharacterPreviews();if(sound&&phase==='playing')startMusic();}
+ try{const a=window.WEDDING.assets,c=window.WEDDING.characters;const images=await Promise.all([a.map,a.gate,a.guests,a.seated,a.hosts,c.men.atlas,c.woman.atlas].map(loadImage));[map,frontGate,guestSprites,seatedSprites,hostSprites]=images;characters.men.image=images[5];characters.woman.image=images[6];prepareWater();for(const clip of buttonSoundPool)if(clip.src)clip.src=a.click;drawCharacterPreviews();if(sound&&phase==='playing')startMusic();}
  catch{$('#travelStatus').textContent='Gambar baru belum dapat dimuat. Muat ulang halaman untuk mencoba lagi.';}
 });
 function drawCharacterPreviews(){
@@ -530,6 +532,10 @@ function assetLoaded(){
   const loadEl = $('#loading');
   if(loadEl && !ready){loadEl.innerHTML = `Membuka taman… <span style="display:inline-block;margin-left:6px;font-weight:700;opacity:0.9;">${percent}%</span>`;}
   if(loaded===7){ready=true;if(loadEl)loadEl.hidden=true;resize();
+  window.__GARDEN_READY=true;
+  for(const img of document.querySelectorAll('img[data-src]')){img.src=img.dataset.src;img.removeAttribute('data-src');}
+  syncPianist(sound&&!audio.paused);
+  buttonSoundPool[0].src=window.WEDDING.assets.click;buttonSoundPool[0].preload='auto';
   for(const [id,c] of Object.entries(characters)){const preview=$(`#${id}Preview`),pctx=preview.getContext('2d');pctx.imageSmoothingEnabled=false;pctx.drawImage(c.image,0,2*68,68,68,0,0,136,136);}
   const pairCtx=$('#pairPreview').getContext('2d');pairCtx.imageSmoothingEnabled=false;
   pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);

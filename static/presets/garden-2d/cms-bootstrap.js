@@ -15,6 +15,12 @@
   window.CMS_PREVIEW = urlParams.get('preview') === '1';
 
   const $ = (s) => document.querySelector(s);
+  // Gambar dekorasi (pengantin, pianis) baru dimuat setelah taman siap (lihat game.js),
+  // supaya tidak berebut koneksi dengan gambar inti taman.
+  const deferSrc = (el, src) => {
+    if (window.__GARDEN_READY) el.src = src;
+    else el.dataset.src = src;
+  };
   const contentApiUrl = `/api/multiplayer/content?site=${encodeURIComponent(window.CMS_SITE)}${window.CMS_PREVIEW ? '&preview=1' : ''}`;
 
   let revision = null;
@@ -61,7 +67,7 @@
       if (coverImg && a.cover) {
         coverImg.src = a.cover;
         coverImg.alt = 'Kartu pernikahan ' + name;
-        if (a.cover && !a.cover.includes('wedding-card.jpg')) {
+        if (a.cover && !a.cover.includes('assets/wedding-card.')) {
           titleCard?.classList.add('has-custom-photo');
           coverImg.classList.add('has-custom-photo');
         } else {
@@ -69,7 +75,7 @@
           coverImg.classList.remove('has-custom-photo');
         }
       }
-      if (coupleImg && a.couple) coupleImg.src = a.couple;
+      if (coupleImg && a.couple) deferSrc(coupleImg, a.couple);
 
       for (const [id, idle, playing] of [
         ['pianistImage', 'pianistIdle', 'pianistPlaying'],
@@ -79,7 +85,7 @@
         if (el && a[idle] && a[playing]) {
           el.dataset.idle = a[idle];
           el.dataset.playing = a[playing];
-          el.src = $('#gardenMusic')?.paused ? a[idle] : a[playing];
+          if (window.__GARDEN_READY) el.src = $('#gardenMusic')?.paused ? a[idle] : a[playing];
         }
       }
 
@@ -101,14 +107,14 @@
         startButton: 'Mulai Permainan',
       },
       assets: {
-        cover: c.wedding_photo || 'assets/wedding-card.jpg',
+        cover: c.wedding_photo || 'assets/wedding-card.webp',
         map: 'assets/garden.webp',
         gate: 'assets/front-gate.webp',
-        couple: 'assets/mempelai.gif',
+        couple: 'assets/mempelai.webp',
         pianistIdle: 'assets/pianist-idle.webp',
-        pianistPlaying: 'assets/pianist.gif',
+        pianistPlaying: 'assets/pianist.webp',
         singerIdle: 'assets/singer-idle.webp',
-        singerPlaying: 'assets/singer.gif',
+        singerPlaying: 'assets/singer.webp',
         guests: 'assets/wedding-guests-v2.webp',
         seated: 'assets/seated-guests.webp',
         hosts: 'assets/wedding-hosts.webp',
@@ -237,7 +243,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js';
+    script.src = 'game.js?v=20261011';
     document.body.append(script);
   }
 

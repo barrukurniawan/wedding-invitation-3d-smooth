@@ -97,7 +97,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:4px}
 .joystick-thumb{background:linear-gradient(#fff5e4,#dec29e);border-color:#c6a580;box-shadow:inset 0 2px 0 #fffaf1,0 3px 0 #b68e68,0 5px 10px #50372322}.joystick-thumb>span{border-color:#9e77577a}
 @media(prefers-reduced-motion:reduce){button{transition:none!important}}
 
-@font-face{font-family:Nunito;font-style:normal;font-weight:700 900;font-display:swap;src:url(assets/nunito-extrabold.ttf) format("truetype")}
+@font-face{font-family:Nunito;font-style:normal;font-weight:700 900;font-display:swap;src:url(assets/nunito-extrabold.woff2) format("woff2"),url(assets/nunito-extrabold.ttf) format("truetype")}
 button:not(.pianist):not(.joystick) span,button:not(.pianist):not(.joystick) strong{font-family:inherit}
 
 #details.has-gallery{width:640px}.photo-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;margin:22px 0}.photo-gallery[hidden]{display:none}.photo-gallery figure{margin:0;min-width:0}.photo-gallery figure:first-child{grid-column:1/-1}.gallery-photo{display:block;width:100%;padding:0;overflow:hidden;cursor:zoom-in;min-height:150px}.gallery-photo img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}.photo-gallery figure:first-child img{aspect-ratio:3/2}.photo-gallery figcaption{font-size:12px;line-height:1.5;margin-top:7px}.photo-gallery a{color:#795c43;text-underline-offset:3px}#photoViewer{width:min(850px,calc(100% - 24px));padding:0} .photo-viewer-inner{position:relative;padding:58px 16px 12px}#largePhoto{display:block;max-width:100%;max-height:70dvh;width:auto;height:auto;margin:auto;object-fit:contain;border-radius:8px}#photoCaption{font-size:13px;text-align:center;margin:12px 0}
@@ -216,7 +216,7 @@ body[data-phase="choose"] .character-panel{transform:none}
 .ceremony-slide h3{margin-bottom:24px}.ceremony-slide .event-date{font-size:clamp(24px,5vw,32px);font-weight:900}.ceremony-slide .event-time,.ceremony-slide .event-venue{font-size:18px;font-weight:800}.ceremony-slide .event-address{font-size:16px;line-height:1.5}.ceremony-slide .event-map-link{margin-top:20px}.ceremony-slide .story-slide-count{margin-top:24px}
 
 /* A pinned paper note; handwriting is reserved for the guest's words and signature. */
-@font-face{font-family:'Caveat';font-style:normal;font-weight:600;font-display:swap;src:url('assets/caveat-semibold.woff') format('woff')}
+@font-face{font-family:'Caveat';font-style:normal;font-weight:600;font-display:swap;src:url('assets/caveat-semibold.woff2') format('woff2'),url('assets/caveat-semibold.woff') format('woff')}
 #details.has-wishes #wishList{padding-top:30px;row-gap:24px}
 #details.has-wishes .wish-message{position:relative;isolation:isolate;min-height:310px;padding:58px 36px 40px;border:0;border-radius:2px 3px 18px 4px;background:linear-gradient(115deg,#fffef9 0%,#faf8ef 78%,#f0eee4 100%);box-shadow:2px 5px 7px #15291e24,9px 17px 20px -9px #10271d70;transform:rotate(-.65deg);color:#4b443c}
 #details.has-wishes .wish-note-pin{position:absolute;top:-24px;left:50%;transform:translateX(-50%) rotate(-12deg);font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:38px;line-height:1;filter:drop-shadow(2px 4px 2px #49332535);pointer-events:none;user-select:none}

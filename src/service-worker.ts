@@ -8,20 +8,12 @@ import { build, files, version } from '$service-worker'
 // Create a unique cache name for this deployment
 const CACHE = `wedding-cache-${version}`
 
-// Critical assets to pre-cache immediately (core JS/CSS, favicon)
-// Exclude heavy audio (27MB), video (7MB), documentation, and 3D models from initial batch
-const PRECACHE_ASSETS = [
-  ...build,
-  ...files.filter(
-    (file) =>
-      !file.startsWith('/audio/') &&
-      !file.startsWith('/media/') &&
-      !file.startsWith('/documentation/') &&
-      !file.endsWith('.glb') &&
-      !file.endsWith('.gltf') &&
-      !file.endsWith('.bin')
-  ),
-]
+// Tidak ada precache massal: dulu daftar ini memuat hampir semua file statis (±57 MB,
+// termasuk aset preset 2D dan lagu) sehingga setiap pengunjung baru mengunduhnya di latar
+// belakang dan memperlambat undangan. Sekarang file hanya disimpan saat benar-benar diminta.
+const PRECACHE_ASSETS: string[] = []
+void build
+void files
 
 self.addEventListener('install', (event) => {
   async function addFilesToCache() {
@@ -58,16 +50,9 @@ self.addEventListener('fetch', (event) => {
   async function respond() {
     const cache = await caches.open(CACHE)
 
-    // Serve pre-cached core assets directly from cache (cache-first)
-    if (PRECACHE_ASSETS.includes(url.pathname)) {
-      const cachedResponse = await cache.match(event.request)
-      if (cachedResponse) {
-        return cachedResponse
-      }
-    }
-
-    // Static assets (3D models, audio, images): cache-on-demand
+    // Build ber-hash, model 3D, audio, media: cache-on-demand (cache-first)
     if (
+      url.pathname.startsWith('/_app/immutable/') ||
       url.pathname.startsWith('/models/') ||
       url.pathname.startsWith('/nature/') ||
       url.pathname.startsWith('/audio/') ||

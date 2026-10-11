@@ -36,6 +36,12 @@
 - Landing assets: WebP only (`static/media/designs/*.webp`, `static/media/features/*.webp`; convert user PNGs with `cwebp -q 82`, keep source PNGs in `assets/media-source/`). Hero videos `hero-garden.mp4` + `hero-beach.mp4` play in turn; regenerate with `node scripts/media/record-gameplay.mjs garden|beach` (needs ffmpeg, dev server + API). Encode at 30 fps (half of the 60 fps capture); 24 fps judders.
 - MySQL TIMESTAMP columns come back as `Date` (pool uses `dateStrings` only for DATETIME): serialize with `toIsoString()` from `server/services/dates.js`, never `String(date)`.
 
+## 2D Preset (garden-2d) & Caching
+- 2D invitations render `static/presets/garden-2d/index.html` in an iframe (`twod/Garden2DApp.svelte`); asset paths come from `cms-bootstrap.js` AND `server/routes/multiplayer.js` (content API) — keep both in sync. Core map images are `<link rel=preload>`ed in the preset `index.html`; decorative images (couple, pianist/singer animations, click sound) load only after the garden is ready (`window.__GARDEN_READY`, `img[data-src]`). Use WebP (animated WebP for former GIFs) and WOFF2.
+- nginx marks every `.js/.css/.png/...` immutable for 1 year (Cloudflare too). Non-hashed preset files must be referenced with `?v=YYYYMMDD` (bump on change); the preset `index.html` itself is `no-store`.
+- Service worker does no bulk precache (it used to pull ~57 MB per new visitor); it caches on demand only. It is registered as `/service-worker.js?v=…` and nginx serves it `no-cache`; bump the query if Cloudflare ever caches a bad copy.
+- 3D asset preloads in `TenantBootstrap.svelte` are emitted only for 3D presets.
+
 ## Admin Dashboard
 - `/admin` (`src/routes/admin/+page.svelte`): light UI, maroon accent, styles in `src/lib/components/admin/admin.css` (`.adm-*` classes/tokens), shared pieces in `admin/ui/` (AdminShell, KpiCard, BarChart, SourceBars, ConfirmDialog, FilePick, Icon). Six menus: Ringkasan, Subdomain, Trafik, Konten Demo, Ucapan, Keamanan.
 - Konten Demo / Ucapan only edit invitation #1 (`server/routes/admin.js` hardcodes `invitation_id = 1`).

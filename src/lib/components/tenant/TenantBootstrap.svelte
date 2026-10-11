@@ -28,16 +28,20 @@
   })
 </script>
 
+<!-- Aset 3D hanya untuk undangan 3D: undangan 2D (iframe garden-2d) tidak memakainya,
+     dan mengunduhnya hanya berebut koneksi dengan gambar taman. -->
 <svelte:head>
-  <link rel="preload" href="/models/tamu.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/tamu-wanita.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/resepsionis.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/pengantin-pria.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/models/pengantin-wanita.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/nature-pack.glb" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.gltf" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.bin" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="/nature/gltf/Leaves_NormalTree_C.png" as="image" />
+  {#if $configStatus === 'ready' && $weddingConfig?.preset !== '2d_garden'}
+    <link rel="preload" href="/models/tamu.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/models/tamu-wanita.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/models/resepsionis.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/models/pengantin-pria.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/models/pengantin-wanita.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/nature/gltf/nature-pack.glb" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.gltf" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/nature/gltf/Bush_Common_Flowers.bin" as="fetch" crossorigin="anonymous" />
+    <link rel="preload" href="/nature/gltf/Leaves_NormalTree_C.png" as="image" />
+  {/if}
 </svelte:head>
 
 {#if $configStatus === 'ready' && InvitationApp}

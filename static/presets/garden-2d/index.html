@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#213d32"><title>The Wedding of Faris &amp; Eliza</title><meta name="description" content="Jelajahi taman pernikahan Faris dan Eliza. Petualangan kecil untuk orang-orang tersayang."><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="style.css"></head>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#213d32"><title>The Wedding of Faris &amp; Eliza</title><meta name="description" content="Jelajahi taman pernikahan Faris dan Eliza. Petualangan kecil untuk orang-orang tersayang."><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="style.css?v=20261011"><link rel="preload" as="image" href="assets/garden.webp" fetchpriority="high"><link rel="preload" as="image" href="assets/front-gate.webp" fetchpriority="high"><link rel="preload" as="image" href="assets/wedding-guests-v2.webp" fetchpriority="high"><link rel="preload" as="image" href="assets/seated-guests.webp" fetchpriority="high"><link rel="preload" as="image" href="assets/wedding-hosts.webp" fetchpriority="high"><link rel="preload" as="image" href="assets/character-atlas.png" fetchpriority="high"><link rel="preload" as="image" href="assets/woman-atlas.png" fetchpriority="high"><link rel="preload" as="font" type="font/woff2" href="assets/nunito-extrabold.woff2" crossorigin></head>
 <body data-phase="title">
 <audio id="gardenMusic" src="assets/wedding-song-complete.m4a" loop preload="none"></audio>
 <main class="game-frame" aria-label="Taman pernikahan interaktif">
 <canvas id="game" inert tabindex="0" aria-label="Permainan taman pernikahan. Geser analog atau gunakan tombol WASD atau panah untuk berjalan. Ketuk jalan untuk menuju ke sana. Tekan E untuk melihat informasi pernikahan di dekatmu."></canvas>
 <p class="sr-only">Tamu dengan beragam pakaian, rambut, dan hijab duduk di sebagian bangku kiri dan kanan menghadap pengantin. Empat tamu lainnya menikmati taman: dua mengobrol di sisi air mancur dan dua menikmati hidangan di area resepsi.</p>
 <canvas id="playerLayer" aria-hidden="true"></canvas>
-<img id="weddingCouple" class="wedding-couple" src="assets/mempelai.gif" alt="Faris dan Eliza, pasangan pengantin" hidden draggable="false">
-<button id="pianist" class="pianist" hidden aria-label="Dekati pianis dan penyanyi"><img id="pianistImage" src="assets/pianist-idle.webp" data-idle="assets/pianist-idle.webp" data-playing="assets/pianist.gif" alt="Pianis di jalan setapak kiri atas, dekat bangku taman" draggable="false"><img id="singerImage" src="assets/singer-idle.webp" data-idle="assets/singer-idle.webp" data-playing="assets/singer.gif" alt="Penyanyi di samping pianis" draggable="false"></button>
+<img id="weddingCouple" class="wedding-couple" data-src="assets/mempelai.webp" alt="Faris dan Eliza, pasangan pengantin" hidden draggable="false">
+<button id="pianist" class="pianist" hidden aria-label="Dekati pianis dan penyanyi"><img id="pianistImage" data-idle="assets/pianist-idle.webp" data-playing="assets/pianist.webp" alt="Pianis di jalan setapak kiri atas, dekat bangku taman" draggable="false"><img id="singerImage" data-idle="assets/singer-idle.webp" data-playing="assets/singer.webp" alt="Penyanyi di samping pianis" draggable="false"></button>
 <section class="opening" id="opening" aria-label="Selamat datang di pernikahan kami">
 <div class="opening-panel" id="titleScreen">
-<div class="title-card" id="titleCard"><img id="titleCardImage" src="assets/wedding-card.jpg" width="1101" height="1536" alt="Kartu pernikahan" fetchpriority="high" draggable="false"></div>
+<div class="title-card" id="titleCard"><img id="titleCardImage" src="assets/wedding-card.webp" width="800" height="1117" alt="Kartu pernikahan" fetchpriority="high" draggable="false"></div>
 <div class="title-copy"><div class="title-sparkles" aria-hidden="true">✦ &nbsp; ✧ &nbsp; ✦</div><p class="opening-kicker">The Wedding of</p><h1>Faris <span>&amp;</span> Eliza</h1>
 <button class="opening-continue" id="continueButton"><span aria-hidden="true">▶</span> Mulai Permainan</button></div>
 </div>
@@ -49,4 +49,4 @@
 <div class="welcome-dialog-body"><canvas id="welcomePortrait" width="112" height="112" aria-hidden="true"></canvas><div class="welcome-copy"><p class="eyebrow">PETUGAS PENYAMBUTAN</p><h2 id="welcomeSpeaker"></h2><p id="welcomeText" aria-live="polite"></p></div></div>
 <div class="welcome-dialog-actions"><span id="welcomeProgress" aria-label="Bagian panduan"></span><button id="skipWelcome">Lewati</button><button id="nextWelcome" autofocus>Lanjut →</button></div>
 </dialog>
-<script src="cms-bootstrap.js"></script></body></html>
+<script src="cms-bootstrap.js?v=20261011"></script></body></html>
