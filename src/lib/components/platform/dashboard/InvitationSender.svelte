@@ -12,6 +12,7 @@
   let nameInput = $state('')
   let phoneInput = $state('')
   let genderInput = $state<'m'|'f'>('m')
+  let showCharInfo = $state(true)
   let template = $state('Assalamualaikum Warahmatullahi Wabarakatuh. Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan dunia 3D kami di sini:\n{link}\n\nKami tunggu kehadiranmu!')
   let selected = $state<string[]>([])
   let opened = $state<string[]>([])
@@ -81,16 +82,35 @@
     return true
   }
 
-  function toggleSelected(id: string) {
-    selected = selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]
+  // Anti-banned WhatsApp: maksimal 3 kontak per sesi kirim, lalu jeda sebelum sesi berikutnya.
+  const MAX_PER_BATCH = 3
+  const COOLDOWN_MS = 60_000
+  const COOLDOWN_KEY = 'marryme_wa_cooldown_until'
+  let now = $state(Date.now())
+  let cooldownUntil = $state(readCooldown())
+  function readCooldown() {
+    try { return Number(localStorage.getItem(COOLDOWN_KEY)) || 0 } catch { return 0 }
   }
+  function startCooldown() {
+    cooldownUntil = Date.now() + COOLDOWN_MS
+    try { localStorage.setItem(COOLDOWN_KEY, String(cooldownUntil)) } catch { /* mode privat */ }
+  }
+  $effect(() => {
+    const timer = setInterval(() => (now = Date.now()), 1000)
+    return () => clearInterval(timer)
+  })
+  const cooldownLeft = $derived(Math.max(0, Math.ceil((cooldownUntil - now) / 1000)))
 
-  function toggleAll() {
-    selected = selected.length === contacts.length ? [] : contacts.map((contact) => contact.id)
+  function toggleSelected(id: string) {
+    if (selected.includes(id)) { selected = selected.filter((item) => item !== id); error = ''; return }
+    if (selected.length >= MAX_PER_BATCH) { error = `Maksimal ${MAX_PER_BATCH} kontak sekali kirim, supaya nomor WhatsApp kamu aman dari pemblokiran.`; return }
+    selected = [...selected, id]
+    error = ''
   }
 
   function startBulk() {
     if (!selected.length) { error = 'Pilih minimal satu kontak terlebih dahulu.'; return }
+    if (cooldownLeft > 0) { error = `Tunggu ${cooldownLeft} detik sebelum mengirim lagi.`; return }
     bulkCancelled = false
     bulkIndex = 0
     error = ''
@@ -98,12 +118,16 @@
 
   function continueBulk() {
     if (bulkIndex === null) return
-    if (bulkCancelled || bulkIndex >= selected.length - 1) { bulkIndex = null; return }
+    if (bulkCancelled || bulkIndex >= selected.length - 1) {
+      // Sesi selesai: kosongkan pilihan dan mulai jeda sebelum sesi berikutnya.
+      if (!bulkCancelled) { selected = []; startCooldown() }
+      bulkIndex = null
+      return
+    }
     bulkIndex += 1
   }
 
   const activeBulkContact = $derived(bulkIndex === null ? null : contacts.find((contact) => contact.id === selected[bulkIndex ?? 0]))
-  const allSelected = $derived(contacts.length > 0 && selected.length === contacts.length)
 </script>
 
 <div class="workspace-panel invitation-sender">
@@ -118,7 +142,7 @@
   {#if invitation.status !== 'active'}
     <div class="sender-notice">Link publik baru dapat dibagikan setelah undangan aktif.</div>
   {:else}
-    <div class="sender-notice">WhatsApp akan membuka chat dengan pesan terisi. Anda tetap perlu menekan tombol <strong>Kirim</strong> di WhatsApp.</div>
+    <div class="sender-notice">WhatsApp akan membuka chat dengan pesan terisi; kamu tetap menekan <strong>Kirim</strong> di WhatsApp. Demi keamanan nomormu, pengiriman dibatasi <strong>maks. {MAX_PER_BATCH} kontak sekali kirim</strong> dengan jeda 1 menit antar sesi.</div>
 
     <section class="sender-section contact-section" aria-labelledby="contact-form-title">
       <div class="section-heading">
@@ -132,7 +156,7 @@
         <label><span>Nama penerima</span><input bind:value={nameInput} placeholder="Contoh: Kurniawan Uwo" maxlength="255" aria-label="Nama penerima" /></label>
         <label><span>Nomor WhatsApp</span><input bind:value={phoneInput} placeholder="Contoh: 0812 3456 7890" maxlength="32" inputmode="tel" aria-label="Nomor WhatsApp" /></label>
         <label class="gender-group">
-          <span>Karakter</span>
+          <span>Karakter tamu <button type="button" class="char-info" aria-label="Apa itu karakter tamu?" onclick={() => (showCharInfo = !showCharInfo)}>?</button></span>
           <div class="gender-toggle">
             <button type="button" class:active={genderInput === 'm'} onclick={() => genderInput = 'm'}>Pria</button>
             <button type="button" class:active={genderInput === 'f'} onclick={() => genderInput = 'f'}>Wanita</button>
@@ -140,6 +164,13 @@
         </label>
         <button type="submit" disabled={saving || contacts.length >= limit}>{saving ? 'Menambahkan...' : '+ Tambah Nomor'}</button>
       </form>
+      <div class="char-hint" class:open={showCharInfo}>
+        <div class="char-pics">
+          <figure class:active={genderInput === 'm'}><img src="/media/guests/guest-m.webp" alt="Avatar tamu pria" loading="lazy" /><figcaption>Pria</figcaption></figure>
+          <figure class:active={genderInput === 'f'}><img src="/media/guests/guest-f.webp" alt="Avatar tamu wanita" loading="lazy" /><figcaption>Wanita</figcaption></figure>
+        </div>
+        <p><strong>Karakter menentukan avatar tamu</strong> saat ia membuka undangan dari link yang kamu kirim. Pilih <em>Pria</em> untuk tamu laki-laki atau <em>Wanita</em> untuk tamu perempuan, supaya tamu tampil sesuai dirinya di dunia undangan.</p>
+      </div>
     </section>
 
     <section class="sender-section template-box">
@@ -154,7 +185,7 @@
     <section class="sender-section recipients-section">
       <div class="bulk-toolbar">
         <div><p class="section-kicker">Penerima</p><h4>Pilih kontak untuk dikirim</h4></div>
-        <div class="bulk-actions-top"><label class="select-all"><input type="checkbox" checked={allSelected} onchange={toggleAll} /> <span>Pilih semua</span></label><button type="button" class="bulk-button" disabled={!selected.length} onclick={startBulk}>Mulai Kirim ({selected.length})</button></div>
+        <div class="bulk-actions-top"><span class="batch-limit">Pilih maks. {MAX_PER_BATCH} kontak</span><button type="button" class="bulk-button" disabled={!selected.length || cooldownLeft > 0} onclick={startBulk}>{cooldownLeft > 0 ? `Jeda ${cooldownLeft} dtk` : `Kirim (${selected.length}/${MAX_PER_BATCH})`}</button></div>
       </div>
 
     {#if loading}
@@ -165,14 +196,14 @@
       <div class="contact-list">
         {#each contacts as contact}
           <div class="contact-row">
-            <input class="contact-checkbox" type="checkbox" checked={selected.includes(contact.id)} onchange={() => toggleSelected(contact.id)} aria-label={`Pilih ${contact.name}`} />
+            <input class="contact-checkbox" type="checkbox" checked={selected.includes(contact.id)} disabled={!selected.includes(contact.id) && selected.length >= MAX_PER_BATCH} onchange={(e) => { toggleSelected(contact.id); (e.currentTarget as HTMLInputElement).checked = selected.includes(contact.id) }} aria-label={`Pilih ${contact.name}`} />
             <span class="contact-avatar" aria-hidden="true">{contact.name.trim().charAt(0).toUpperCase()}</span>
             <div class="contact-detail">
               <strong>{contact.name} <span class="gender-icon" title={contact.gender === 'f' ? 'Wanita' : 'Pria'}>{contact.gender === 'f' ? '🚺' : '🚹'}</span></strong>
               <span>+{contact.phone}</span>
               {#if opened.includes(contact.id)}<em>Chat dibuka</em>{/if}
             </div>
-            <div class="contact-actions"><button type="button" class="whatsapp-button" aria-label={`Buka chat WhatsApp ${contact.name}`} title="Buka Chat WhatsApp" onclick={() => openChat(contact)}>WA</button><button type="button" class="delete-contact" aria-label={`Hapus penerima ${contact.name}`} title="Hapus penerima" onclick={() => void removeContact(contact.id)}>×</button></div>
+            <div class="contact-actions"><button type="button" class="delete-contact" aria-label={`Hapus penerima ${contact.name}`} title="Hapus penerima" onclick={() => void removeContact(contact.id)}>×</button></div>
           </div>
         {/each}
       </div>
@@ -229,8 +260,7 @@
   .template-box small { color: var(--muted, #777); }
   .bulk-toolbar { justify-content: space-between; }
   .bulk-actions-top { display: flex; align-items: center; justify-content: flex-end; gap: 18px; margin-left: auto; }
-  .select-all { display: inline-flex; align-items: center; gap: 8px; color: var(--muted, #777); font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
-  .select-all input, .contact-checkbox { width: 16px; height: 16px; margin: 0; accent-color: #8f5e68; }
+  .contact-checkbox { width: 16px; height: 16px; margin: 0; accent-color: #8f5e68; }
   .contact-list { display: grid; gap: 10px; margin-top: 20px; }
   .contact-row { display: grid; grid-template-columns: 18px 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #e8e4e1; border-radius: 12px; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
   .contact-row:hover { border-color: #d8d4d1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -241,8 +271,6 @@
   .contact-detail span { color: #665b4c; font-size: .85rem; }
   .contact-detail em { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #e8f5ed; color: #168447; font-size: .7rem; font-style: normal; font-weight: 600; margin-top: 2px; }
   .contact-actions { display: flex; align-items: center; gap: 6px; margin-left: 14px; }
-  .whatsapp-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: #20b957; color: white; font-size: .62rem; font-weight: 800; cursor: pointer; transition: background 0.2s, transform 0.1s; }
-  .whatsapp-button:hover { background: #1b9e4a; transform: scale(1.02); }
   .delete-contact { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #a34f58; font-size: 1.25rem; line-height: 1; cursor: pointer; transition: background 0.2s, color 0.2s; }
   .delete-contact:hover { background: #fdf5f5; }
   .sender-error { color: #a33d3d; font-size: .84rem; margin-top: 14px; }
@@ -252,5 +280,16 @@
   .bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
   .bulk-actions button { border: 1px solid #ddd; border-radius: 8px; padding: 9px 11px; cursor: pointer; }
   .bulk-actions .bulk-button { border-color: #20b957; background: #20b957; }
-  @media (max-width: 680px) { .contact-form { grid-template-columns: 1fr; } .sender-header, .section-heading, .bulk-toolbar { align-items: flex-start; flex-direction: column; } .bulk-actions-top { width: 100%; justify-content: space-between; margin-left: 0; } .contact-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto; padding: 11px 10px; } .contact-detail { padding-left: 8px; } .contact-detail strong { font-size: .88rem; } .contact-actions { margin-left: 8px; } .whatsapp-button, .delete-contact { width: 34px; height: 34px; } }
+  @media (max-width: 680px) { .contact-form { grid-template-columns: 1fr; } .sender-header, .section-heading, .bulk-toolbar { align-items: flex-start; flex-direction: column; } .bulk-actions-top { width: 100%; justify-content: space-between; margin-left: 0; } .contact-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto; padding: 11px 10px; } .contact-detail { padding-left: 8px; } .contact-detail strong { font-size: .88rem; } .contact-actions { margin-left: 8px; } .delete-contact { width: 34px; height: 34px; } }
+  .batch-limit { font-size: .8rem; color: #8a7a76; font-weight: 600; }
+  .contact-form .char-info, .char-info { display: inline-grid; min-height: 0; box-shadow: none; padding: 0; line-height: 1; place-items: center; width: 18px; height: 18px; margin-left: 4px; border-radius: 50%; border: 1px solid #d9c4be; background: #fff; color: #8f1d45; font-size: 11px; font-weight: 800; cursor: pointer; vertical-align: 1px; }
+  .char-hint { display: none; align-items: center; gap: 16px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: #fdf6f0; border: 1px dashed #e8c9bf; }
+  .char-hint.open { display: flex; }
+  .char-pics { display: flex; gap: 8px; flex-shrink: 0; }
+  .char-pics figure { margin: 0; text-align: center; opacity: .5; transition: opacity .2s, transform .2s; }
+  .char-pics figure.active { opacity: 1; transform: translateY(-2px); }
+  .char-pics img { display: block; width: 56px; height: 80px; object-fit: cover; border-radius: 10px; background: #c55e5e; }
+  .char-pics figcaption { margin-top: 4px; font-size: .72rem; font-weight: 700; color: #6b5a56; }
+  .char-hint p { margin: 0; font-size: .82rem; line-height: 1.55; color: #6b5a56; }
+  @media (max-width: 560px) { .char-hint.open { flex-direction: column; align-items: flex-start; } }
 </style>
