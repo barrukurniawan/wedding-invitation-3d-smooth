@@ -142,6 +142,8 @@
 
     const kicker = $('#titleScreen .opening-kicker');
     if (kicker) kicker.textContent = config.profile.titlePrefix;
+    const loadingCouple = $('#loadingCouple');
+    if (loadingCouple) loadingCouple.textContent = `Undangan ${shortName(config.profile.groom)} & ${shortName(config.profile.bride)}`;
     const h1 = $('#titleScreen h1');
     if (h1) {
       h1.textContent = name;

@@ -24,7 +24,17 @@
 
 </div>
 </section>
-<div class="map-loading" id="loading">Membuka taman…</div>
+<div class="map-loading" id="loading" role="status" aria-live="polite">
+<div class="ml-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="ml-panel">
+<div class="ml-mark">MARRYME</div>
+<h2 class="ml-title">Membuka taman</h2>
+<p class="ml-couple" id="loadingCouple"></p>
+<div class="ml-walker" aria-hidden="true"></div>
+<div class="ml-track" role="progressbar" aria-label="Memuat taman" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ml-bar" id="loadingBar"></div></div>
+<div class="ml-row"><span id="loadingText">Menyiapkan taman…</span><span id="loadingPct">0%</span></div>
+</div>
+</div>
 <div class="map-wedding-title" aria-label="The Wedding of Faris &amp; Eliza"><span>The Wedding of</span><strong>Faris &amp; Eliza</strong></div>
 <nav class="game-tools" aria-label="Menu permainan"><button id="soundButton" class="map-button" aria-pressed="true" aria-label="Matikan musik" title="Nyalakan atau matikan musik">♫<span class="sr-only">Musik menyala</span></button><button id="journalButton" class="map-button" aria-label="Informasi pernikahan" title="Informasi pernikahan">✉ <span>Info pernikahan</span></button><button id="chatButton" class="map-button" aria-label="Chat" title="Chat" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.7L3 21l1.7-5.1A8.5 8.5 0 1 1 20 11.5Z"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01"/></svg></button><button id="guideButton" class="map-button" aria-label="Cara bermain" title="Cara bermain">?</button></nav>
 <button id="joystick" class="joystick" aria-label="Analog gerakan. Geser ke arah yang diinginkan untuk berjalan." aria-describedby="stickHelp"><span class="joystick-ring" aria-hidden="true"></span><span class="joystick-thumb" id="joystickThumb" aria-hidden="true"><span></span></span></button>

@@ -527,11 +527,21 @@ function drawCharacterPreviews(){
  const pairCtx=$('#pairPreview').getContext('2d');pairCtx.clearRect(0,0,204,136);pairCtx.imageSmoothingEnabled=false;pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);
 }
 let loaded=0;
+// Teks berganti selama memuat supaya terasa ada kemajuan.
+const loadingMessages=['Menyiapkan taman…','Menata kursi tamu…','Merangkai bunga gerbang…','Memanggil pianis…','Mengundang tamu…','Hampir siap…'];
+let loadingMessageIndex=0;
+const loadingTicker=setInterval(()=>{if(ready){clearInterval(loadingTicker);return;}const el=$('#loadingText');if(!el||$('#loading')?.classList.contains('ml-error'))return;loadingMessageIndex=Math.min(loadingMessageIndex+1,loadingMessages.length-1);el.style.opacity='0';setTimeout(()=>{el.textContent=loadingMessages[loadingMessageIndex];el.style.opacity='1';},250);},2200);
+function setLoadingProgress(percent){
+  const bar=$('#loadingBar'),pct=$('#loadingPct'),track=bar?.parentElement;
+  if(bar)bar.style.width=`${Math.max(4,percent)}%`;
+  if(pct)pct.textContent=`${percent}%`;
+  if(track)track.setAttribute('aria-valuenow',String(percent));
+}
 function assetLoaded(){
   const percent = Math.min(100, Math.round((++loaded / 7) * 100));
   const loadEl = $('#loading');
-  if(loadEl && !ready){loadEl.innerHTML = `Membuka taman… <span style="display:inline-block;margin-left:6px;font-weight:700;opacity:0.9;">${percent}%</span>`;}
-  if(loaded===7){ready=true;if(loadEl)loadEl.hidden=true;resize();
+  if(loadEl && !ready)setLoadingProgress(percent);
+  if(loaded===7){ready=true;setLoadingProgress(100);if(loadEl){loadEl.classList.add('ml-done');setTimeout(()=>{loadEl.hidden=true;},350);}resize();
   window.__GARDEN_READY=true;
   for(const img of document.querySelectorAll('img[data-src]')){img.src=img.dataset.src;img.removeAttribute('data-src');}
   syncPianist(sound&&!audio.paused);
@@ -541,7 +551,7 @@ function assetLoaded(){
   pairCtx.drawImage(characters.men.image,0,136,68,68,0,0,136,136);pairCtx.drawImage(characters.woman.image,0,136,68,68,68,0,136,136);
   document.querySelectorAll('[data-character]').forEach(b=>b.disabled=false);
 }}
-function assetError(){$('#loading').textContent='Taman belum berhasil dimuat. Muat ulang halaman untuk mencoba lagi.';}
+function assetError(){const l=$('#loading');l?.classList.add('ml-error');const t=$('#loadingText');if(t)t.textContent='Taman belum berhasil dimuat. Muat ulang halaman untuk mencoba lagi.';}
 hostSprites.onload=assetLoaded;hostSprites.onerror=assetError;hostSprites.src=window.WEDDING.assets.hosts;
 seatedSprites.onload=assetLoaded;seatedSprites.onerror=assetError;seatedSprites.src=window.WEDDING.assets.seated;
 guestSprites.onload=assetLoaded;guestSprites.onerror=assetError;guestSprites.src=window.WEDDING.assets.guests;
