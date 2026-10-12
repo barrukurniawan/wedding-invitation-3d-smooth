@@ -82,12 +82,6 @@
       <span class="callout {c.pos}"><i>{c.icon}</i>{c.text}</span>
     {/each}
   </div>
-  <!-- Di layar HP keterangan tampil di bawah gambar supaya tidak menutupi video/mockup. -->
-  <ul class="callout-list" aria-label="Fitur utama">
-    {#each callouts as c (c.pos)}
-      <li><i>{c.icon}</i>{c.text}</li>
-    {/each}
-  </ul>
 </section>
 
 <style>
@@ -236,11 +230,11 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 14px 9px 10px;
+    padding: 6px 11px 6px 7px;
     border-radius: 999px;
     background: #fff;
     color: var(--lp-ink);
-    font-size: 0.82rem;
+    font-size: 0.74rem;
     font-weight: 700;
     box-shadow: 0 16px 36px -18px rgba(80, 44, 53, 0.55);
     border: 1px solid rgba(143, 29, 69, 0.1);
@@ -250,12 +244,12 @@
   .callout i {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--lp-blush);
     font-style: normal;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
   }
   .callout.a {
     top: -18px;
@@ -300,52 +294,16 @@
       left: 0;
     }
   }
-  .callout-list {
-    display: none;
-  }
-  @media (max-width: 640px) {
-    .callout {
-      display: none;
-    }
-    .visual {
-      margin-bottom: 34px;
-    }
-    .callout-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .callout-list li {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 13px 8px 9px;
-      border-radius: 999px;
-      background: #fff;
-      border: 1px solid rgba(143, 29, 69, 0.1);
-      box-shadow: 0 10px 24px -16px rgba(80, 44, 53, 0.5);
-      color: var(--lp-ink);
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-    .callout-list i {
-      display: grid;
-      place-items: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--lp-blush);
-      font-style: normal;
-      font-size: 0.8rem;
-    }
-  }
   @media (max-width: 480px) {
     .callout {
-      font-size: 0.74rem;
-      padding: 7px 11px 7px 8px;
+      gap: 5px;
+      font-size: 0.64rem;
+      padding: 4px 9px 4px 5px;
+    }
+    .callout i {
+      width: 16px;
+      height: 16px;
+      font-size: 0.6rem;
     }
     .phone {
       width: 36%;
