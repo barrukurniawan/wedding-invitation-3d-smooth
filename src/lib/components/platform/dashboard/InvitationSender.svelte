@@ -77,7 +77,7 @@
 
   // Anti-banned WhatsApp: maksimal 3 chat per menit (jendela geser), lalu jeda.
   // Kunci cooldown lama tetap dipakai supaya jeda yang sedang berjalan ikut dihormati.
-  const MAX_PER_MINUTE = 3
+  const MAX_PER_MINUTE = 10
   const WINDOW_MS = 60_000
   const COOLDOWN_KEY = 'marryme_wa_cooldown_until'
   const SENT_LOG_KEY = 'marryme_wa_sent_log'
