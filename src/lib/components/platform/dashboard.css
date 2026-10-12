@@ -2116,7 +2116,6 @@
   color: #065f46;
 }
 
-.tab-btn .tab-wa-icon { vertical-align: -3px; margin-right: 2px; }
 
 /* Kartu progres (paling atas di /account): versi marun. Teks putih/krem, aksen emas;
    warna status tetap terlihat lewat garis kiri kotak status & badge. */
@@ -2191,3 +2190,13 @@
 .hero-progress-card .status-alert-content strong {
   display: inline-block;
 }
+
+/* Ikon custom (icons/Icon.svelte): sejajar dengan teks; di latar maroon jadi putih + emas. */
+.tab-btn, .sub-tab-btn, .primary-btn-sm, .ghost-btn-sm { display: inline-flex; align-items: center; gap: 7px; }
+.primary-btn-lg { gap: 8px; }
+.sub-tab-btn.active, .primary-btn-sm, .primary-btn-lg, .hero-progress-card {
+  --mm-ic: #fff;
+  --mm-ic-soft: rgba(255, 255, 255, 0.28);
+  --mm-ic-bg: #8f1d45;
+}
+.alert-icon .mm-icon { display: block; }

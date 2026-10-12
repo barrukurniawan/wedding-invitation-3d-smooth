@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { WeddingConfig } from '$lib/api-client'
 
   let { config = $bindable() }: { config: WeddingConfig } = $props()
@@ -11,7 +12,7 @@
   <p class="section-desc">Untuk tamu yang ingin memberi tanda kasih: lewat transfer/QRIS, atau mengirim hadiah ke alamat kalian.</p>
 
   <div class="gift-card">
-    <h4>💳 Transfer &amp; QRIS</h4>
+    <h4><Icon name="amplop" size={18} /> Transfer &amp; QRIS</h4>
     <div class="grid-2">
       <label>
         Bank Transfer
@@ -33,7 +34,7 @@
   </div>
 
   <div class="gift-card">
-    <h4>🎁 Alamat Kirim Hadiah <span class="optional">opsional</span></h4>
+    <h4><Icon name="gift" size={18} /> Alamat Kirim Hadiah <span class="optional">opsional</span></h4>
     <p class="gift-hint">Kosongkan alamat bila tidak ingin menerima kiriman hadiah; bagian ini tidak akan tampil di undangan.</p>
     <div class="grid-2">
       <label>
@@ -58,7 +59,7 @@
       </label>
     </div>
     {#if hasAddress}
-      <p class="gift-warning">⚠️ Alamat ini dapat dilihat oleh siapa pun yang membuka link undangan kalian.</p>
+      <p class="gift-warning"><Icon name="alert" size={15} /> Alamat ini dapat dilihat oleh siapa pun yang membuka link undangan kalian.</p>
     {/if}
   </div>
 </div>

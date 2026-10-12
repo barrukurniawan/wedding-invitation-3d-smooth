@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import { ApiError, createMyContact, deleteMyContact, getMyContacts, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
 
   type Props = { invitation: OwnerInvitation; myConfig: WeddingConfig | null }
@@ -199,7 +200,7 @@
             <input class="contact-checkbox" type="checkbox" checked={selected.includes(contact.id)} disabled={!selected.includes(contact.id) && selected.length >= MAX_PER_BATCH} onchange={(e) => { toggleSelected(contact.id); (e.currentTarget as HTMLInputElement).checked = selected.includes(contact.id) }} aria-label={`Pilih ${contact.name}`} />
             <span class="contact-avatar" aria-hidden="true">{contact.name.trim().charAt(0).toUpperCase()}</span>
             <div class="contact-detail">
-              <strong>{contact.name} <span class="gender-icon" title={contact.gender === 'f' ? 'Wanita' : 'Pria'}>{contact.gender === 'f' ? '🚺' : '🚹'}</span></strong>
+              <strong>{contact.name} <span class="gender-icon" title={contact.gender === 'f' ? 'Wanita' : 'Pria'}><Icon name={contact.gender === 'f' ? 'bride' : 'groom'} size={15} /></span></strong>
               <span>+{contact.phone}</span>
               {#if opened.includes(contact.id)}<em>Chat dibuka</em>{/if}
             </div>

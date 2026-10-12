@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { OwnerInvitation, WeddingConfig } from '$lib/api-client'
   import { ApiError, checkoutPayment, getPublicPricing, uploadPaymentProof, type PublicPricing } from '$lib/api-client'
   import { onMount } from 'svelte'
@@ -137,17 +138,17 @@
     <div class="package-name">Paket Undangan 3D</div>
     <div class="package-price">{formattedPrice}</div>
     <ul class="package-features">
-      <li>✓ Subdomain eksklusif (slug.marryme.web.id)</li>
-      <li>✓ Dunia 3D interaktif seumur hidup event</li>
-      <li>✓ Galeri foto tak terbatas</li>
-      <li>✓ Buku tamu digital & RSVP</li>
-      <li>✓ QR Code undangan</li>
+      <li><Icon name="check" size={16} /> Subdomain eksklusif (slug.marryme.web.id)</li>
+      <li><Icon name="check" size={16} /> Dunia 3D interaktif seumur hidup event</li>
+      <li><Icon name="check" size={16} /> Galeri foto tak terbatas</li>
+      <li><Icon name="check" size={16} /> Buku tamu digital & RSVP</li>
+      <li><Icon name="check" size={16} /> QR Code undangan</li>
     </ul>
   </div>
 
   {#if invitation.status === 'active'}
     <div class="success-box">
-      <span class="success-icon">🎉</span>
+      <span class="success-icon"><Icon name="party" size={40} /></span>
       <div>
         <strong>{isFreePackage ? 'Paket Gratis Aktif!' : 'Pembayaran Terverifikasi!'}</strong>
         <p>Undangan pernikahan kalian sudah aktif dan bisa dibagikan ke tamu.</p>
@@ -157,7 +158,7 @@
 
   {:else if invitation.status === 'pending_verification'}
     <div class="pending-box">
-      <span>⏳</span>
+      <span><Icon name="clock" size={22} /></span>
       <div>
         <strong>Menunggu Verifikasi Admin</strong>
         <p>Bukti transfer diterima pada {fmtDate(invitation.payment_submitted_at || '')}. Tim admin sedang memproses — biasanya 1×24 jam.</p>
@@ -171,7 +172,7 @@
 
    {:else if isFreePackage}
      <div class="success-box">
-       <span class="success-icon">🎉</span>
+       <span class="success-icon"><Icon name="party" size={40} /></span>
        <div>
          <strong>Paket Undangan 3D Gratis</strong>
          <p>Undangan kalian sudah aktif tanpa pembayaran. Link dapat langsung dibagikan kepada tamu.</p>
@@ -188,7 +189,7 @@
           class:active={paymentMode === 'snap'}
           onclick={() => { paymentMode = 'snap'; paymentMsg = '' }}
         >
-          💳 Bayar Online (Kartu/VA/GoPay)
+          <Icon name="payment" size={17} /> Bayar Online (Kartu/VA/GoPay)
         </button>
         <button
           type="button"
@@ -196,7 +197,7 @@
           class:active={paymentMode === 'transfer'}
           onclick={() => { paymentMode = 'transfer'; paymentMsg = '' }}
         >
-          🏦 Transfer Manual
+          <Icon name="bank" size={17} /> Transfer Manual
         </button>
       </div>
     {/if}
@@ -249,10 +250,10 @@
 
         <label class="file-drop-area" class:has-file={proofFile !== null}>
           {#if proofFile}
-            <span class="file-selected">📎 {proofFile.name}</span>
+            <span class="file-selected"><Icon name="paperclip" size={15} /> {proofFile.name}</span>
             <span class="file-size">{(proofFile.size / 1024).toFixed(0)} KB</span>
           {:else}
-            <span class="upload-icon">📷</span>
+            <span class="upload-icon"><Icon name="camera" size={30} /></span>
             <span>Klik atau seret foto bukti transfer ke sini</span>
           {/if}
           <input

@@ -1,6 +1,6 @@
 # Rencana Ikon Custom MarryMe (ganti emoji di dashboard)
 
-Status: **pratinjau dibuat (2026-10-12), menunggu pilihan gaya.** Branch: `dashboard_gift` (lanjutan) atau branch baru `dashboard_icons`.
+Status: **Opsi B dipilih, I1–I3 selesai di lokal (2026-10-12), belum di-deploy.** Urutan tab baru: Detail Undangan, Buku Tamu, Kirim Undangan, Tema, Pembayaran (dulu "Pembayaran & Paket").
 
 ## Masalah
 Dashboard memakai ±40 emoji berbeda (✏️ 💾 💳 🎨 📲 💍 📅 🖼️ 🎶 ⚠️ 💡 🎉 dll.). Gaya, warna, dan ukurannya tidak seragam antar perangkat, tidak senada dengan maroon, dan beberapa terasa aneh (pensil untuk "Detail Undangan", disket untuk "Simpan").

@@ -45,6 +45,7 @@
   import Faq from './landing/Faq.svelte'
   import ClosingCta from './landing/ClosingCta.svelte'
   import WhatsAppFab from './landing/WhatsAppFab.svelte'
+  import Icon from '$lib/components/icons/Icon.svelte'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
   let loading = $state(true)
@@ -515,7 +516,7 @@
           <div class="status-alert-box" data-status={invitation.status}>
              {#if invitation.status === 'draft' && invitation.rejection_reason}
                <div class="status-alert-content">
-                 <span class="alert-icon">!</span>
+                 <span class="alert-icon"><Icon name="alert" size={20} /></span>
                  <div>
                    <strong>Status: Bukti Pembayaran Perlu Diperbaiki</strong>
                    <p>{invitation.rejection_reason}</p>
@@ -523,7 +524,7 @@
                </div>
              {:else if invitation.status === 'draft'}
               <div class="status-alert-content">
-                <span class="alert-icon">💡</span>
+                <span class="alert-icon"><Icon name="tip" size={20} /></span>
                 <div>
                   <strong>Status: Draft (Belum Dipublikasikan)</strong>
                   <p>Lengkapi detail acara dan unggah bukti pada tab <em>Pembayaran</em> agar tim admin dapat memverifikasi &amp; mengaktifkan undangan kalian.</p>
@@ -531,7 +532,7 @@
               </div>
             {:else if invitation.status === 'pending_verification'}
               <div class="status-alert-content">
-                <span class="alert-icon">⏳</span>
+                <span class="alert-icon"><Icon name="clock" size={20} /></span>
                 <div>
                   <strong>Status: Menunggu Verifikasi Admin</strong>
                   <p>Bukti transfer telah diterima. Tim admin sedang memproses verifikasi. Undangan akan otomatis aktif setelah disetujui.</p>
@@ -539,7 +540,7 @@
               </div>
             {:else if invitation.status === 'active'}
               <div class="status-alert-content">
-                <span class="alert-icon">🎉</span>
+                <span class="alert-icon"><Icon name="party" size={20} /></span>
                 <div>
                   <strong>Status: Aktif! (Dunia 3D Sudah Terbit)</strong>
                   <p>Undangan pernikahan kalian sudah aktif dan dapat diakses publik oleh seluruh keluarga serta para tamu.</p>
@@ -559,16 +560,16 @@
 
             <div class="link-actions-row">
               <button type="button" class="primary-btn-sm" onclick={copyLink}>
-                📋 Salin Link
+                <Icon name="copy" size={16} /> Salin Link
               </button>
                {#if invitation.status === 'active'}
                <a class="ghost-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
-                 ↗ Buka Undangan
+                 <Icon name="external" size={16} /> Buka Undangan
                </a>
                {/if}
                {#if invitation.status === 'active'}
                <button type="button" class="ghost-btn-sm" onclick={() => (showQrModal = true)}>
-                 📱 QR Code
+                 <Icon name="phone" size={16} /> QR Code
                </button>
                {/if}
             </div>
@@ -602,7 +603,7 @@
             class:active={activeTab === 'edit'}
             onclick={() => (activeTab = 'edit')}
           >
-            ✏️ Detail Undangan
+            <Icon name="invite" /> Detail Undangan
           </button>
 
           <button
@@ -614,16 +615,16 @@
               void loadGuestbook()
             }}
           >
-            💌 Buku Tamu {#if myGuestbook?.stats.total}<span class="tab-badge">{myGuestbook.stats.total}</span>{/if}
+            <Icon name="guestbook" /> Buku Tamu {#if myGuestbook?.stats.total}<span class="tab-badge">{myGuestbook.stats.total}</span>{/if}
           </button>
 
           <button
             type="button"
             class="tab-btn"
-            class:active={activeTab === 'pembayaran'}
-            onclick={() => (activeTab = 'pembayaran')}
+            class:active={activeTab === 'kirim'}
+            onclick={() => (activeTab = 'kirim')}
           >
-            💳 Pembayaran &amp; Paket
+            <Icon name="send" /> Kirim Undangan
           </button>
 
           <button
@@ -632,16 +633,16 @@
             class:active={activeTab === 'pengaturan'}
             onclick={() => (activeTab = 'pengaturan')}
           >
-            🎨 Tema
+            <Icon name="palette" /> Tema
           </button>
+
           <button
             type="button"
             class="tab-btn"
-            class:active={activeTab === 'kirim'}
-            onclick={() => (activeTab = 'kirim')}
+            class:active={activeTab === 'pembayaran'}
+            onclick={() => (activeTab = 'pembayaran')}
           >
-            <svg class="tab-wa-icon" viewBox="0 0 24 24" width="17" height="17" fill="#25a35a" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-            Kirim Undangan
+            <Icon name="payment" /> Pembayaran
           </button>
         </nav>
 
@@ -656,7 +657,7 @@
                 class:active={editSubTab === 'mempelai'}
                 onclick={() => (editSubTab = 'mempelai')}
               >
-                💍 Data Mempelai
+                <Icon name="rings" size={16} /> Data Mempelai
               </button>
               <button
                 type="button"
@@ -664,7 +665,7 @@
                 class:active={editSubTab === 'acara'}
                 onclick={() => (editSubTab = 'acara')}
               >
-                📅 Detail Acara &amp; Lokasi
+                <Icon name="calendar" size={16} /> Detail Acara &amp; Lokasi
                 {#if !myConfig?.maps_url || !myConfig?.venue_address}
                   <span class="ml-1 text-[10px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-full shadow-xs">!</span>
                 {/if}
@@ -675,7 +676,7 @@
                 class:active={editSubTab === 'amplop'}
                 onclick={() => (editSubTab = 'amplop')}
               >
-                💌 Amplop Digital &amp; Bank
+                <Icon name="amplop" size={16} /> Amplop Digital &amp; Bank
               </button>
               <button
                 type="button"
@@ -683,7 +684,7 @@
                 class:active={editSubTab === 'galeri'}
                 onclick={() => (editSubTab = 'galeri')}
               >
-                🖼️ Galeri Foto 3D
+                <Icon name="gallery" size={16} /> Galeri Foto 3D
               </button>
               <button
                 type="button"
@@ -691,7 +692,7 @@
                 class:active={editSubTab === 'quote'}
                 onclick={() => (editSubTab = 'quote')}
               >
-                💬 Quote &amp; Pesan
+                <Icon name="quote" size={16} /> Quote &amp; Pesan
               </button>
               <button
                 type="button"
@@ -699,7 +700,7 @@
                 class:active={editSubTab === 'musik'}
                 onclick={() => (editSubTab = 'musik')}
               >
-                🎶 Musik
+                <Icon name="music" size={16} /> Musik
               </button>
             </div>
 
@@ -724,7 +725,7 @@
                 <!-- Save Action Footer Bar -->
                 <div class="form-save-footer">
                   <button type="submit" class="primary-btn-lg" disabled={savingConfig}>
-                    {savingConfig ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                    {#if savingConfig}Menyimpan...{:else}<Icon name="save" /> Simpan Perubahan{/if}
                   </button>
                   {#if configSavedMsg}
                     <span class="save-msg" class:error-msg={configSavedMsg.startsWith('Gagal')}>
@@ -740,7 +741,7 @@
         {:else if activeTab === 'tamu'}
           <GuestbookManager {invitation} {myGuestbook} {loadingGuestbook} {loadGuestbook} {fmtDate} />
 
-        <!-- Tab 3: Pembayaran & Paket -->
+        <!-- Tab 5: Pembayaran -->
         {:else if activeTab === 'pembayaran'}
           <PaymentManager 
             {invitation} 
@@ -777,7 +778,7 @@
                     }}
                   >
                     <div class="theme-switch-head">
-                      <strong>🌟 Preset 1: Dunia 3D Island</strong>
+                      <strong><Icon name="star" size={16} /> Preset 1: Dunia 3D Island</strong>
                       {#if myConfig?.preset === '3d_summer' || !myConfig?.preset}
                         <span class="badge-active">Aktif Digunakan</span>
                       {/if}
@@ -796,7 +797,7 @@
                     }}
                   >
                     <div class="theme-switch-head">
-                      <strong>🌿 Preset 2: Dunia 2D Pixel Garden</strong>
+                      <strong><Icon name="garden" size={16} /> Preset 2: Dunia 2D Pixel Garden</strong>
                       {#if myConfig?.preset === '2d_garden'}
                         <span class="badge-active green">Aktif Digunakan</span>
                       {/if}
@@ -824,7 +825,7 @@
                       >
                         <img src={option.thumbnail} alt="Venue {resolveVenue(option.id).label}" class="venue-switch-thumb" loading="lazy" />
                         <div class="theme-switch-head">
-                          <strong>{option.emoji} {resolveVenue(option.id).label}</strong>
+                          <strong><Icon name={option.id === 'beach' ? 'beach' : 'garden'} size={17} /> {resolveVenue(option.id).label}</strong>
                           {#if active}
                             <span class="badge-active">Aktif Digunakan</span>
                           {/if}
@@ -848,7 +849,7 @@
                 {#if !editingSlug}
                   <div class="mt-3 flex items-center gap-2">
                     <button type="button" class="ghost-btn-sm" onclick={startEditSlug}>
-                      ✏️ Ubah Subdomain
+                      <Icon name="edit" size={15} /> Ubah Subdomain
                     </button>
                     {#if slugSuccessMsg}
                       <span class="text-xs text-emerald-600 font-medium">✓ {slugSuccessMsg}</span>
@@ -887,10 +888,10 @@
                       </button>
                     </div>
                     {#if slugError}
-                      <p class="text-xs text-rose-600 mt-1.5 font-medium">⚠️ {slugError}</p>
+                      <p class="text-xs text-rose-600 mt-1.5 font-medium"><Icon name="alert" size={14} /> {slugError}</p>
                     {/if}
                     <p class="text-[11px] text-slate-400 mt-1">
-                      💡 Kalian bebas mengubah subdomain jika sebelumnya mengisi nama uji coba / acak.
+                      <Icon name="tip" size={14} /> Kalian bebas mengubah subdomain jika sebelumnya mengisi nama uji coba / acak.
                     </p>
                   </div>
                 {/if}
@@ -959,7 +960,7 @@
         <p class="qr-url-text"><code>{invitation.public_url}</code></p>
       </div>
       <div class="modal-actions">
-        <button type="button" class="primary-btn-sm" onclick={copyLink}>📋 Salin Link</button>
+        <button type="button" class="primary-btn-sm" onclick={copyLink}><Icon name="copy" size={16} /> Salin Link</button>
               {#if invitation.status === 'active'}
               <a
           class="ghost-btn-sm"
@@ -967,7 +968,7 @@
           target="_blank"
           download="QR_{invitation.slug}.png"
         >
-          💾 Unduh Gambar QR
+          <Icon name="download" size={16} /> Unduh Gambar QR
               </a>
               {/if}
       </div>
