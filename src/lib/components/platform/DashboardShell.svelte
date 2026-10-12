@@ -69,6 +69,20 @@
   const supportContext = $derived(invitation ? `${invitation.slug} · ${activeTab}` : 'onboarding')
   let ownerTabs = $state<HTMLElement | null>(null)
   let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
+  // Di HP baris sub-tab bisa digeser; pastikan tombol yang dipilih selalu terlihat utuh.
+  $effect(() => {
+    void editSubTab
+    requestAnimationFrame(() => {
+      const btn = document.querySelector<HTMLElement>('.sub-tab-btn.active')
+      const bar = btn?.parentElement
+      if (!btn || !bar || bar.scrollWidth <= bar.clientWidth) return
+      // Geser horizontal saja (scrollIntoView bisa ikut menggulir halaman).
+      const left = btn.offsetLeft - bar.offsetLeft
+      if (left < bar.scrollLeft || left + btn.offsetWidth > bar.scrollLeft + bar.clientWidth - 24) {
+        bar.scrollTo({ left: Math.max(0, left - 16), behavior: 'smooth' })
+      }
+    })
+  })
 
   // Landing v2: harga/promo + angka bukti sosial (publik, tanpa login) + modal login.
   let pricing = $state<PublicPricing | null>(null)
