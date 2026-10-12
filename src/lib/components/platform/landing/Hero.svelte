@@ -76,7 +76,7 @@
     </figure>
     <figure class="phone">
       <span class="statusbar" aria-hidden="true"><b>9:41</b><span class="notch"></span><span class="sb-icons"><i class="sig"></i><i class="bat"></i></span></span>
-      <img src="/media/features/mobile-3d.webp" alt="" loading="lazy" decoding="async" />
+      <img src="/media/features/female_char.webp" alt="" loading="lazy" decoding="async" />
     </figure>
     {#each callouts as c (c.pos)}
       <span class="callout {c.pos}"><i>{c.icon}</i>{c.text}</span>
