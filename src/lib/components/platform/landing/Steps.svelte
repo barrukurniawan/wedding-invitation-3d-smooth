@@ -12,7 +12,7 @@
   <div class="lp-container">
     <div class="lp-section-head">
       <p class="lp-eyebrow">Cara kerja</p>
-      <h2 id="steps-title">Dari masuk sampai dibagikan, kurang dari 15 menit</h2>
+      <h2 id="steps-title">Dari masuk sampai dibagikan, cukup 5 menit</h2>
     </div>
     <ol>
       {#each steps as [title, desc], i (title)}

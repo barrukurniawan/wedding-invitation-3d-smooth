@@ -62,7 +62,7 @@
       title: 'Sebar lewat WhatsApp dengan nama tamu di pesannya',
       desc: 'Simpan daftar penerima, lalu kirim satu per satu lewat WhatsApp dengan pesan yang sudah dipersonalisasi. Ada juga QR code untuk undangan cetak.',
       chips: ['Daftar penerima', 'Template pesan WhatsApp', 'QR code undangan'],
-      img: '/media/features/sender.webp',
+      img: '/media/features/sender_wa.webp',
       imgAlt: 'Dashboard kirim undangan via WhatsApp',
       frame: 'panel',
     },
@@ -286,11 +286,7 @@
     width: 100%;
     height: auto;
   }
-  .panel img {
-    aspect-ratio: 1072 / 760;
-    object-fit: cover;
-    object-position: top;
-  }
+
   .phone {
     position: relative;
     width: min(300px, 78%);
