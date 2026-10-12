@@ -1117,13 +1117,13 @@
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 20px;
 }
 
 .grid-3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -1456,6 +1456,10 @@
     margin-bottom: 20px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* Tepi kanan memudar: tanda baris ini bisa digeser. */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+    padding-right: 24px;
   }
   .sub-tab-bar::-webkit-scrollbar {
     display: none;

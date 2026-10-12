@@ -74,13 +74,13 @@
 <div class="form-section">
   <h3>Jadwal Acara &amp; Lokasi Venue</h3>
   <p class="section-desc">
-    Tentukan jadwal akad, resepsi, dan titik Google Maps. Tanggal akad otomatis menjadi acuan hitung mundur di undangan para tamu.
+    Tanggal akad dipakai untuk hitung mundur di undangan.
   </p>
 
   <!-- 1. AKAD NIKAH -->
   <div class="card-subGroup">
-    <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-stone-100">
-      <div class="flex items-center gap-2">
+    <div class="event-head border-b border-stone-100">
+      <div class="event-title">
         <span class="text-lg"><Icon name="rings" size={20} /></span>
         <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">1. Akad Nikah</h4>
       </div>
@@ -98,7 +98,7 @@
     <div class="grid-2">
       <!-- Tanggal Akad -->
       <label>
-        Tanggal Akad (Klik Kalender)
+        Tanggal Akad
         <input
           type="date"
           value={akadIsoDate}
@@ -111,30 +111,30 @@
 
       <!-- Waktu Akad -->
       <label>
-        Waktu / Jam Akad
-        <div class="flex items-center gap-2">
+        Jam Akad
+        <div class="time-row">
           <input
             type="time"
             bind:value={akadStartTime}
             onchange={syncAkad}
-            class="text-center font-medium flex-1 min-w-0"
+            class="text-center font-medium"
             class:input-empty={!akadStartTime}
             class:input-filled={Boolean(akadStartTime)}
           />
-          <span class="text-stone-400 font-bold text-xs shrink-0">s/d</span>
+          <span class="time-sep">s/d</span>
           <input
             type="time"
             bind:value={akadEndTime}
             onchange={syncAkad}
-            class="text-center font-medium flex-1 min-w-0"
+            class="text-center font-medium"
             class:input-empty={!akadEndTime}
             class:input-filled={Boolean(akadEndTime)}
           />
           <select
             bind:value={akadTimezone}
             onchange={syncAkad}
-            class="shrink-0 font-bold bg-white text-center"
-            style="width: 78px; padding: 12px 6px;"
+            class="tz-select font-bold bg-white text-center"
+            aria-label="Zona waktu"
           >
             <option value="WIB">WIB</option>
             <option value="WITA">WITA</option>
@@ -145,10 +145,10 @@
 
       <!-- Tempat Akad -->
       <label class="col-span-2">
-        Nama Tempat / Lokasi Akad
+        Tempat Akad
         <input
           bind:value={config.akad_location}
-          placeholder="Masjid Agung / Kediaman Mempelai"
+          placeholder="Masjid / Kediaman mempelai"
           class:input-empty={!config.akad_location}
           class:input-filled={Boolean(config.akad_location)}
         />
@@ -158,8 +158,8 @@
 
   <!-- 2. RESEPSI PERNIKAHAN -->
   <div class="card-subGroup">
-    <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-stone-100">
-      <div class="flex items-center gap-2">
+    <div class="event-head border-b border-stone-100">
+      <div class="event-title">
         <span class="text-lg"><Icon name="party" size={20} /></span>
         <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">2. Resepsi Pernikahan</h4>
       </div>
@@ -177,7 +177,7 @@
     <div class="grid-2">
       <!-- Tanggal Resepsi -->
       <label>
-        Tanggal Resepsi (Klik Kalender)
+        Tanggal Resepsi
         <input
           type="date"
           value={resepsiIsoDate}
@@ -190,30 +190,30 @@
 
       <!-- Waktu Resepsi -->
       <label>
-        Waktu / Jam Resepsi
-        <div class="flex items-center gap-2">
+        Jam Resepsi
+        <div class="time-row">
           <input
             type="time"
             bind:value={resepsiStartTime}
             onchange={syncResepsi}
-            class="text-center font-medium flex-1 min-w-0"
+            class="text-center font-medium"
             class:input-empty={!resepsiStartTime}
             class:input-filled={Boolean(resepsiStartTime)}
           />
-          <span class="text-stone-400 font-bold text-xs shrink-0">s/d</span>
+          <span class="time-sep">s/d</span>
           <input
             type="time"
             bind:value={resepsiEndTime}
             onchange={syncResepsi}
-            class="text-center font-medium flex-1 min-w-0"
+            class="text-center font-medium"
             class:input-empty={!resepsiEndTime}
             class:input-filled={Boolean(resepsiEndTime)}
           />
           <select
             bind:value={resepsiTimezone}
             onchange={syncResepsi}
-            class="shrink-0 font-bold bg-white text-center"
-            style="width: 78px; padding: 12px 6px;"
+            class="tz-select font-bold bg-white text-center"
+            aria-label="Zona waktu"
           >
             <option value="WIB">WIB</option>
             <option value="WITA">WITA</option>
@@ -224,10 +224,10 @@
 
       <!-- Tempat Resepsi -->
       <label class="col-span-2">
-        Nama Tempat / Lokasi Resepsi
+        Tempat Resepsi
         <input
           bind:value={config.resepsi_location}
-          placeholder="Gedung Serbaguna / Ballroom Hotel"
+          placeholder="Gedung / Ballroom hotel"
           class:input-empty={!config.resepsi_location}
           class:input-filled={Boolean(config.resepsi_location)}
         />
@@ -237,18 +237,18 @@
 
   <!-- 3. LOKASI VENUE & GOOGLE MAPS -->
   <div class="card-subGroup" style="border: 1.5px solid #f59e0b;">
-    <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-amber-100">
-      <div class="flex items-center gap-2">
+    <div class="event-head border-b border-amber-100">
+      <div class="event-title">
         <span class="text-lg"><Icon name="pin" size={20} /></span>
-        <h4 style="margin: 0; font-size: 1.1rem; color: #92400e;">3. Alamat Lengkap &amp; Google Maps</h4>
+        <h4 style="margin: 0; font-size: 1.1rem; color: #92400e;">3. Alamat &amp; Google Maps</h4>
       </div>
       {#if config.maps_url}
         <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <Icon name="check" size={14} /> Google Maps Terpasang
+          <Icon name="check" size={14} /> Maps terpasang
         </span>
       {:else}
         <span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
-          <Icon name="alert" size={14} /> Wajib Diisi untuk Tamu
+          <Icon name="alert" size={14} /> Wajib diisi
         </span>
       {/if}
     </div>
@@ -256,11 +256,11 @@
     <div class="grid-2">
       <!-- Alamat Lengkap Venue -->
       <label class="col-span-2">
-        Alamat Lengkap Gedung / Venue Acara
+        Alamat Lengkap Venue
         <textarea
           bind:value={config.venue_address}
-          rows="2"
-          placeholder="Contoh: Gedung Pernikahan, Jl. Gatot Subroto No. 54, Kuningan Barat, Jakarta Selatan"
+          rows="3"
+          placeholder="Contoh: Jl. Gatot Subroto No. 54, Jakarta Selatan"
           class:input-empty={!config.venue_address}
           class:input-filled={Boolean(config.venue_address)}
         ></textarea>
@@ -268,21 +268,21 @@
 
       <!-- Link Google Maps -->
       <label class="col-span-2">
-        <div class="flex items-center justify-between">
-          <span>Link Google Maps (Tautan Navigasi Tamu)</span>
+        <div class="maps-label">
+          <span>Link Google Maps</span>
           <a
             href="https://www.google.com/maps"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-xs text-rose-700 hover:text-rose-900 underline font-normal"
+            class="maps-open"
           >
-            <Icon name="map" size={15} /> Buka Google Maps
+            <Icon name="map" size={15} /> Buka Maps
           </a>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="maps-row">
           <input
             bind:value={config.maps_url}
-            placeholder="https://maps.app.goo.gl/... atau https://goo.gl/maps/..."
+            placeholder="https://maps.app.goo.gl/..."
             class="font-mono text-sm"
             class:input-empty={!config.maps_url}
             class:input-filled={Boolean(config.maps_url)}
@@ -303,3 +303,23 @@
     </div>
   </div>
 </div>
+
+<style>
+  .event-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-bottom: 10px; margin-bottom: 14px; }
+  .event-head > :last-child { white-space: nowrap; }
+  .event-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .time-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 76px; align-items: center; gap: 8px; }
+  .time-row input { min-width: 0; padding-left: 6px !important; padding-right: 6px !important; }
+  .time-row .tz-select { width: 100%; padding: 12px 4px; }
+  .time-sep { color: #a8a29e; font-size: .75rem; font-weight: 700; }
+  .maps-label { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+  .maps-open { display: inline-flex; align-items: center; gap: 4px; color: #8f1d45; font-size: .78rem; font-weight: 700; text-decoration: none; text-transform: none; letter-spacing: 0; white-space: nowrap; }
+  .maps-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .maps-row input { flex: 1; min-width: 0; }
+  @media (max-width: 420px) {
+    .time-row { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+    .time-row .tz-select { grid-column: 1 / -1; }
+    .maps-row { flex-wrap: wrap; }
+    .maps-row a { width: 100%; justify-content: center; }
+  }
+</style>
