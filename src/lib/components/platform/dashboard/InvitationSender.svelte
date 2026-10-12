@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import Icon from '$lib/components/icons/Icon.svelte'
   import { ApiError, createMyContact, deleteMyContact, getMyContacts, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
 
@@ -34,13 +35,42 @@
     } finally { loading = false }
   }
 
+  // Pilih dari kontak HP (Contact Picker API: Chrome/Samsung Internet di Android).
+  // Di perangkat lain tombolnya tidak muncul; isi manual / tempel tetap bisa.
+  type PickedContact = { name?: string[]; tel?: string[] }
+  type ContactsManager = { select: (props: string[], opts?: { multiple?: boolean }) => Promise<PickedContact[]> }
+  let canPickContact = $state(false)
+  onMount(() => {
+    const contactsApi = (navigator as Navigator & { contacts?: ContactsManager }).contacts
+    canPickContact = typeof contactsApi?.select === 'function'
+  })
+  // Nomor dari kontak/salinan sering membawa spasi, tanda baca, atau karakter tak terlihat.
+  const cleanPhone = (value: string) => value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '')
+
+  async function pickContact() {
+    error = ''
+    try {
+      const contactsApi = (navigator as Navigator & { contacts?: ContactsManager }).contacts
+      const [picked] = (await contactsApi?.select(['name', 'tel'], { multiple: false })) ?? []
+      if (!picked) return
+      const phones = (picked.tel ?? []).map(cleanPhone).filter(Boolean)
+      const phone = phones.find((p) => /^(\+?62|0)?8/.test(p)) ?? phones[0]
+      if (!phone) { error = 'Kontak ini tidak punya nomor telepon.'; return }
+      phoneInput = phone
+      const name = picked.name?.find((n) => n.trim())?.trim()
+      if (name && !nameInput.trim()) nameInput = name.slice(0, 255)
+    } catch {
+      error = 'Kontak belum dapat dibuka. Isi nomor secara manual.'
+    }
+  }
+
   async function addContact(event: SubmitEvent) {
     event.preventDefault()
     if (!nameInput.trim() || !phoneInput.trim()) { error = 'Isi nama dan nomor WhatsApp tamu.'; return }
     saving = true
     error = ''
     try {
-      const result = await createMyContact(nameInput, phoneInput, genderInput)
+      const result = await createMyContact(nameInput, cleanPhone(phoneInput), genderInput)
       contacts = [...contacts, result.contact]
       nameInput = ''
       phoneInput = ''
@@ -141,7 +171,14 @@
 
   <form class="add-row" onsubmit={addContact}>
     <input bind:value={nameInput} placeholder="Nama tamu" maxlength="255" aria-label="Nama tamu" />
-    <input bind:value={phoneInput} placeholder="No. WhatsApp" maxlength="32" inputmode="tel" aria-label="Nomor WhatsApp" />
+    <div class="phone-field" class:has-picker={canPickContact}>
+      <input bind:value={phoneInput} placeholder="No. WhatsApp" maxlength="32" inputmode="tel" aria-label="Nomor WhatsApp" />
+      {#if canPickContact}
+        <button type="button" class="pick-contact" aria-label="Pilih dari kontak HP" title="Pilih dari kontak HP" onclick={pickContact}>
+          <Icon name="contacts" size={20} />
+        </button>
+      {/if}
+    </div>
     <div class="avatar-pick" role="radiogroup" aria-label="Avatar tamu di undangan" title="Avatar tamu di undangan">
       <button type="button" role="radio" aria-checked={genderInput === 'm'} class:active={genderInput === 'm'} onclick={() => (genderInput = 'm')}>
         <img src="/media/guests/guest-m.webp" alt="" /><span>Pria</span>
@@ -221,6 +258,10 @@
   .add-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 12px; border: 1px solid rgba(143, 29, 69, .14); border-radius: 16px; background: #fdf8f9; }
   .add-row input { width: 100%; min-width: 0; height: 46px; box-sizing: border-box; border: 1px solid #e6dcdc; border-radius: 12px; padding: 0 14px; background: #fff; color: inherit; font: inherit; font-size: .92rem; }
   .add-row input:focus { outline: none; border-color: #8f1d45; }
+  .phone-field { position: relative; min-width: 0; }
+  .phone-field.has-picker input { padding-right: 50px; }
+  .pick-contact { position: absolute; top: 50%; right: 6px; display: grid; place-items: center; width: 36px; height: 36px; transform: translateY(-50%); border: 0; border-radius: 10px; background: #fbeef1; cursor: pointer; }
+  .pick-contact:hover { background: #f6dde4; }
   .avatar-pick { display: flex; gap: 6px; }
   .avatar-pick button { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 12px 0 4px; border: 2px solid #eadfdf; border-radius: 12px; background: #fff; color: #7a6a6d; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; transition: border-color .15s, color .15s; }
   .avatar-pick button img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; object-position: top; background: #c55e5e; opacity: .55; transition: opacity .15s; }
@@ -263,13 +304,13 @@
 
   @media (max-width: 720px) {
     .add-row { grid-template-columns: 1fr 1fr; }
-    .add-row input { grid-column: 1 / -1; }
+    .add-row input, .phone-field { grid-column: 1 / -1; }
     .avatar-pick { grid-column: 1 / 2; }
     .avatar-pick button { flex: 1; justify-content: center; }
     .add-btn { grid-column: 2 / 3; }
   }
   @media (max-width: 480px) {
-    .add-row input { grid-column: 1 / -1; }
+    .add-row input, .phone-field { grid-column: 1 / -1; }
     .avatar-pick { grid-column: 1 / -1; }
     .add-btn { grid-column: 1 / -1; }
     .guest-row { grid-template-columns: 36px minmax(0, 1fr); }

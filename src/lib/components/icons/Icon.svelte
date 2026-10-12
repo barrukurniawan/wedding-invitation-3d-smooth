@@ -62,6 +62,7 @@
     external: `<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path class="d" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>`,
     download: `<path class="d" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/>`,
     eye: `<path class="d" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle class="w" cx="12" cy="12" r="3"/>`,
+    contacts: `<rect class="d" x="4" y="2.5" width="16" height="19" rx="2.5"/><circle class="w" cx="12" cy="10" r="2.8"/><path d="M7.5 17.5a4.5 4.5 0 0 1 9 0"/><path d="M2.5 7h3M2.5 12h3M2.5 17h3"/>`,
   } as const
 
   export type IconName = keyof typeof ICONS
