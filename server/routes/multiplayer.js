@@ -2,6 +2,7 @@ import express from 'express'
 import crypto from 'node:crypto'
 import pool from '../db.js'
 import { assetCdnBase } from '../services/assetCdn.js'
+import { publicGiftShipping } from '../services/giftShipping.js'
 
 const router = express.Router()
 
@@ -303,7 +304,8 @@ router.get(['/content', '/api/content'], async (req, res) => {
         `SELECT i.id, i.slug, wc.bride_name, wc.groom_name, wc.wedding_date, wc.wedding_photo,
                 wc.akad_date, wc.akad_time, wc.akad_location, wc.resepsi_date, wc.resepsi_time,
                 wc.resepsi_location, wc.bank_name, wc.bank_account, wc.bank_holder, wc.maps_url,
-                wc.venue_address, wc.gallery_photos, wc.quote, wc.bgm_url
+                wc.venue_address, wc.gallery_photos, wc.quote, wc.bgm_url,
+                wc.gift_recipient, wc.gift_address, wc.gift_phone, wc.gift_phone_public, wc.gift_note
          FROM invitations i
          LEFT JOIN wedding_configs wc ON wc.invitation_id = i.id
          WHERE i.slug = ? AND i.deleted_at IS NULL
@@ -313,6 +315,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
 
       if (invRows && invRows.length > 0) {
         const c = invRows[0]
+        const gift = publicGiftShipping(c)
         let gallery = []
         try {
           gallery = typeof c.gallery_photos === 'string' ? JSON.parse(c.gallery_photos) : (c.gallery_photos || [])
@@ -394,13 +397,18 @@ router.get(['/content', '/api/content'], async (req, res) => {
                     ['Atas nama', c.bank_holder || c.groom_name || '-'],
                   ],
                 },
-                {
-                  title: 'Pengiriman Hadiah',
-                  fields: [
-                    ['Penerima', `${c.groom_name || 'Pengantin'} & ${c.bride_name || 'Pengantin'}`],
-                    ['Alamat', c.venue_address || '-'],
-                  ],
-                },
+                // Alamat kirim hadiah hanya tampil bila diisi pasangan (dulu memakai alamat venue: keliru).
+                ...(gift
+                  ? [{
+                      title: 'Kirim Hadiah',
+                      fields: [
+                        ['Penerima', gift.recipient || `${c.groom_name || 'Pengantin'} & ${c.bride_name || 'Pengantin'}`],
+                        ['Alamat', gift.address],
+                        ...(gift.phone ? [['No. HP', gift.phone]] : []),
+                        ...(gift.note ? [['Catatan', gift.note]] : []),
+                      ],
+                    }]
+                  : []),
               ],
             },
             {

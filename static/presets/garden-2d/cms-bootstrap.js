@@ -361,13 +361,18 @@
                 ['Atas nama', c.bank_holder || c.groom_name || '-'],
               ],
             },
-            {
-              title: 'Pengiriman Hadiah',
-              fields: [
-                ['Penerima', `${c.groom_name || 'Pengantin'} & ${c.bride_name || 'Pengantin'}`],
-                ['Alamat', c.venue_address || '-'],
-              ],
-            },
+            // Alamat kirim hadiah hanya bila diisi pasangan (dulu memakai alamat venue: keliru).
+            ...(c.gift_shipping
+              ? [{
+                  title: 'Kirim Hadiah',
+                  fields: [
+                    ['Penerima', c.gift_shipping.recipient || `${c.groom_name || 'Pengantin'} & ${c.bride_name || 'Pengantin'}`],
+                    ['Alamat', c.gift_shipping.address],
+                    ...(c.gift_shipping.phone ? [['No. HP', c.gift_shipping.phone]] : []),
+                    ...(c.gift_shipping.note ? [['Catatan', c.gift_shipping.note]] : []),
+                  ],
+                }]
+              : []),
           ],
         },
         {
@@ -432,7 +437,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261012a';
+    script.src = 'game.js?v=20261012b';
     document.body.append(script);
   }
 
