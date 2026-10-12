@@ -2200,3 +2200,65 @@
   --mm-ic-bg: #8f1d45;
 }
 .alert-icon .mm-icon { display: block; }
+
+/* Tab Tema: kartu bergambar ringkas + info subdomain/akun berdampingan. */
+.tema-panel { display: flex; flex-direction: column; gap: 28px; }
+.tema-label {
+  display: flex; align-items: center; gap: 7px;
+  margin: 0 0 12px; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.tema-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 640px; }
+.tema-card {
+  display: flex; flex-direction: column; padding: 0; overflow: hidden;
+  border: 2px solid var(--line); border-radius: 16px; background: var(--surface);
+  cursor: pointer; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.tema-card:hover { border-color: rgba(143, 29, 69, 0.4); transform: translateY(-2px); }
+.tema-card.active { border-color: var(--accent-deep); box-shadow: 0 8px 22px rgba(143, 29, 69, 0.14); }
+.tema-card:disabled { cursor: wait; }
+.tema-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.tema-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 11px 14px; font-weight: 700; font-size: 0.92rem; color: var(--ink);
+}
+.tema-card.active .tema-card-foot { color: var(--accent-deep); }
+.tema-check { display: inline-flex; }
+.tema-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; padding-top: 24px; border-top: 1px solid var(--line); }
+.tema-info-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper);
+}
+.tema-info-card .tema-label { margin: 0; }
+.tema-info-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tema-info-row code {
+  padding: 5px 9px; border-radius: 8px; border: 1px solid var(--line); background: #fff;
+  font: 600 0.85rem ui-monospace, 'SF Mono', Consolas, monospace; color: var(--accent-deep);
+}
+.tema-info-row strong { font-size: 0.95rem; color: var(--ink); }
+.tema-muted { margin: -6px 0 0; font-size: 0.85rem; color: var(--muted); }
+.tema-ok { font-size: 0.8rem; font-weight: 600; color: #059669; }
+.tema-err { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.8rem; font-weight: 600; color: #e11d48; }
+.tema-slug-input {
+  display: flex; align-items: center; width: 100%; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff;
+}
+.tema-slug-input:focus-within { border-color: var(--accent-deep); }
+.tema-slug-input input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 0.85rem ui-monospace, 'SF Mono', Consolas, monospace; }
+.tema-slug-input span { font: 0.78rem ui-monospace, 'SF Mono', Consolas, monospace; color: var(--muted); }
+.tema-actions { display: flex; gap: 8px; }
+@media (max-width: 520px) { .tema-grid { gap: 10px; } .tema-card-foot { padding: 9px 11px; font-size: 0.85rem; } }
+.tema-card-foot { align-self: stretch; text-align: left; }
+.tema-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); }
+.tema-seg button {
+  display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border: 0; border-radius: 999px;
+  background: transparent; font: inherit; font-size: 0.9rem; font-weight: 700; color: var(--muted); cursor: pointer;
+}
+.tema-seg button.active { background: var(--accent-deep); color: #fff; box-shadow: 0 4px 12px rgba(143, 29, 69, 0.25);
+  --mm-ic: #fff; --mm-ic-soft: rgba(255, 255, 255, 0.28); --mm-ic-bg: #8f1d45; }
+.tema-seg button:disabled { cursor: wait; }
+.tema-info-card .tema-slug-input input {
+  padding: 0; height: auto; min-height: 0; border: 0; box-shadow: none; background: transparent;
+  text-transform: none; letter-spacing: 0;
+}
+.tema-info-card .tema-slug-input span { text-transform: none; letter-spacing: 0; }

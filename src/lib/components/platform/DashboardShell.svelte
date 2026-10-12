@@ -758,149 +758,94 @@
 
          <!-- Tab 5: Pengaturan -->
         {:else if activeTab === 'pengaturan'}
-          <div class="workspace-panel">
-            <h3>Tema Undangan</h3>
-            <p class="section-desc">Pilih dunia undangan (3D/2D) dan venue, lalu atur alamat subdomain dan akun.</p>
-
-            <div class="grid-2">
-              <div class="settings-card col-span-2">
-                <h4>Preset Desain Dunia Undangan</h4>
-                <p class="section-desc" style="margin-bottom: 14px;">Bebas beralih antara 3D dan 2D kapan saja tanpa menghapus data pernikahan yang sudah diisi.</p>
-                <div class="preset-theme-switch-grid">
+          {@const is3d = myConfig?.preset !== '2d_garden'}
+          <div class="workspace-panel tema-panel">
+            <section class="tema-section">
+              <h4 class="tema-label">Dunia Undangan</h4>
+              <div class="tema-seg" role="radiogroup" aria-label="Pilih dunia undangan">
+                {#each [
+                  { id: '3d_summer', label: 'Dunia 3D', icon: 'sparkle' },
+                  { id: '2d_garden', label: 'Pixel 2D', icon: 'garden' },
+                ] as const as opt (opt.id)}
+                  {@const active = opt.id === '3d_summer' ? is3d : !is3d}
                   <button
                     type="button"
-                    class="theme-switch-card"
-                    class:active={myConfig?.preset === '3d_summer' || !myConfig?.preset}
+                    role="radio"
+                    aria-checked={active}
+                    class:active
+                    disabled={savingConfig}
                     onclick={async () => {
-                      if (!myConfig || myConfig.preset === '3d_summer') return
-                      myConfig.preset = '3d_summer'
+                      if (!myConfig || active) return
+                      myConfig.preset = opt.id
                       await saveConfig()
                     }}
                   >
-                    <div class="theme-switch-head">
-                      <strong><Icon name="star" size={16} /> Preset 1: Dunia 3D Island</strong>
-                      {#if myConfig?.preset === '3d_summer' || !myConfig?.preset}
-                        <span class="badge-active">Aktif Digunakan</span>
-                      {/if}
-                    </div>
-                    <p class="theme-switch-desc">Dunia 3D Three.js interaktif dengan avatar animasi, pelaminan, dan confetti.</p>
+                    <Icon name={opt.icon} size={18} /> {opt.label}
                   </button>
-
-                  <button
-                    type="button"
-                    class="theme-switch-card"
-                    class:active={myConfig?.preset === '2d_garden'}
-                    onclick={async () => {
-                      if (!myConfig || myConfig.preset === '2d_garden') return
-                      myConfig.preset = '2d_garden'
-                      await saveConfig()
-                    }}
-                  >
-                    <div class="theme-switch-head">
-                      <strong><Icon name="garden" size={16} /> Preset 2: Dunia 2D Pixel Garden</strong>
-                      {#if myConfig?.preset === '2d_garden'}
-                        <span class="badge-active green">Aktif Digunakan</span>
-                      {/if}
-                    </div>
-                    <p class="theme-switch-desc">Retro pixel RPG yang sangat ringan di semua ponsel, air mancur & pianis romantis.</p>
-                  </button>
-                </div>
+                {/each}
               </div>
+            </section>
 
-              {#if myConfig?.preset === '3d_summer' || !myConfig?.preset}
-                <div class="settings-card col-span-2">
-                  <h4>Venue Dunia 3D</h4>
-                  <p class="section-desc" style="margin-bottom: 14px;">Pilih lokasi pernikahan di dunia 3D. Isi undangan, posisi tamu, dan pelaminan tetap sama.</p>
-                  <div class="preset-theme-switch-grid" role="radiogroup" aria-label="Pilih venue dunia 3D">
-                    {#each venueOptions as option (option.id)}
-                      {@const active = (myConfig?.venue ?? 'garden') === option.id}
-                      <button
-                        type="button"
-                        role="radio"
-                        aria-checked={active}
-                        class="theme-switch-card venue-switch-card"
-                        class:active
-                        disabled={savingConfig}
-                        onclick={() => switchVenue(option.id)}
-                      >
-                        <img src={option.thumbnail} alt="Venue {resolveVenue(option.id).label}" class="venue-switch-thumb" loading="lazy" />
-                        <div class="theme-switch-head">
-                          <strong><Icon name={option.id === 'beach' ? 'beach' : 'garden'} size={17} /> {resolveVenue(option.id).label}</strong>
-                          {#if active}
-                            <span class="badge-active">Aktif Digunakan</span>
-                          {/if}
-                        </div>
-                        <p class="theme-switch-desc">{option.description}</p>
-                      </button>
-                    {/each}
-                  </div>
-                  {#if venueMsg}
-                    <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
-                  {/if}
-                </div>
-              {/if}
-
-              <div class="settings-card">
-                <h4>Status Subdomain</h4>
-                <p>Alamat: <code>{invitation.slug}.marryme.web.id</code></p>
-                <p>Status: <strong class="badge-inline" data-status={invitation.status}>{statusLabel(invitation.status)}</strong></p>
-                <p>Zona Waktu: <code>{invitation.timezone}</code></p>
-
-                {#if !editingSlug}
-                  <div class="mt-3 flex items-center gap-2">
-                    <button type="button" class="ghost-btn-sm" onclick={startEditSlug}>
-                      <Icon name="edit" size={15} /> Ubah Subdomain
+            {#if is3d}
+              <section class="tema-section">
+                <h4 class="tema-label">Venue 3D</h4>
+                <div class="tema-grid" role="radiogroup" aria-label="Pilih venue dunia 3D">
+                  {#each venueOptions as option (option.id)}
+                    {@const active = (myConfig?.venue ?? 'garden') === option.id}
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      class="tema-card"
+                      class:active
+                      disabled={savingConfig}
+                      onclick={() => switchVenue(option.id)}
+                    >
+                      <img src={option.thumbnail} alt="" loading="lazy" />
+                      <span class="tema-card-foot">{resolveVenue(option.id).label}{#if active}<span class="tema-check"><Icon name="check" size={18} /></span>{/if}</span>
                     </button>
-                    {#if slugSuccessMsg}
-                      <span class="text-xs text-emerald-600 font-medium">✓ {slugSuccessMsg}</span>
-                    {/if}
+                  {/each}
+                </div>
+                {#if venueMsg}
+                  <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
+                {/if}
+              </section>
+            {/if}
+
+            <div class="tema-info-grid">
+              <div class="tema-info-card">
+                <h4 class="tema-label"><Icon name="globe" size={16} /> Subdomain</h4>
+                {#if !editingSlug}
+                  <div class="tema-info-row">
+                    <code>{invitation.slug}.marryme.web.id</code>
+                    <span class="badge-inline" data-status={invitation.status}>{statusLabel(invitation.status)}</span>
                   </div>
+                  <button type="button" class="ghost-btn-sm" onclick={startEditSlug}>
+                    <Icon name="edit" size={15} /> Ubah
+                  </button>
+                  {#if slugSuccessMsg}<span class="tema-ok">✓ {slugSuccessMsg}</span>{/if}
                 {:else}
-                  <div class="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                    <label for="new-subdomain-input" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Subdomain Baru:
-                    </label>
-                    <div class="flex items-center gap-1.5">
-                      <div class="flex items-center flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500">
-                        <input
-                          id="new-subdomain-input"
-                          bind:value={newSlugInput}
-                          placeholder="nama-pasangan"
-                          class="w-full bg-transparent text-xs font-mono text-slate-800 outline-none"
-                        />
-                        <span class="text-[11px] text-slate-400 font-mono">.marryme.web.id</span>
-                      </div>
-                      <button
-                        type="button"
-                        class="primary-btn-sm text-xs py-1.5 px-3"
-                        disabled={savingSlug}
-                        onclick={handleSaveSlug}
-                      >
-                        {savingSlug ? 'Menyimpan...' : 'Simpan'}
-                      </button>
-                      <button
-                        type="button"
-                        class="ghost-btn-sm text-xs py-1.5 px-2"
-                        disabled={savingSlug}
-                        onclick={() => (editingSlug = false)}
-                      >
-                        Batal
-                      </button>
-                    </div>
-                    {#if slugError}
-                      <p class="text-xs text-rose-600 mt-1.5 font-medium"><Icon name="alert" size={14} /> {slugError}</p>
-                    {/if}
-                    <p class="text-[11px] text-slate-400 mt-1">
-                      <Icon name="tip" size={14} /> Kalian bebas mengubah subdomain jika sebelumnya mengisi nama uji coba / acak.
-                    </p>
+                  <div class="tema-slug-input">
+                    <input id="new-subdomain-input" bind:value={newSlugInput} placeholder="nama-pasangan" aria-label="Subdomain baru" />
+                    <span>.marryme.web.id</span>
                   </div>
+                  <div class="tema-actions">
+                    <button type="button" class="primary-btn-sm" disabled={savingSlug} onclick={handleSaveSlug}>
+                      {savingSlug ? 'Menyimpan...' : 'Simpan'}
+                    </button>
+                    <button type="button" class="ghost-btn-sm" disabled={savingSlug} onclick={() => (editingSlug = false)}>Batal</button>
+                  </div>
+                  {#if slugError}<p class="tema-err"><Icon name="alert" size={14} /> {slugError}</p>{/if}
                 {/if}
               </div>
-              <div class="settings-card">
-                <h4>Akun Pengelola</h4>
-                <p>Nama: <strong>{user.displayName}</strong></p>
-                <p>Email: <code>{user.email || '-'}</code></p>
-                <button type="button" class="ghost-btn-sm mt-12" onclick={() => void handleLogout()}>Keluar dari Akun</button>
+
+              <div class="tema-info-card">
+                <h4 class="tema-label"><Icon name="groom" size={16} /> Akun</h4>
+                <div class="tema-info-row">
+                  <strong>{user.displayName}</strong>
+                </div>
+                <p class="tema-muted">{user.email || '-'}</p>
+                <button type="button" class="ghost-btn-sm" onclick={() => void handleLogout()}>Keluar</button>
               </div>
             </div>
           </div>
