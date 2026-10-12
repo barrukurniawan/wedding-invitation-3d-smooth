@@ -2117,3 +2117,77 @@
 }
 
 .tab-btn .tab-wa-icon { vertical-align: -3px; margin-right: 2px; }
+
+/* Kartu progres (paling atas di /account): versi marun. Teks putih/krem, aksen emas;
+   warna status tetap terlihat lewat garis kiri kotak status & badge. */
+.hero-progress-card {
+  background: linear-gradient(135deg, #a52552 0%, #8f1d45 52%, #5e1230 100%);
+  border: 0;
+  box-shadow: 0 22px 46px -22px rgba(94, 18, 48, 0.75);
+  color: #fff;
+}
+.hero-progress-card h1 {
+  color: #fff;
+}
+.hero-progress-card .hero-subtitle {
+  color: #fde7ec;
+}
+.hero-progress-card .hero-subtitle strong {
+  color: #f5b942;
+}
+.hero-progress-card .progress-bar-track {
+  background: rgba(255, 255, 255, 0.2);
+}
+.hero-progress-card .progress-bar-fill {
+  background: linear-gradient(90deg, #f5b942 0%, #ffd98a 100%);
+}
+.hero-progress-card .badge[data-status] {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+.hero-progress-card .badge[data-status]::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f5b942;
+}
+.hero-progress-card .badge[data-status='active']::before {
+  background: #4ade80;
+}
+.hero-progress-card .badge[data-status='pending_verification']::before {
+  background: #a5b4fc;
+}
+.hero-progress-card .status-alert-box[data-status] {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+.hero-progress-card .status-alert-box[data-status='active'] {
+  border-left-color: #4ade80;
+}
+.hero-progress-card .status-alert-box[data-status='draft'] {
+  border-left-color: #f5b942;
+}
+.hero-progress-card .status-alert-box[data-status='pending_verification'] {
+  border-left-color: #a5b4fc;
+}
+.hero-progress-card .status-alert-content p {
+  color: #fde7ec;
+}
+.hero-progress-card .status-alert-content em {
+  color: #ffd98a;
+}
+/* Nama pasangan & judul status: gradasi kuning → oranye (senada angka persen). */
+.hero-progress-card h1,
+.hero-progress-card .status-alert-content strong {
+  background: linear-gradient(90deg, #ffe08a 0%, #f5b942 45%, #f39a3d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.hero-progress-card .status-alert-content strong {
+  display: inline-block;
+}
