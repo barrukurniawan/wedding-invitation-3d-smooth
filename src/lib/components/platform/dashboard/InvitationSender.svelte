@@ -263,7 +263,7 @@
 
   @media (max-width: 720px) {
     .add-row { grid-template-columns: 1fr 1fr; }
-    .add-row input:first-child { grid-column: 1 / -1; }
+    .add-row input { grid-column: 1 / -1; }
     .avatar-pick { grid-column: 1 / 2; }
     .avatar-pick button { flex: 1; justify-content: center; }
     .add-btn { grid-column: 2 / 3; }
