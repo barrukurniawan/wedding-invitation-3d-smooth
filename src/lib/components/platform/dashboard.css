@@ -2262,3 +2262,5 @@
   text-transform: none; letter-spacing: 0;
 }
 .tema-info-card .tema-slug-input span { text-transform: none; letter-spacing: 0; }
+div.tema-card { cursor: default; }
+div.tema-card:hover { transform: none; }

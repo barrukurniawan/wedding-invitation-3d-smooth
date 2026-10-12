@@ -810,6 +810,16 @@
                   <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
                 {/if}
               </section>
+            {:else}
+              <section class="tema-section">
+                <h4 class="tema-label">Tampilan 2D</h4>
+                <div class="tema-grid">
+                  <div class="tema-card active">
+                    <img src="/media/designs/2d.webp" alt="Pratinjau undangan Pixel 2D" loading="lazy" />
+                    <span class="tema-card-foot">Pixel Garden<span class="tema-check"><Icon name="check" size={18} /></span></span>
+                  </div>
+                </div>
+              </section>
             {/if}
 
             <div class="tema-info-grid">
