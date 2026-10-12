@@ -26,6 +26,14 @@ export interface WeddingConfig {
   venue?: VenueId
   /** Base URL CDN aset (jsDelivr) dari server; null/undefined = pakai server sendiri. */
   asset_cdn?: string | null
+  /** Alamat kirim hadiah (dashboard pemilik; semua opsional). */
+  gift_recipient?: string | null
+  gift_address?: string | null
+  gift_phone?: string | null
+  gift_phone_public?: boolean
+  gift_note?: string | null
+  /** Versi publik untuk tamu (dari /api/config); null bila alamat kosong. */
+  gift_shipping?: { recipient: string | null; address: string; phone: string | null; note: string | null } | null
   slug?: string
   updated_at: string
 }

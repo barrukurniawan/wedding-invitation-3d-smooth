@@ -70,6 +70,20 @@
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
+
+  let giftCopied = $state(false)
+  async function copyGiftAddress() {
+    const g = $weddingConfig.gift_shipping
+    if (!g) return
+    const text = [g.recipient, g.address, g.phone ? `HP: ${g.phone}` : ''].filter(Boolean).join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      giftCopied = true
+      setTimeout(() => (giftCopied = false), 2000)
+    } catch {
+      giftCopied = false
+    }
+  }
 </script>
 
 {#if $activeModal === 'weddingStage'}
@@ -107,6 +121,19 @@
             <p class="mt-2 font-mono text-lg font-semibold tracking-wide text-[var(--ink)]">{$weddingConfig.bank_account}</p>
             <p class="mt-0.5 text-xs text-[var(--ink)]/55">a/n {$weddingConfig.bank_holder}</p>
           </div>
+          {#if $weddingConfig.gift_shipping}
+            {@const gift = $weddingConfig.gift_shipping}
+            <div class="payment-card rounded-xl p-3 text-left w-card">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--deep-rose)]/65">Kirim Hadiah</p>
+                <button type="button" onclick={copyGiftAddress} class="rounded-full bg-white/70 px-2 py-1 text-[0.65rem] font-semibold text-[var(--deep-rose)]/80">{giftCopied ? 'Tersalin ✓' : 'Salin alamat'}</button>
+              </div>
+              {#if gift.recipient}<p class="mt-2 text-sm font-semibold text-[var(--ink)]">{gift.recipient}</p>{/if}
+              <p class="mt-1 whitespace-pre-line text-xs leading-relaxed text-[var(--ink)]/75">{gift.address}</p>
+              {#if gift.phone}<p class="mt-1 text-xs text-[var(--ink)]/60">HP: {gift.phone}</p>{/if}
+              {#if gift.note}<p class="mt-2 text-[0.7rem] italic text-[var(--ink)]/55">{gift.note}</p>{/if}
+            </div>
+          {/if}
           {#if effectiveMapsUrl}<a class="block text-xs text-[var(--rose)] hover:text-[var(--champagne)]" href={effectiveMapsUrl} target="_blank" rel="noreferrer">Buka lokasi di Google Maps</a>{/if}
         </div>
       {:else}

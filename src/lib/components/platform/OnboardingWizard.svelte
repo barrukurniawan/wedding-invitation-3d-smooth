@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import { fade, slide } from 'svelte/transition'
   import { resolveVenue, venueOptions, type VenueId } from '$lib/venues'
 
@@ -47,7 +48,7 @@
   
   <div class="relative z-10 text-center mb-7">
     <span class="inline-flex items-center gap-1.5 py-1 px-4 rounded-full text-xs font-bold tracking-widest uppercase mb-3 shadow-sm transition-all duration-500 {presetInput === '3d_summer' ? 'bg-gradient-to-r from-amber-100 to-rose-100 text-amber-900' : 'bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-900'}">
-      <span>✨</span> Mulai Perjalanan Kalian
+      <Icon name="sparkle" size={18} /> Mulai Perjalanan Kalian
     </span>
     <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight mb-2">Tentukan Desain & Link Undangan</h2>
     <p class="text-slate-500 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
@@ -64,7 +65,7 @@
   >
     {#if errorMessage}
       <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium flex items-center gap-2.5 shadow-sm">
-        <span class="text-lg">⚠️</span>
+        <span class="text-lg"><Icon name="alert" size={20} /></span>
         <span>{errorMessage}</span>
       </div>
     {/if}
@@ -76,7 +77,7 @@
           Pilih Preset Desain Undangan
         </span>
         <span class="text-xs font-medium px-2.5 py-0.5 rounded-full transition-colors duration-300 {presetInput === '3d_summer' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
-          {presetInput === '3d_summer' ? '🏝️ 3D Summer' : '🌿 2D Garden'}
+          {#if presetInput === '3d_summer'}<Icon name="beach" size={16} /> 3D Summer{:else}<Icon name="garden" size={16} /> 2D Garden{/if}
         </span>
       </div>
 
@@ -102,14 +103,14 @@
             </div>
             {#if presetInput === '3d_summer'}
               <div class="absolute top-2.5 right-2.5 bg-amber-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                <span>✓</span> Terpilih
+                <Icon name="check" size={14} /> Terpilih
               </div>
             {/if}
           </div>
 
           <div class="p-3.5 flex-1 flex flex-col justify-start">
             <h4 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-              <span>🏝️</span> Dunia 3D Summer Island
+              <Icon name="beach" size={18} /> Dunia 3D Summer Island
             </h4>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
               Petualangan 3D interaktif orang ketiga di pulau taman tropis dengan avatar & confetti.
@@ -138,14 +139,14 @@
             </div>
             {#if presetInput === '2d_garden'}
               <div class="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                <span>✓</span> Terpilih
+                <Icon name="check" size={14} /> Terpilih
               </div>
             {/if}
           </div>
 
           <div class="p-3.5 flex-1 flex flex-col justify-start">
             <h4 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-              <span>🌿</span> Dunia 2D Pixel Garden
+              <Icon name="garden" size={18} /> Dunia 2D Pixel Garden
             </h4>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
               Sangat ringan di semua ponsel, retro pixel RPG, air mancur & musisi danau dengan multiplayer.
@@ -171,7 +172,7 @@
                   <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">✓ Terpilih</span>
                 {/if}
                 <span class="block px-2.5 py-2 text-xs sm:text-sm font-bold text-slate-800">
-                  {option.emoji} {resolveVenue(option.id).label}
+                  <Icon name={option.id === 'beach' ? 'beach' : 'garden'} size={17} /> {resolveVenue(option.id).label}
                 </span>
               </button>
             {/each}
@@ -180,7 +181,7 @@
       {/if}
 
       <p class="text-xs text-slate-400 ml-1">
-        💡 Tenang, kalian bisa beralih tema kapan saja di menu pengaturan tanpa kehilangan data.
+        <Icon name="tip" size={16} /> Tenang, kalian bisa beralih tema kapan saja di menu pengaturan tanpa kehilangan data.
       </p>
     </div>
 
@@ -250,7 +251,7 @@
             </svg>
             <span>Membuat...</span>
           {:else}
-            <span class="text-xl">🚀</span> Mulai Buat Undangan
+            <Icon name="rocket" size={20} /> Mulai Buat Undangan
           {/if}
         </span>
       </button>

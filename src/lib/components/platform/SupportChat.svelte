@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   // Chat bantuan pemilik akun → admin. Tombol bulat di kanan bawah; panel berisi satu
   // percakapan. Polling: 8 dtk saat panel terbuka, 60 dtk saat tertutup (badge balasan).
   import { onMount, tick } from 'svelte'
@@ -140,12 +141,12 @@
           <strong>Bantuan MarryMe</strong>
           <span>Ada error atau kendala? Tulis di sini, admin akan membalas.</span>
         </div>
-        <button type="button" class="close" aria-label="Tutup chat" onclick={toggle}>✕</button>
+        <button type="button" class="close" aria-label="Tutup chat" onclick={toggle}><Icon name="close" size={16} /></button>
       </header>
 
       <div class="messages" bind:this={list}>
         <div class="bubble admin intro">
-          👋 Halo! Ceritakan kendalamu, misalnya halaman mana yang error dan apa yang terjadi. Balasan admin muncul di sini.
+          <Icon name="chat" size={16} /> Halo! Ceritakan kendalamu, misalnya halaman mana yang error dan apa yang terjadi. Balasan admin muncul di sini.
         </div>
         {#each messages as m (m.id)}
           <div class="bubble {m.sender}">

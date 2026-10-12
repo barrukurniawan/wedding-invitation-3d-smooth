@@ -43,6 +43,11 @@ const configSchema = z.object({
   bgm_title: text(255),
   preset: z.enum(['3d_summer', '2d_garden']),
   venue: z.enum(VENUE_IDS),
+  gift_recipient: text(255),
+  gift_address: text(1000),
+  gift_phone: z.union([z.string().trim().max(32).regex(/^[0-9+\-\s()]*$/, 'No. HP penerima tidak valid.'), z.null()]),
+  gift_phone_public: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
+  gift_note: text(255),
   slug: z.string().optional(),
 }).partial().passthrough()
 
@@ -77,12 +82,18 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'bgm_title',
   'preset',
   'venue',
+  'gift_recipient',
+  'gift_address',
+  'gift_phone',
+  'gift_phone_public',
+  'gift_note',
 ])
 
 function serializeConfig(config) {
   const result = normalizeMusicConfig(config)
   result.id = Number(result.invitation_id || result.id)
   result.venue = normalizeVenue(result.venue)
+  result.gift_phone_public = Number(result.gift_phone_public) === 1
   result.gallery_photos = typeof result.gallery_photos === 'string'
     ? JSON.parse(result.gallery_photos)
     : result.gallery_photos || []

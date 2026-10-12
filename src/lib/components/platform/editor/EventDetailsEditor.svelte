@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { WeddingConfig } from '$lib/api-client'
   import {
     extractIsoDate,
@@ -80,12 +81,12 @@
   <div class="card-subGroup">
     <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-stone-100">
       <div class="flex items-center gap-2">
-        <span class="text-lg">💍</span>
+        <span class="text-lg"><Icon name="rings" size={20} /></span>
         <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">1. Akad Nikah</h4>
       </div>
       {#if akadIsoDate}
         <span class="text-xs text-rose-800 font-semibold bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-          📅 {formatIndonesianDate(akadIsoDate)}
+          <Icon name="calendar" size={14} /> {formatIndonesianDate(akadIsoDate)}
         </span>
       {:else}
         <span class="text-xs text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full">
@@ -159,7 +160,7 @@
   <div class="card-subGroup">
     <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-stone-100">
       <div class="flex items-center gap-2">
-        <span class="text-lg">🎉</span>
+        <span class="text-lg"><Icon name="party" size={20} /></span>
         <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">2. Resepsi Pernikahan</h4>
       </div>
       {#if akadIsoDate && resepsiIsoDate !== akadIsoDate}
@@ -168,7 +169,7 @@
           class="text-xs text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer"
           onclick={copyAkadDateToResepsi}
         >
-          ⚡ Samakan Tanggal Akad
+          <Icon name="zap" size={14} /> Samakan Tanggal Akad
         </button>
       {/if}
     </div>
@@ -238,16 +239,16 @@
   <div class="card-subGroup" style="border: 1.5px solid #f59e0b;">
     <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-amber-100">
       <div class="flex items-center gap-2">
-        <span class="text-lg">📍</span>
+        <span class="text-lg"><Icon name="pin" size={20} /></span>
         <h4 style="margin: 0; font-size: 1.1rem; color: #92400e;">3. Alamat Lengkap &amp; Google Maps</h4>
       </div>
       {#if config.maps_url}
         <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <span>✓</span> Google Maps Terpasang
+          <Icon name="check" size={14} /> Google Maps Terpasang
         </span>
       {:else}
         <span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
-          ⚠️ Wajib Diisi untuk Tamu
+          <Icon name="alert" size={14} /> Wajib Diisi untuk Tamu
         </span>
       {/if}
     </div>
@@ -275,7 +276,7 @@
             rel="noopener noreferrer"
             class="text-xs text-rose-700 hover:text-rose-900 underline font-normal"
           >
-            🗺️ Buka Google Maps
+            <Icon name="map" size={15} /> Buka Google Maps
           </a>
         </div>
         <div class="flex items-center gap-2">
@@ -294,7 +295,7 @@
               class="ghost-btn-sm shrink-0"
               style="padding: 10px 14px; text-decoration: none;"
             >
-              🧭 Uji Link
+              <Icon name="compass" size={15} /> Uji Link
             </a>
           {/if}
         </div>

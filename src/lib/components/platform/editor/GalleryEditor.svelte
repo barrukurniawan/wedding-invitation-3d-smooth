@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { WeddingConfig } from '$lib/api-client'
 import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
   import { prepareImageUpload } from '$lib/utils/prepareImageUpload'
@@ -170,7 +171,7 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
             disabled={uploadingCover}
             onclick={() => coverInputEl?.click()}
           >
-            🔄 Ganti Foto
+            <Icon name="refresh" size={15} /> Ganti Foto
           </button>
           <button
             type="button"
@@ -178,7 +179,7 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
             disabled={deletingUrl === config.wedding_photo}
             onclick={removeCover}
           >
-            🗑 Hapus
+            <Icon name="trash" size={15} /> Hapus
           </button>
         </div>
       </div>
@@ -198,7 +199,7 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
           <span>Mengunggah... {coverProgress}%</span>
           <div class="progress-bar"><div class="progress-fill" style="width:{coverProgress}%"></div></div>
         {:else}
-          <span class="upload-icon">🖼</span>
+          <span class="upload-icon"><Icon name="gallery" size={30} /></span>
           <span class="upload-hint">Klik untuk pilih foto utama pasangan</span>
            <span class="upload-sub">JPG, PNG, atau WebP · Otomatis dioptimalkan hingga 2 MB</span>
         {/if}
@@ -263,10 +264,10 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
           <span>Mengunggah... {galleryProgress}%</span>
           <div class="progress-bar"><div class="progress-fill" style="width:{galleryProgress}%"></div></div>
         {:else if isDragging}
-          <span class="upload-icon">📂</span>
+          <span class="upload-icon"><Icon name="folder" size={30} /></span>
           <span>Lepaskan untuk mengunggah!</span>
         {:else}
-          <span class="upload-icon">📷</span>
+          <span class="upload-icon"><Icon name="camera" size={30} /></span>
           <span class="upload-hint">Seret &amp; lepas foto di sini, atau <u>klik untuk pilih</u></span>
            <span class="upload-sub">Bisa pilih banyak sekaligus · JPG, PNG, WebP · Otomatis dioptimalkan hingga 2 MB</span>
         {/if}
@@ -300,7 +301,7 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
               disabled={deletingUrl === photo}
               onclick={() => removeGalleryPhoto(photo)}
             >
-              {deletingUrl === photo ? '…' : '✕'}
+              {#if deletingUrl === photo}…{:else}<Icon name="close" size={14} />{/if}
             </button>
           </div>
         </div>

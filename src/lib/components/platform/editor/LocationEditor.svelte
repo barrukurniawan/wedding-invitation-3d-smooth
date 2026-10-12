@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { WeddingConfig } from '$lib/api-client'
 
   let { config = $bindable() }: { config: WeddingConfig } = $props()
@@ -15,11 +16,11 @@
 
     {#if config.maps_url}
       <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-full flex items-center gap-1 shadow-xs">
-        <span>✓</span> Link Maps Siap
+        <Icon name="check" size={14} /> Link Maps Siap
       </span>
     {:else}
       <span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full flex items-center gap-1 shadow-xs">
-        <span>⚠️</span> Wajib Diisi
+        <Icon name="alert" size={14} /> Wajib Diisi
       </span>
     {/if}
   </div>
@@ -53,7 +54,7 @@
             rel="noopener noreferrer"
             class="text-xs font-semibold text-rose-700 hover:text-rose-900 underline flex items-center gap-1"
           >
-            <span>🗺️</span> Cari di Google Maps
+            <Icon name="map" size={15} /> Cari di Google Maps
           </a>
         </div>
         <div class="flex items-center gap-2">
@@ -70,12 +71,12 @@
               rel="noopener noreferrer"
               class="px-3 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-semibold border border-stone-300 shrink-0 transition flex items-center gap-1"
             >
-              <span>🧭</span> Uji Link
+              <Icon name="compass" size={15} /> Uji Link
             </a>
           {/if}
         </div>
         <div class="p-3 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-stone-600 mt-1">
-          <p class="font-semibold text-amber-900 mb-1">💡 Cara mudah mengambil link Google Maps:</p>
+          <p class="font-semibold text-amber-900 mb-1"><Icon name="tip" size={15} /> Cara mudah mengambil link Google Maps:</p>
           <ol class="list-decimal list-inside space-y-0.5 text-stone-600 text-[11.5px]">
             <li>Buka <strong>Google Maps</strong> di HP atau Komputer Anda.</li>
             <li>Cari nama gedung / tempat pernikahan Anda.</li>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/icons/Icon.svelte'
   import type { GuestbookEntry, GuestbookStats, OwnerInvitation } from '$lib/api-client'
 
   type Props = {
@@ -52,7 +53,7 @@
       <div class="generated-url-box" style="padding: 12px; background: rgba(0,0,0,0.02); border: 1px dashed var(--accent-deep); border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
         <code style="font-size: 0.85rem; color: var(--text-dark); word-break: break-all;">{generatedUrl}</code>
         <button type="button" class="ghost-btn-sm" onclick={copyGuestLink} style="white-space: nowrap; margin-left: 12px;">
-          {copiedUrl ? '✓ Tersalin' : '📋 Salin'}
+          {#if copiedUrl}<Icon name="check" size={15} /> Tersalin{:else}<Icon name="copy" size={15} /> Salin{/if}
         </button>
       </div>
     {/if}
