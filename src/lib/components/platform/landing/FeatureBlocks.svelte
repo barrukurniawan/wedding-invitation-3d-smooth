@@ -130,7 +130,7 @@
               </figure>
             {:else if b.frame === 'phone'}
               <figure class="phone">
-                <span class="notch"></span>
+                <span class="statusbar" aria-hidden="true"><b>9:41</b><span class="notch"></span><span class="sb-icons"><i class="sig"></i><i class="bat"></i></span></span>
                 <img src={b.img} alt={b.imgAlt} loading="lazy" decoding="async" />
               </figure>
             {:else if b.frame === 'pair'}
@@ -297,23 +297,13 @@
     background: #1d1618;
     box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.55);
   }
-  .phone .notch {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    width: 36%;
-    height: 16px;
-    border-radius: 999px;
-    background: #1d1618;
-    transform: translateX(-50%);
-    z-index: 1;
-  }
   .phone img {
     display: block;
     width: 100%;
     aspect-ratio: 496 / 768;
     object-fit: cover;
-    border-radius: 26px;
+    object-position: top;
+    border-radius: 0 0 26px 26px;
   }
   .pair {
     position: relative;
@@ -375,5 +365,54 @@
       transform: none;
       transition: none;
     }
+  }
+
+  /* Status bar ala iPhone: notch berada di strip ini, jadi isi layar (nama pasangan) tidak tertutup. */
+  .phone {
+    display: flex;
+    flex-direction: column;
+    container-type: inline-size;
+  }
+  .phone .statusbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    aspect-ratio: 496 / 58;
+    padding: 0 7cqw;
+    background: #fbf8f4;
+    color: #1d1618;
+    font: 700 4.4cqw/1 -apple-system, 'SF Pro Text', 'Outfit', sans-serif;
+  }
+  .phone .statusbar .notch {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30%;
+    height: 62%;
+    border-radius: 999px;
+    background: #1d1618;
+    transform: translate(-50%, -50%);
+  }
+  .sb-icons {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+  }
+  .sb-icons .sig {
+    width: 4.6cqw;
+    height: 3cqw;
+    background: linear-gradient(90deg, #1d1618 0 18%, transparent 18% 27%, #1d1618 27% 45%, transparent 45% 54%, #1d1618 54% 72%, transparent 72% 81%, #1d1618 81%);
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+  .sb-icons .bat {
+    width: 6cqw;
+    height: 3cqw;
+    border: 0.5cqw solid #1d1618;
+    border-radius: 1cqw;
+    background: linear-gradient(90deg, #1d1618 0 70%, transparent 70%);
+    background-clip: content-box;
+    padding: 0.4cqw;
   }
 </style>

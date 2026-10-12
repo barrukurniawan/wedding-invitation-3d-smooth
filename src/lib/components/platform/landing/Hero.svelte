@@ -75,13 +75,19 @@
       {/if}
     </figure>
     <figure class="phone">
-      <span class="notch"></span>
+      <span class="statusbar" aria-hidden="true"><b>9:41</b><span class="notch"></span><span class="sb-icons"><i class="sig"></i><i class="bat"></i></span></span>
       <img src="/media/features/mobile-3d.webp" alt="" loading="lazy" decoding="async" />
     </figure>
     {#each callouts as c (c.pos)}
       <span class="callout {c.pos}"><i>{c.icon}</i>{c.text}</span>
     {/each}
   </div>
+  <!-- Di layar HP keterangan tampil di bawah gambar supaya tidak menutupi video/mockup. -->
+  <ul class="callout-list" aria-label="Fitur utama">
+    {#each callouts as c (c.pos)}
+      <li><i>{c.icon}</i>{c.text}</li>
+    {/each}
+  </ul>
 </section>
 
 <style>
@@ -217,23 +223,13 @@
     box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.6);
     transform: rotate(3deg);
   }
-  .phone .notch {
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    width: 36%;
-    height: 14px;
-    border-radius: 999px;
-    background: #1d1618;
-    transform: translateX(-50%);
-    z-index: 1;
-  }
   .phone img {
     display: block;
     width: 100%;
     aspect-ratio: 496 / 768;
     object-fit: cover;
-    border-radius: 20px;
+    object-position: top;
+    border-radius: 0 0 20px 20px;
   }
   .callout {
     position: absolute;
@@ -304,6 +300,48 @@
       left: 0;
     }
   }
+  .callout-list {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .callout {
+      display: none;
+    }
+    .visual {
+      margin-bottom: 34px;
+    }
+    .callout-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .callout-list li {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px 8px 9px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid rgba(143, 29, 69, 0.1);
+      box-shadow: 0 10px 24px -16px rgba(80, 44, 53, 0.5);
+      color: var(--lp-ink);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .callout-list i {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--lp-blush);
+      font-style: normal;
+      font-size: 0.8rem;
+    }
+  }
   @media (max-width: 480px) {
     .callout {
       font-size: 0.74rem;
@@ -319,5 +357,54 @@
     .callout {
       animation: none;
     }
+  }
+
+  /* Status bar ala iPhone: notch berada di strip ini, jadi isi layar (nama pasangan) tidak tertutup. */
+  .phone {
+    display: flex;
+    flex-direction: column;
+    container-type: inline-size;
+  }
+  .phone .statusbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    aspect-ratio: 496 / 58;
+    padding: 0 7cqw;
+    background: #fbf8f4;
+    color: #1d1618;
+    font: 700 4.4cqw/1 -apple-system, 'SF Pro Text', 'Outfit', sans-serif;
+  }
+  .phone .statusbar .notch {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30%;
+    height: 62%;
+    border-radius: 999px;
+    background: #1d1618;
+    transform: translate(-50%, -50%);
+  }
+  .sb-icons {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+  }
+  .sb-icons .sig {
+    width: 4.6cqw;
+    height: 3cqw;
+    background: linear-gradient(90deg, #1d1618 0 18%, transparent 18% 27%, #1d1618 27% 45%, transparent 45% 54%, #1d1618 54% 72%, transparent 72% 81%, #1d1618 81%);
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+  .sb-icons .bat {
+    width: 6cqw;
+    height: 3cqw;
+    border: 0.5cqw solid #1d1618;
+    border-radius: 1cqw;
+    background: linear-gradient(90deg, #1d1618 0 70%, transparent 70%);
+    background-clip: content-box;
+    padding: 0.4cqw;
   }
 </style>
