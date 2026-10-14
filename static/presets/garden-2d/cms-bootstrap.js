@@ -248,7 +248,7 @@
       const titleCard = $('.title-card');
       if (coverImg && a.cover) {
         // Kartu contoh lama (berisi nama "Faris & Eliza") diganti kartu kosong + nama asli.
-        const cover = a.cover.includes('assets/wedding-card.') ? toCdn('assets/wedding-card-blank.webp') : a.cover;
+        const cover = a.cover.includes('assets/wedding-card.') ? toCdn(a.coverBlank || 'assets/wedding-card-blank.webp') : a.cover;
         if (cover.startsWith('http') && cover.includes('cdn.jsdelivr.net')) coverImg.crossOrigin = 'anonymous';
         if (coverImg.getAttribute('src') !== cover) coverImg.src = cover;
         coverImg.alt = 'Kartu pernikahan ' + name;
@@ -285,8 +285,29 @@
     }
   }
 
+  // Aset per gaya busana. Harus sinkron dengan server/services/characterStyles.js.
+  const STYLE_ASSETS = {
+    hijab: {
+      couple: 'assets/mempelai.webp',
+      guests: 'assets/wedding-guests-v2.webp',
+      seated: 'assets/seated-guests.webp',
+      hosts: 'assets/wedding-hosts.webp',
+      coverBlank: 'assets/wedding-card-blank.webp',
+      ceremonyBackground: 'assets/ceremony-background.png',
+    },
+    umum: {
+      couple: 'assets/mempelai-umum.webp',
+      guests: 'assets/wedding-guests-umum.webp',
+      seated: 'assets/seated-guests-umum.webp',
+      hosts: 'assets/wedding-hosts-umum.webp',
+      coverBlank: 'assets/wedding-card-blank-umum.webp',
+      ceremonyBackground: 'assets/ceremony-background-umum.webp',
+    },
+  };
+
   function transformMarryMeConfig(c) {
     if (!c) return null;
+    const style = STYLE_ASSETS[c.character_style] || STYLE_ASSETS.hijab;
     return {
       demo: false,
       profile: {
@@ -299,14 +320,15 @@
         cover: c.wedding_photo || 'assets/wedding-card.webp',
         map: 'assets/garden.webp',
         gate: 'assets/front-gate.webp',
-        couple: 'assets/mempelai.webp',
+        couple: style.couple,
+        coverBlank: style.coverBlank,
         pianistIdle: 'assets/pianist-idle.webp',
         pianistPlaying: 'assets/pianist.webp',
         singerIdle: 'assets/singer-idle.webp',
         singerPlaying: 'assets/singer.webp',
-        guests: 'assets/wedding-guests-v2.webp',
-        seated: 'assets/seated-guests.webp',
-        hosts: 'assets/wedding-hosts.webp',
+        guests: style.guests,
+        seated: style.seated,
+        hosts: style.hosts,
         music: c.bgm_url || 'assets/wedding-song-complete.m4a',
         click: 'assets/button-pop.mp3',
       },
@@ -324,6 +346,7 @@
           y: 0.27,
           description: '',
           fields: [],
+          ceremonyBackground: style.ceremonyBackground,
           events: [
             {
               title: 'Akad Nikah',
