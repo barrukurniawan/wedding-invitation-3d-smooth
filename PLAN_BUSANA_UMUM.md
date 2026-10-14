@@ -1,6 +1,6 @@
 # Rencana: Pilihan Busana "Berhijab / Umum" untuk Preset 2D
 
-Status: **rencana (2026-10-14), belum ada kode.** Branch `busana_umum` (dari `new_staging`).
+Status: **dikerjakan (2026-10-14), menunggu uji lokal.** Branch `busana_umum` (dari `new_staging`).
 
 ## Latar belakang
 Semua karakter wanita di preset 2D (pengantin, penerima tamu, sebagian tamu, karakter "Woman") berhijab
@@ -46,16 +46,19 @@ Sebelum lanjut ke langkah B, hasilnya saya tunjukkan dulu dalam bentuk gambar pe
 ## B. Data: migrasi 018
 `018_character_style.sql` (idempoten seperti 015), juga ditambahkan ke `server/scripts/migrate.js`:
 ```sql
-ALTER TABLE wedding_configs ADD COLUMN character_style VARCHAR(16) NOT NULL DEFAULT 'hijab'
+ALTER TABLE wedding_configs ADD COLUMN character_style VARCHAR(16) NOT NULL DEFAULT 'hijab'  -- isi baris lama
+ALTER TABLE wedding_configs ALTER COLUMN character_style SET DEFAULT 'umum'                 -- undangan baru
 ```
-Nilai: `hijab` (default, semua undangan lama **tidak berubah**) | `umum`.
+Nilai: `umum` | `hijab`. Keputusan (2026-10-14): **undangan baru default Umum**, karena belum tentu
+semua pasangan berhijab. **Undangan yang sudah ada tetap Berhijab** (tampilan yang sudah dilihat tamu tidak
+berubah tiba-tiba). Fallback di kode untuk nilai kosong/tidak dikenal juga `umum`.
 
 ## C. Server
 - `server/services/characterStyles.js`: daftar `['hijab','umum']` + `normalizeCharacterStyle()` +
   peta aset per gaya (satu sumber kebenaran).
 - `routes/config.js`: kirim `character_style`.
 - `routes/tenant-config.js`: zod enum + masuk daftar allowed fields (bisa diubah lewat `PATCH /api/my/config`).
-- `routes/invitations.js`: opsional saat membuat undangan (default `hijab`).
+- `routes/invitations.js`: tidak diubah; undangan baru otomatis `umum` dari default kolom.
 - `routes/multiplayer.js` (`/content`): `assets.couple/hosts/guests/seated` mengikuti gaya.
 - `src/lib/api-client.ts`: tipe `CharacterStyle = 'hijab' | 'umum'` di config.
 
@@ -72,13 +75,13 @@ Nilai: `hijab` (default, semua undangan lama **tidak berubah**) | `umum`.
 - Tab **Pengaturan** → bagian "Tampilan 2D" (hanya tampil untuk preset 2D): kartu pilihan
   **Gaya busana karakter**, berisi "Berhijab" dan "Umum (tanpa hijab)" dengan thumbnail pengantin
   masing-masing. Polanya sama dengan pemilih venue 3D (simpan langsung + pesan "✓ … · Lihat undangan ↗").
-- Onboarding: tidak diubah (default berhijab; bisa diganti kapan saja di Pengaturan). Bisa ditambah
+- Onboarding: tidak diubah (default Umum; bisa diganti kapan saja di Pengaturan). Bisa ditambah
   nanti kalau perlu.
 - Thumbnail: `static/media/busana/hijab.webp` dan `umum.webp` (crop frame pertama pengantin).
 
 ## F. Uji lokal
 1. `npm --prefix server run migrate` di DB lokal, lalu `npm run dev` + `npm run dev:server`.
-2. Undangan 2D lokal (mis. `kia-toni.localhost:5173`): default tetap berhijab.
+2. Undangan 2D lama di lokal (mis. `lalamudi.localhost:5173`) tetap berhijab; undangan 2D baru langsung Umum.
 3. Ganti ke "Umum" di Pengaturan, buka ulang undangan: pengantin, penerima tamu, tamu berdiri, dan
    tamu duduk berubah; posisi dan ukuran sama; animasi pengantin halus; tidak ada kilasan gambar lama.
 4. Kembali ke "Berhijab": semua kembali seperti semula.

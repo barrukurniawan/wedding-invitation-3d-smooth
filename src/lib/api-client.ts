@@ -170,7 +170,7 @@ export const defaultConfig: WeddingConfig = {
   bgm_title: 'Marry You',
   preset: '3d_summer',
   venue: 'garden',
-  character_style: 'hijab',
+  character_style: 'umum',
   updated_at: '',
 }
 

@@ -285,12 +285,12 @@
   let styleMsg = $state('')
 
   const characterStyleOptions: { id: CharacterStyle; label: string; thumbnail: string }[] = [
-    { id: 'hijab', label: 'Berhijab', thumbnail: '/media/busana/hijab.webp' },
     { id: 'umum', label: 'Umum (tanpa hijab)', thumbnail: '/media/busana/umum.webp' },
+    { id: 'hijab', label: 'Berhijab', thumbnail: '/media/busana/hijab.webp' },
   ]
 
   async function switchCharacterStyle(id: CharacterStyle) {
-    if (!myConfig || (myConfig.character_style ?? 'hijab') === id) return
+    if (!myConfig || (myConfig.character_style ?? 'umum') === id) return
     const previous = myConfig.character_style
     myConfig.character_style = id
     styleMsg = 'Menyimpan...'
@@ -862,7 +862,7 @@
                 <p class="tema-hint">Berlaku untuk pengantin, penerima tamu, tamu, dan latar Akad &amp; Resepsi.</p>
                 <div class="tema-grid" role="radiogroup" aria-label="Pilih gaya busana karakter">
                   {#each characterStyleOptions as option (option.id)}
-                    {@const active = (myConfig?.character_style ?? 'hijab') === option.id}
+                    {@const active = (myConfig?.character_style ?? 'umum') === option.id}
                     <button
                       type="button"
                       role="radio"

@@ -1,7 +1,8 @@
 // Gaya busana karakter preset 2D (garden-2d). Harus sinkron dengan cms-bootstrap.js
 // (STYLE_ASSETS) dan tipe CharacterStyle di src/lib/api-client.ts.
 export const CHARACTER_STYLES = ['hijab', 'umum']
-export const DEFAULT_CHARACTER_STYLE = 'hijab'
+// Default undangan baru (kolom DB default 'umum'); undangan lama diset 'hijab' oleh migrasi 018.
+export const DEFAULT_CHARACTER_STYLE = 'umum'
 
 // Nilai kosong/tidak dikenal (data lama, typo) selalu jatuh ke gaya default.
 export function normalizeCharacterStyle(value) {

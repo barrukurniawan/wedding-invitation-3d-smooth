@@ -307,7 +307,7 @@
 
   function transformMarryMeConfig(c) {
     if (!c) return null;
-    const style = STYLE_ASSETS[c.character_style] || STYLE_ASSETS.hijab;
+    const style = STYLE_ASSETS[c.character_style] || STYLE_ASSETS.umum;
     return {
       demo: false,
       profile: {

@@ -16,3 +16,6 @@ SET @preparedStatement = (SELECT IF(
 PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;
 DEALLOCATE PREPARE alterIfNotExists;
+
+-- Baris yang sudah ada tetap 'hijab' (tampilan lama tidak berubah); undangan BARU default 'umum'.
+ALTER TABLE wedding_configs ALTER COLUMN character_style SET DEFAULT 'umum';

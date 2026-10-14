@@ -12,16 +12,16 @@ import {
 
 const presetDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../static/presets/garden-2d')
 
-test('default character style is hijab (existing invitations unchanged)', () => {
-  assert.equal(DEFAULT_CHARACTER_STYLE, 'hijab')
+test('default character style for new invitations is umum', () => {
+  assert.equal(DEFAULT_CHARACTER_STYLE, 'umum')
   assert.ok(CHARACTER_STYLES.includes(DEFAULT_CHARACTER_STYLE))
 })
 
 test('normalizeCharacterStyle keeps known styles and falls back otherwise', () => {
   assert.equal(normalizeCharacterStyle('umum'), 'umum')
   assert.equal(normalizeCharacterStyle('hijab'), 'hijab')
-  for (const value of [undefined, null, '', 'UMUM', 'casual', 1]) {
-    assert.equal(normalizeCharacterStyle(value), 'hijab')
+  for (const value of [undefined, null, '', 'HIJAB', 'casual', 1]) {
+    assert.equal(normalizeCharacterStyle(value), 'umum')
   }
 })
 
