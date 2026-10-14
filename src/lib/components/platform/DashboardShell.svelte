@@ -22,6 +22,7 @@
     type OwnerInvitation,
     type UserAccount,
     type WeddingConfig,
+    type CharacterStyle,
   } from '$lib/api-client'
   import BrideGroomEditor from './editor/BrideGroomEditor.svelte'
   import EventDetailsEditor from './editor/EventDetailsEditor.svelte'
@@ -281,6 +282,27 @@
   }
 
   let venueMsg = $state('')
+  let styleMsg = $state('')
+
+  const characterStyleOptions: { id: CharacterStyle; label: string; thumbnail: string }[] = [
+    { id: 'hijab', label: 'Berhijab', thumbnail: '/media/busana/hijab.webp' },
+    { id: 'umum', label: 'Umum (tanpa hijab)', thumbnail: '/media/busana/umum.webp' },
+  ]
+
+  async function switchCharacterStyle(id: CharacterStyle) {
+    if (!myConfig || (myConfig.character_style ?? 'hijab') === id) return
+    const previous = myConfig.character_style
+    myConfig.character_style = id
+    styleMsg = 'Menyimpan...'
+    await saveConfig()
+    if (configSavedMsg.startsWith('Gagal')) {
+      if (myConfig) myConfig.character_style = previous
+      styleMsg = configSavedMsg
+    } else {
+      styleMsg = `✓ Gaya busana diganti ke ${characterStyleOptions.find((o) => o.id === id)?.label}`
+      setTimeout(() => (styleMsg = ''), 3500)
+    }
+  }
 
   async function switchVenue(id: VenueId) {
     if (!myConfig || (myConfig.venue ?? 'garden') === id) return
@@ -833,6 +855,31 @@
                     <span class="tema-card-foot">Pixel Garden<span class="tema-check"><Icon name="check" size={18} /></span></span>
                   </div>
                 </div>
+              </section>
+
+              <section class="tema-section">
+                <h4 class="tema-label">Gaya busana karakter</h4>
+                <p class="tema-hint">Berlaku untuk pengantin, penerima tamu, tamu, dan latar Akad &amp; Resepsi.</p>
+                <div class="tema-grid" role="radiogroup" aria-label="Pilih gaya busana karakter">
+                  {#each characterStyleOptions as option (option.id)}
+                    {@const active = (myConfig?.character_style ?? 'hijab') === option.id}
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      class="tema-card tema-card--busana"
+                      class:active
+                      disabled={savingConfig}
+                      onclick={() => switchCharacterStyle(option.id)}
+                    >
+                      <img src={option.thumbnail} alt="" loading="lazy" />
+                      <span class="tema-card-foot">{option.label}{#if active}<span class="tema-check"><Icon name="check" size={18} /></span>{/if}</span>
+                    </button>
+                  {/each}
+                </div>
+                {#if styleMsg}
+                  <p class="venue-switch-msg">{styleMsg} {#if styleMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
+                {/if}
               </section>
             {/if}
 
