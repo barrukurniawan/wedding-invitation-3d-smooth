@@ -1,3 +1,6 @@
+/** Gaya busana karakter preset 2D. Sinkron dengan server/services/characterStyles.js. */
+export type CharacterStyle = 'hijab' | 'umum'
+
 export interface WeddingConfig {
   id: number
   bride_name: string
@@ -24,6 +27,7 @@ export interface WeddingConfig {
   bgm_title?: string
   preset?: '3d_summer' | '2d_garden'
   venue?: VenueId
+  character_style?: CharacterStyle
   /** Base URL CDN aset (jsDelivr) dari server; null/undefined = pakai server sendiri. */
   asset_cdn?: string | null
   /** Alamat kirim hadiah (dashboard pemilik; semua opsional). */
@@ -166,6 +170,7 @@ export const defaultConfig: WeddingConfig = {
   bgm_title: 'Marry You',
   preset: '3d_summer',
   venue: 'garden',
+  character_style: 'hijab',
   updated_at: '',
 }
 

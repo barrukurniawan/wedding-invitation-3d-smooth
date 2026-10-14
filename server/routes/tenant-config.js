@@ -5,6 +5,7 @@ import pool from '../db.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { VENUE_IDS, normalizeVenue } from '../services/venues.js'
+import { CHARACTER_STYLES, normalizeCharacterStyle } from '../services/characterStyles.js'
 
 const router = Router()
 
@@ -43,6 +44,7 @@ const configSchema = z.object({
   bgm_title: text(255),
   preset: z.enum(['3d_summer', '2d_garden']),
   venue: z.enum(VENUE_IDS),
+  character_style: z.enum(CHARACTER_STYLES),
   gift_recipient: text(255),
   gift_address: text(1000),
   gift_phone: z.union([z.string().trim().max(32).regex(/^[0-9+\-\s()]*$/, 'No. HP penerima tidak valid.'), z.null()]),
@@ -82,6 +84,7 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'bgm_title',
   'preset',
   'venue',
+  'character_style',
   'gift_recipient',
   'gift_address',
   'gift_phone',
@@ -93,6 +96,7 @@ function serializeConfig(config) {
   const result = normalizeMusicConfig(config)
   result.id = Number(result.invitation_id || result.id)
   result.venue = normalizeVenue(result.venue)
+  result.character_style = normalizeCharacterStyle(result.character_style)
   result.gift_phone_public = Number(result.gift_phone_public) === 1
   result.gallery_photos = typeof result.gallery_photos === 'string'
     ? JSON.parse(result.gallery_photos)

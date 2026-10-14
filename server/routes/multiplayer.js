@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import pool from '../db.js'
 import { assetCdnBase } from '../services/assetCdn.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
+import { characterStyleAssets } from '../services/characterStyles.js'
 
 const router = express.Router()
 
@@ -305,7 +306,8 @@ router.get(['/content', '/api/content'], async (req, res) => {
                 wc.akad_date, wc.akad_time, wc.akad_location, wc.resepsi_date, wc.resepsi_time,
                 wc.resepsi_location, wc.bank_name, wc.bank_account, wc.bank_holder, wc.maps_url,
                 wc.venue_address, wc.gallery_photos, wc.quote, wc.bgm_url,
-                wc.gift_recipient, wc.gift_address, wc.gift_phone, wc.gift_phone_public, wc.gift_note
+                wc.gift_recipient, wc.gift_address, wc.gift_phone, wc.gift_phone_public, wc.gift_note,
+                wc.character_style
          FROM invitations i
          LEFT JOIN wedding_configs wc ON wc.invitation_id = i.id
          WHERE i.slug = ? AND i.deleted_at IS NULL
@@ -316,6 +318,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
       if (invRows && invRows.length > 0) {
         const c = invRows[0]
         const gift = publicGiftShipping(c)
+        const style = characterStyleAssets(c.character_style)
         let gallery = []
         try {
           gallery = typeof c.gallery_photos === 'string' ? JSON.parse(c.gallery_photos) : (c.gallery_photos || [])
@@ -335,14 +338,15 @@ router.get(['/content', '/api/content'], async (req, res) => {
             cover: c.wedding_photo || 'assets/wedding-card.webp',
             map: 'assets/garden.webp',
             gate: 'assets/front-gate.webp',
-            couple: 'assets/mempelai.webp',
+            couple: style.couple,
+            coverBlank: style.coverBlank,
             pianistIdle: 'assets/pianist-idle.webp',
             pianistPlaying: 'assets/pianist.webp',
             singerIdle: 'assets/singer-idle.webp',
             singerPlaying: 'assets/singer.webp',
-            guests: 'assets/wedding-guests-v2.webp',
-            seated: 'assets/seated-guests.webp',
-            hosts: 'assets/wedding-hosts.webp',
+            guests: style.guests,
+            seated: style.seated,
+            hosts: style.hosts,
             music: c.bgm_url || 'assets/wedding-song-complete.m4a',
             click: 'assets/button-pop.mp3',
           },
@@ -360,6 +364,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
               y: 0.27,
               description: '',
               fields: [],
+              ceremonyBackground: style.ceremonyBackground,
               events: [
                 {
                   title: 'Akad Nikah',

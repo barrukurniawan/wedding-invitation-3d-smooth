@@ -3,6 +3,7 @@ import { assetCdnBase } from '../services/assetCdn.js'
 import pool from '../db.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { normalizeVenue } from '../services/venues.js'
+import { normalizeCharacterStyle } from '../services/characterStyles.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
 
 const router = Router()
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
       `SELECT invitation_id AS id, bride_name, groom_name, bride_parents, groom_parents, wedding_photo,
         wedding_date, akad_date, akad_time, akad_location, resepsi_date, resepsi_time,
         resepsi_location, qris_image, bank_name, bank_account, bank_holder, maps_url,
-         venue_address, gallery_photos, quote, bgm_url, bgm_title, preset, venue,
+         venue_address, gallery_photos, quote, bgm_url, bgm_title, preset, venue, character_style,
          gift_recipient, gift_address, gift_phone, gift_phone_public, gift_note, updated_at
        FROM wedding_configs WHERE invitation_id = ?`,
       [req.invitation.id],
@@ -25,6 +26,7 @@ router.get('/', async (req, res) => {
     row.slug = req.invitation?.slug || ''
     row.preset = row.preset || '3d_summer'
     row.venue = normalizeVenue(row.venue)
+    row.character_style = normalizeCharacterStyle(row.character_style)
     row.gallery_photos = typeof row.gallery_photos === 'string' ? JSON.parse(row.gallery_photos) : row.gallery_photos
     row.wedding_date = row.wedding_date ? String(row.wedding_date).replace(' ', 'T') : ''
     row.bgm_url ||= '/audio/Marry%20You.mp3'
