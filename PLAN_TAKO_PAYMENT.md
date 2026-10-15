@@ -1,6 +1,6 @@
 # Rencana: Pembayaran Otomatis lewat Tako (alternatif Midtrans)
 
-Status: **rencana (2026-10-15), belum ada kode.** Branch `tako_payment` (dari `new_staging`).
+Status: **dikerjakan (2026-10-15), lolos uji lokal dengan Tako tiruan; menunggu uji bayar asli.** Branch `tako_payment` (dari `new_staging`).
 
 ## Latar belakang
 Midtrans belum disetujui. Sekarang pemilik undangan membayar manual (transfer → unggah bukti → admin
@@ -63,7 +63,7 @@ Tabel `payments` sudah mendukung banyak provider:
 - Env baru (`server/.env.docker`): `PAYMENT_MODE=tako`, `TAKO_API_KEY`, `TAKO_CALLBACK_SECRET`,
   `TAKO_USERNAME=marryme`. Kosong = fitur mati, alur manual tetap jalan.
 
-## D. Status undangan setelah bayar (perlu keputusan)
+## D. Status undangan setelah bayar (keputusan: langsung aktif)
 1. **Langsung aktif** (disarankan): tanda tangan + cek ulang ke API Tako sudah cukup kuat. Pasangan langsung bisa
    menyebar undangan, dan admin tetap melihat riwayatnya.
 2. **Menunggu verifikasi admin**: sama seperti alur Midtrans sekarang (`pending_verification`), lebih hati-hati
