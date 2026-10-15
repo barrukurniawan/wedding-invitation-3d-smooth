@@ -3,8 +3,8 @@
 
 Sumber: assets/media-source/garden-2d-umum/*.jpeg (hasil generate, latar putih).
 Hasil:  static/presets/garden-2d/assets/{mempelai,wedding-hosts,wedding-guests,seated-guests,
-        ceremony-background,wedding-card-blank}-umum.webp + static/media/busana/{hijab,umum}.webp
-        (thumbnail dashboard).
+        ceremony-background,wedding-card-blank}-umum.webp, woman-atlas-umum.png (karakter Woman),
+        + static/media/busana/{hijab,umum}.webp (thumbnail dashboard).
 
 Setiap sosok ditempatkan di kanvas dan kotak crop yang sama dengan aset lama (hostCrops,
 gardenGuests[].crop, seatedCrops di game.js; kanvas 393x370 untuk pengantin), jadi game.js
@@ -256,6 +256,104 @@ def build_card():
     webp(img.resize((800, 1117), Image.LANCZOS, box=box), OUT / 'wedding-card-blank-umum.webp')
 
 
+# Atlas karakter "Woman" (game.js): 8 baris arah x 8 kolom (kolom 0 idle, 1-7 jalan), sel 68 px,
+# digambar dengan jangkar (34, 57). Atlas lama: tinggi idle 46 px (baris 11-56), tengah kolom 34.
+WOMAN_DIRS = ['east', 'south-east', 'south', 'south-west', 'west', 'north-west', 'north', 'north-east']
+WOMAN_SOURCES = {'east': 'timur', 'south-east': 'tenggara', 'south': 'selatan', 'north': 'utara', 'north-east': 'timur-laut'}
+WOMAN_MIRROR = {'west': 'east', 'south-west': 'south-east', 'north-west': 'north-east'}
+CELL, WALK_FRAMES, IDLE_HEIGHT, FOOT_ROW = 68, 7, 46, 56
+
+
+def strip_frames(rgba, min_gap=12, min_width=40):
+    """Potong strip horizontal per frame berdasarkan kolom kosong. Serpihan sempit digabung ke tetangga."""
+    cols = (rgba[..., 3] > 0).sum(0) > 2
+    runs, start, gap = [], None, 0
+    for x, filled in enumerate(cols):
+        if filled:
+            if start is None:
+                start = x
+            gap = 0
+        elif start is not None:
+            gap += 1
+            if gap >= min_gap:
+                runs.append([start, x - gap + 1])
+                start, gap = None, 0
+    if start is not None:
+        runs.append([start, len(cols)])
+    merged = []
+    for r in runs:
+        if merged and (r[1] - r[0] < min_width or merged[-1][1] - merged[-1][0] < min_width):
+            merged[-1][1] = r[1]
+        else:
+            merged.append(r)
+    frames = []
+    for x0, x1 in merged:
+        part = rgba[:, x0:x1]
+        ys = np.nonzero(part[..., 3].any(1))[0]
+        frames.append(Image.fromarray(part[ys.min():ys.max() + 1].copy(), 'RGBA'))
+    return frames
+
+
+def place_in_cell(img):
+    """Rata bawah di FOOT_ROW, tengah kepala (30% baris teratas) di kolom 34."""
+    a = np.asarray(img)[..., 3] > 0
+    head = np.nonzero(a[: max(1, int(img.height * 0.3))].any(0))[0]
+    cx = (head.min() + head.max() + 1) / 2
+    cell = Image.new('RGBA', (CELL, CELL))
+    cell.alpha_composite(img, (round(CELL / 2 - cx), FOOT_ROW + 1 - img.height))
+    return cell
+
+
+def build_woman():
+    rows = {}
+    for direction, name in WOMAN_SOURCES.items():
+        frames = strip_frames(cutout(SRC / 'karakter-jalan' / f'{name}.jpeg'))
+        idle, walk = frames[0], frames[1:]
+        assert len(walk) >= WALK_FRAMES, f'{name}: hanya {len(walk)} frame jalan'
+        # Siklus jalan sumber bisa 7-9 frame: ambil 7 yang tersebar merata supaya loop tetap mulus.
+        picks = [walk[int(k * len(walk) / WALK_FRAMES)] for k in range(WALK_FRAMES)]
+        factor = IDLE_HEIGHT / idle.height
+        rows[direction] = [place_in_cell(scale_box(f, factor)) for f in [idle, *picks]]
+    for direction, source in WOMAN_MIRROR.items():
+        rows[direction] = [c.transpose(Image.FLIP_LEFT_RIGHT) for c in rows[source]]
+    atlas = Image.new('RGBA', (CELL * (WALK_FRAMES + 1), CELL * len(WOMAN_DIRS)))
+    for r, direction in enumerate(WOMAN_DIRS):
+        for c, cell in enumerate(rows[direction]):
+            atlas.alpha_composite(cell, (c * CELL, r * CELL))
+    atlas.save(OUT / 'woman-atlas-umum.png', optimize=True)
+    return atlas
+
+
+def scale_box(img, factor):
+    """Pengecilan besar (sprite AI ~15 px per 'piksel' -> 1 px): rata-rata kotak, lalu alfa tegas."""
+    w, h = img.size
+    a = np.asarray(img).astype(np.float32)
+    rgb = a[..., :3] * (a[..., 3:] / 255)  # premultiplied supaya tepi tidak keputihan
+    pre = Image.fromarray(np.dstack([rgb, a[..., 3]]).astype(np.uint8), 'RGBA')
+    size = (max(1, round(w * factor)), max(1, round(h * factor)))
+    r = np.asarray(pre.resize(size, Image.BOX)).astype(np.float32)
+    alpha = r[..., 3]
+    out = np.zeros_like(r)
+    solid = alpha >= 110
+    out[..., :3] = np.where(solid[..., None], r[..., :3] * 255 / np.maximum(alpha[..., None], 1), 0)
+    out[..., 3] = np.where(solid, 255, 0)
+    return pixel_outline(Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGBA'))
+
+
+def pixel_outline(img, darken=0.32, saturation=1.15):
+    """Gaya sprite lama: garis tepi gelap 1 px + warna sedikit lebih jenuh (pengecilan membuat kusam)."""
+    a = np.asarray(img).astype(np.float32)
+    solid = a[..., 3] > 0
+    rgb = a[..., :3]
+    gray = rgb.mean(axis=2, keepdims=True)
+    rgb = np.clip(gray + (rgb - gray) * saturation, 0, 255)
+    pad = np.pad(solid, 1)
+    edge = solid & ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
+    rgb = np.where(edge[..., None], np.minimum(rgb * darken + np.array([10, 10, 28]), 255), rgb)
+    a[..., :3] = rgb
+    return Image.fromarray(a.astype(np.uint8), 'RGBA')
+
+
 def build_thumbs(umum_frame):
     THUMBS.mkdir(parents=True, exist_ok=True)
     hijab = Image.open(OUT / 'mempelai.gif').convert('RGBA')
@@ -268,7 +366,7 @@ def build_thumbs(umum_frame):
 
 
 if __name__ == '__main__':
-    steps = sys.argv[1:] or ['couple', 'hosts', 'guests', 'seated', 'ceremony', 'card']
+    steps = sys.argv[1:] or ['couple', 'hosts', 'guests', 'seated', 'ceremony', 'card', 'woman']
     if 'couple' in steps:
         build_thumbs(build_couple())
     if 'hosts' in steps:
@@ -281,4 +379,6 @@ if __name__ == '__main__':
         build_ceremony()
     if 'card' in steps:
         build_card()
+    if 'woman' in steps:
+        build_woman()
     print('selesai:', ', '.join(steps))

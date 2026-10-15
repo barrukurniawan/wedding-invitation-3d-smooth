@@ -352,7 +352,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
           },
           characters: {
             men: { atlas: 'assets/character-atlas.png', frames: 9 },
-            woman: { atlas: 'assets/woman-atlas.png', frames: 7 },
+            woman: { atlas: style.womanAtlas, frames: 7 },
           },
           places: [
             {

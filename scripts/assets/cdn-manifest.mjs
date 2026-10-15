@@ -17,7 +17,7 @@ const PRESET_2D = [
   'gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg',
   // Gaya busana "umum" (tanpa hijab), dipilih per undangan (server/services/characterStyles.js).
   'mempelai-umum.webp', 'wedding-guests-umum.webp', 'seated-guests-umum.webp', 'wedding-hosts-umum.webp',
-  'wedding-card-blank-umum.webp', 'ceremony-background-umum.webp',
+  'wedding-card-blank-umum.webp', 'ceremony-background-umum.webp', 'woman-atlas-umum.png',
 ].map((f) => `presets/garden-2d/assets/${f}`)
 
 // Folder 3D & media: semua file kecuali sumber yang tidak dipakai runtime.

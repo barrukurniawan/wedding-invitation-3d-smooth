@@ -18,6 +18,7 @@ const STYLE_ASSETS = {
     hosts: 'assets/wedding-hosts.webp',
     coverBlank: 'assets/wedding-card-blank.webp',
     ceremonyBackground: 'assets/ceremony-background.png',
+    womanAtlas: 'assets/woman-atlas.png',
   },
   umum: {
     couple: 'assets/mempelai-umum.webp',
@@ -26,6 +27,7 @@ const STYLE_ASSETS = {
     hosts: 'assets/wedding-hosts-umum.webp',
     coverBlank: 'assets/wedding-card-blank-umum.webp',
     ceremonyBackground: 'assets/ceremony-background-umum.webp',
+    womanAtlas: 'assets/woman-atlas-umum.png',
   },
 }
 
