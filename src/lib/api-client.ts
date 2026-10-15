@@ -102,6 +102,8 @@ export interface OwnerInvitation {
     resepsi_date: string
     resepsi_location: string
   } | null
+  /** Akun mendaftar di masa gratis: tidak pernah ditagih (users.free_plan). */
+  free_plan?: boolean
 }
 
 export interface AdminInvitation {

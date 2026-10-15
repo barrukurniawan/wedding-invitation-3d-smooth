@@ -27,6 +27,8 @@ export async function transitionInvitation({
   reason = null,
   paymentId = null,
   connection = pool,
+  // Aktivasi draft tanpa bayar untuk akun ber-paket gratis (users.free_plan), di luar mode gratis global.
+  allowFreeActivation = false,
 }) {
   const [rows] = await connection.query(
     'SELECT id, status FROM invitations WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
@@ -39,7 +41,8 @@ export async function transitionInvitation({
     throw error
   }
   if (invitation.status === toStatus) return invitation.status
-  const freeActivation = toStatus === 'active' && canActivateFreeInvitation(invitation.status)
+  const freeActivation = toStatus === 'active'
+    && (canActivateFreeInvitation(invitation.status) || (allowFreeActivation && invitation.status === 'draft'))
   if (!freeActivation && !canTransition(invitation.status, toStatus)) {
     const error = new Error(`Perubahan status ${invitation.status} ke ${toStatus} tidak diizinkan.`)
     error.code = 'INVALID_STATUS_TRANSITION'

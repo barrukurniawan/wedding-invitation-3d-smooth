@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import pool from '../db.js'
 import { normalizeReturnPath } from './oauthPaths.js'
+import { freePlanForNewUser } from './freePlan.js'
 
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
@@ -141,9 +142,10 @@ export async function upsertGoogleUser(profile) {
     }
 
     const [result] = await connection.query(
-      `INSERT INTO users (google_subject, email, display_name, avatar_url, status, last_login_at)
-       VALUES (?, ?, ?, ?, 'active', UTC_TIMESTAMP())`,
-      [profile.subject, profile.email, profile.displayName, profile.avatarUrl],
+      `INSERT INTO users (google_subject, email, display_name, avatar_url, status, last_login_at, free_plan)
+       VALUES (?, ?, ?, ?, 'active', UTC_TIMESTAMP(), ?)`,
+      // Mendaftar saat paket masih gratis = gratis selamanya (lihat migrasi 020).
+      [profile.subject, profile.email, profile.displayName, profile.avatarUrl, freePlanForNewUser()],
     )
     await connection.commit()
     return Number(result.insertId)

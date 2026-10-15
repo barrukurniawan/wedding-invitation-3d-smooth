@@ -10,6 +10,7 @@ import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import { TAKO_METHODS, TakoError, createTakoGift, takoConfigured } from '../services/tako.js'
 import { openTakoPayments, syncTakoPayment } from '../services/takoPayments.js'
+import { isFreeForUser } from '../services/freePlan.js'
 
 const router = Router()
 const PAYMENT_MODE = paymentMode()
@@ -169,6 +170,10 @@ router.post('/payment/tako', requireUser, requireCsrf, takoLimit, async (req, re
     }
     const invitation = await ownerInvitation(req.user.id)
     if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    if (await isFreeForUser(req.user.id)) {
+      // Akun yang mendaftar di masa gratis tidak pernah ditagih; dashboard mengaktifkannya otomatis.
+      return res.status(409).json({ error: { code: 'FREE_PLAN', message: 'Akun kamu termasuk paket gratis. Muat ulang dashboard untuk mengaktifkan undangan.' } })
+    }
     if (!['draft', 'awaiting_payment', 'pending_verification'].includes(invitation.status)) {
       return res.status(409).json({ error: { code: 'NOT_PAYABLE', message: 'Undangan ini tidak memerlukan pembayaran.' } })
     }

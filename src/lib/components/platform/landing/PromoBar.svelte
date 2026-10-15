@@ -33,9 +33,6 @@
           <strong>{pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)}</strong>
           {#if !pricing.isFree}<span class="save">hemat {pct}%</span>{/if}
         </p>
-        {#if pricing.afterPromoPrice != null}
-          <p class="note">Setelah promo: {fmtIdr(pricing.afterPromoPrice)}</p>
-        {/if}
       </div>
 
       <div class="timer" role="timer" aria-live="off" aria-label="Sisa waktu promo, berakhir {endsLabel}">
@@ -123,11 +120,6 @@
     color: var(--lp-ink);
     font-size: 0.8rem;
     font-weight: 800;
-  }
-  .note {
-    margin: 8px 0 0;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.85);
   }
   .timer {
     display: flex;

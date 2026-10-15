@@ -41,7 +41,7 @@
             <s>{fmtIdr(pricing.normalPrice)}</s>
             <strong>{pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)}</strong>
           </p>
-          <p class="save">{pricing.isFree ? `Hemat ${fmtIdr(pricing.normalPrice)}` : `Hemat ${pct}%`}{#if pricing.afterPromoPrice != null} · setelah promo {fmtIdr(pricing.afterPromoPrice)}{/if}</p>
+          <p class="save">{pricing.isFree ? `Hemat ${fmtIdr(pricing.normalPrice)}` : `Hemat ${pct}%`}</p>
         {:else if pricing}
           <p class="price"><strong>{pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)}</strong></p>
           <p class="save">per undangan, sekali bayar</p>

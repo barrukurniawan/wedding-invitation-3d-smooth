@@ -140,7 +140,7 @@
   ]
   const TAKO_POLL_MS = 5000
   const TAKO_POLL_LIMIT_MS = 20 * 60 * 1000
-  const isTako = $derived(PAYMENT_MODE === 'tako' && PACKAGE_AMOUNT > 0)
+  const isTako = $derived(PAYMENT_MODE === 'tako' && PACKAGE_AMOUNT > 0 && !invitation.free_plan)
   let takoMethod = $state<TakoMethod>('qris')
   let takoWaiting = $state(false)
   let takoPaymentUrl = $state<string | null>(null)
@@ -232,9 +232,10 @@
     }
   })
 
-  const isFreePackage = $derived(PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0)
+  // Gratis: harga Rp0 (mode manual) atau akun yang mendaftar di masa gratis (free_plan).
+  const isFreePackage = $derived((PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0) || invitation.free_plan === true)
   const isConfigure = $derived(PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY'))
-  const formattedPrice = $derived(PACKAGE_AMOUNT === 0 ? 'Gratis' : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`)
+  const formattedPrice = $derived(PACKAGE_AMOUNT === 0 || invitation.free_plan ? 'Gratis' : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`)
 </script>
 
 <div class="workspace-panel">

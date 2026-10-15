@@ -3,7 +3,7 @@ import { z } from 'zod'
 import pool from '../db.js'
 import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
-import { isFreeManualPackage } from '../services/paymentConfig.js'
+import { isFreeForUser } from '../services/freePlan.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { DEFAULT_VENUE, VENUE_IDS } from '../services/venues.js'
 
@@ -77,20 +77,32 @@ function defaultReceptionAt(daysAhead = 14) {
 
 router.get('/me', requireUser, async (req, res, next) => {
   try {
-    if (isFreeManualPackage()) {
+    const free = await isFreeForUser(req.user.id)
+    if (free) {
       const [ownedRows] = await pool.query(
         `SELECT id, status FROM invitations
          WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1`,
         [req.user.id],
       )
-      if (ownedRows[0]?.status === 'draft') {
+      // Termasuk yang sempat membuat tagihan (awaiting_payment): akun gratis tidak pernah perlu membayar.
+      if (ownedRows[0]?.status === 'draft' || ownedRows[0]?.status === 'awaiting_payment') {
         await withTransaction(async (connection) => {
+          if (ownedRows[0].status === 'awaiting_payment') {
+            await transitionInvitation({
+              invitationId: ownedRows[0].id,
+              toStatus: 'draft',
+              actorType: 'system',
+              reason: 'Paket gratis: tagihan tidak diperlukan',
+              connection,
+            })
+          }
           await transitionInvitation({
             invitationId: ownedRows[0].id,
             toStatus: 'active',
             actorType: 'system',
             reason: 'Paket gratis: aktivasi otomatis saat membuka dashboard',
             connection,
+            allowFreeActivation: true,
           })
         })
       }
@@ -107,7 +119,7 @@ router.get('/me', requireUser, async (req, res, next) => {
     if (!rows[0]) {
       return res.json({ invitation: null })
     }
-    res.json({ invitation: serializeInvitation(rows[0]) })
+    res.json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free } })
   } catch (error) {
     next(error)
   }
@@ -136,6 +148,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
 
   try {
     await connection.beginTransaction()
+    const free = await isFreeForUser(req.user.id, connection)
 
     const [owned] = await connection.query(
       'SELECT id FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1 FOR UPDATE',
@@ -165,7 +178,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
           ?, ?, ?, ?, 'Asia/Jakarta',
           DATE_ADD(?, INTERVAL 7 DAY), DATE_ADD(?, INTERVAL 37 DAY)
         )`,
-       [req.user.id, slug, isFreeManualPackage() ? 'active' : 'draft', receptionMysql, receptionMysql, receptionMysql],
+       [req.user.id, slug, free ? 'active' : 'draft', receptionMysql, receptionMysql, receptionMysql],
     )
     const invitationId = Number(insert.insertId)
 
@@ -192,7 +205,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
       [invitationId, brideName, groomName, receptionMysql, defaultEventDateIndo, defaultEventDateIndo, groomName, preset, venue],
     )
 
-    if (isFreeManualPackage()) {
+    if (free) {
       await connection.query(
         'UPDATE invitations SET activated_at = UTC_TIMESTAMP() WHERE id = ?',
         [invitationId],
@@ -214,7 +227,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
       [invitationId],
     )
     await connection.commit()
-    res.status(201).json({ invitation: serializeInvitation(rows[0]) })
+    res.status(201).json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free } })
   } catch (error) {
     await connection.rollback()
     if (error?.code === 'ER_DUP_ENTRY') {

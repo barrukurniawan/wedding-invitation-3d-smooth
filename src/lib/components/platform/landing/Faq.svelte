@@ -6,9 +6,11 @@
   let { pricing }: { pricing: PublicPricing | null } = $props()
 
   const bayar = $derived(
-    pricing?.isFree && pricing.promoActive
-      ? `Selama ${pricing.promoLabel?.toLowerCase()}, undangan gratis dan langsung aktif.${pricing.afterPromoPrice != null ? ` Setelah promo berakhir harganya ${fmtIdr(pricing.afterPromoPrice)}, dibayar lewat transfer bank lalu unggah bukti; admin memverifikasi dan undangan aktif.` : ''}`
-      : 'Transfer bank, lalu unggah bukti transfer di dashboard. Admin memverifikasi, lalu undangan aktif. Tidak ada langganan.',
+    pricing?.isFree
+      ? `${pricing.promoActive ? `Selama ${pricing.promoLabel?.toLowerCase()}, undangan` : 'Undangan'} gratis dan langsung aktif.`
+      : pricing?.mode === 'tako'
+        ? `Sekali bayar ${fmtIdr(pricing.currentPrice)} lewat QRIS, GoPay, DANA, atau PayPal langsung dari dashboard. Undangan aktif otomatis begitu pembayaran berhasil. Tidak ada langganan.`
+        : 'Transfer bank, lalu unggah bukti transfer di dashboard. Admin memverifikasi, lalu undangan aktif. Tidak ada langganan.',
   )
 
   const items = $derived([
