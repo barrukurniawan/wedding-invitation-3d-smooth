@@ -1,7 +1,7 @@
 <script lang="ts">
   // Panel samping detail satu subdomain: trafik harian, sumber, halaman, RSVP, bukti transfer.
   import { fade, fly } from 'svelte/transition'
-  import { getAdminSubdomainTraffic, type AdminSubdomain, type SubdomainTraffic, type TrafficRange } from '$lib/api-client'
+  import { ApiError, extendInvitationTrial, getAdminSubdomainTraffic, markInvitationPaid, type AdminSubdomain, type SubdomainTraffic, type TrafficRange } from '$lib/api-client'
   import { resolveVenue } from '$lib/venues'
   import BarChart from './ui/BarChart.svelte'
   import Icon from './ui/Icon.svelte'
@@ -14,13 +14,38 @@
     onClose,
     onActivate,
     onReject,
+    onChanged,
   }: {
     item: AdminSubdomain
     range: TrafficRange
     onClose: () => void
     onActivate: (item: AdminSubdomain) => void
     onReject: (item: AdminSubdomain) => void
+    onChanged?: (message: string) => void
   } = $props()
+
+  // Uji coba: perpanjang gratis (+3 hari) atau tandai sudah bayar (mis. transfer manual).
+  let planBusy = $state(false)
+  let planError = $state('')
+  const canExtend = $derived(item.plan?.phase === 'trial' || item.plan?.phase === 'trial_ended')
+  const canMarkPaid = $derived(item.status === 'active' && (canExtend || item.plan?.phase === 'none'))
+  async function planAction(kind: 'extend' | 'paid') {
+    const question = kind === 'extend'
+      ? `Perpanjang uji coba ${item.slug} 3 hari (gratis)?`
+      : `Tandai ${item.slug} sudah bayar? Undangan aktif selamanya.`
+    if (!confirm(question)) return
+    planBusy = true
+    planError = ''
+    try {
+      if (kind === 'extend') await extendInvitationTrial(item.id)
+      else await markInvitationPaid(item.id)
+      onChanged?.(kind === 'extend' ? `Uji coba ${item.slug} diperpanjang 3 hari.` : `${item.slug} ditandai sudah bayar.`)
+    } catch (error) {
+      planError = error instanceof ApiError ? error.message : 'Gagal menyimpan.'
+    } finally {
+      planBusy = false
+    }
+  }
 
   let traffic = $state<SubdomainTraffic | null>(null)
   let errorMsg = $state('')
@@ -67,7 +92,14 @@
       <button type="button" class="adm-btn success sm" onclick={() => onActivate(item)}><Icon name="check" size={14} /> Aktifkan</button>
       <button type="button" class="adm-btn danger sm" onclick={() => onReject(item)}><Icon name="x" size={14} /> Tolak</button>
     {/if}
+    {#if canExtend}
+      <button type="button" class="adm-btn ghost sm" disabled={planBusy} onclick={() => planAction('extend')}><Icon name="clock" size={14} /> Perpanjang uji coba +3 hari</button>
+    {/if}
+    {#if canMarkPaid}
+      <button type="button" class="adm-btn success sm" disabled={planBusy} onclick={() => planAction('paid')}><Icon name="check" size={14} /> Tandai sudah bayar</button>
+    {/if}
   </div>
+  {#if planError}<p class="adm-error">{planError}</p>{/if}
 
   <div class="adm-card owner">
     <span class="adm-avatar">{initials(item.owner_name || item.owner_email)}</span>

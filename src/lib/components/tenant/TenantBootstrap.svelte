@@ -2,6 +2,7 @@
   import { onMount, type Component } from 'svelte'
   import { configError, configStatus, loadConfig, weddingConfig } from '../../stores/weddingConfig.svelte'
   import TenantStateScreen from './TenantStateScreen.svelte'
+  import TrialBadge from './TrialBadge.svelte'
   import InvitationLoading from '../ui/InvitationLoading.svelte'
   import { loadProgress, startFakeProgress, stopFakeProgress } from '../../stores/loadProgress.svelte'
 
@@ -49,10 +50,13 @@
 
 {#if $configStatus === 'ready' && InvitationApp}
   <InvitationApp />
+  {#if $weddingConfig.trial}<TrialBadge />{/if}
 {:else if $configStatus === 'expired'}
   <TenantStateScreen state="expired" />
 {:else if $configStatus === 'suspended'}
   <TenantStateScreen state="suspended" />
+{:else if $configStatus === 'inactive'}
+  <TenantStateScreen state="inactive" />
 {:else if $configStatus === 'notFound'}
   <TenantStateScreen state="notFound" />
 {:else if $configStatus === 'error'}

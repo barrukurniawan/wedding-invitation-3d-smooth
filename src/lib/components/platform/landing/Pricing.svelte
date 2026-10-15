@@ -48,13 +48,13 @@
         {/if}
 
         <button type="button" class="lp-btn primary big" onclick={onCta}>
-          {pricing?.isFree ? 'Buat undangan gratis' : 'Mulai sekarang'}
+          {pricing?.isFree ? 'Buat undangan gratis' : pricing?.trialDays ? `Coba gratis ${pricing.trialDays} hari` : 'Mulai sekarang'}
         </button>
         <p class="note">
           {#if pricing?.isFree}
             Undangan langsung aktif setelah dibuat. Tidak perlu kartu kredit.
           {:else}
-            Bayar via QRIS, GoPay &amp; aktivasi secara otomatis.
+            {#if pricing?.trialDays}Coba gratis {pricing.trialDays} hari dengan semua fitur. {/if}Bayar via QRIS, GoPay &amp; aktivasi secara otomatis. Bayar sekali, aktif selamanya.
           {/if}
         </p>
       </div>

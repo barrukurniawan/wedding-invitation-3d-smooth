@@ -140,7 +140,14 @@
   ]
   const TAKO_POLL_MS = 5000
   const TAKO_POLL_LIMIT_MS = 20 * 60 * 1000
-  const isTako = $derived(PAYMENT_MODE === 'tako' && PACKAGE_AMOUNT > 0 && !invitation.free_plan)
+  // Uji coba (PLAN_TRIAL_3_HARI.md): undangan sudah 'active' selama uji coba; bayar = aktif selamanya.
+  const plan = $derived(invitation.trial ?? null)
+  const inTrial = $derived(plan?.phase === 'trial' || plan?.phase === 'trial_ended')
+  const isPaid = $derived(plan?.phase === 'paid')
+  // Harga untuk undangan ini (harga khusus dari email pengingat bila masih berlaku).
+  const amountDue = $derived(plan?.price ?? PACKAGE_AMOUNT)
+  const offerActive = $derived(Boolean(plan?.offer_expires_at && new Date(plan.offer_expires_at).getTime() > Date.now()))
+  const isTako = $derived(PAYMENT_MODE === 'tako' && amountDue > 0 && !invitation.free_plan && !isPaid)
   let takoMethod = $state<TakoMethod>('qris')
   let takoWaiting = $state(false)
   let takoPaymentUrl = $state<string | null>(null)
@@ -151,10 +158,11 @@
   async function checkTako() {
     try {
       const s = await getTakoPaymentStatus()
-      if (s.invitationStatus === 'active') {
+      // Lunas = pembayaran Tako diterima (undangan uji coba sudah 'active' sebelum bayar).
+      if (s.payment?.status === 'received') {
         stopTakoPolling()
         takoWaiting = false
-        paymentMsg = '✓ Pembayaran berhasil! Undangan kalian sudah aktif.'
+        paymentMsg = '✓ Pembayaran berhasil! Undangan kalian aktif selamanya.'
         onStatusChange('active')
         return
       }
@@ -214,7 +222,7 @@
 
   // Saat tab Pembayaran dibuka / kembali dari Tako: cek tagihan yang masih terbuka.
   $effect(() => {
-    if (!isTako || takoChecked || invitation.status === 'active') return
+    if (!isTako || takoChecked || (invitation.status === 'active' && !inTrial)) return
     takoChecked = true
     void checkTako().then(() => {
       if (takoWaiting || new URLSearchParams(location.search).get('bayar') === 'tako') startTakoPolling()
@@ -235,7 +243,7 @@
   // Gratis: harga Rp0 (mode manual) atau akun yang mendaftar di masa gratis (free_plan).
   const isFreePackage = $derived((PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0) || invitation.free_plan === true)
   const isConfigure = $derived(PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY'))
-  const formattedPrice = $derived(PACKAGE_AMOUNT === 0 || invitation.free_plan ? 'Gratis' : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`)
+  const formattedPrice = $derived(amountDue === 0 || invitation.free_plan ? 'Gratis' : `Rp ${amountDue.toLocaleString('id-ID')}`)
 </script>
 
 <div class="workspace-panel">
@@ -247,7 +255,12 @@
   <!-- Paket Info -->
   <div class="package-card">
     <div class="package-name">Paket Undangan 3D</div>
-    <div class="package-price">{formattedPrice}</div>
+    <div class="package-price">
+      {#if offerActive && !isPaid && plan?.normal_price}<s class="package-normal">Rp {plan.normal_price.toLocaleString('id-ID')}</s>{/if}
+      {formattedPrice}
+    </div>
+    {#if offerActive && !isPaid}<p class="package-offer">Harga khusus untuk kalian, berlaku sampai {fmtDate(plan?.offer_expires_at || '')}</p>{/if}
+    {#if inTrial}<p class="package-offer">Bayar sekali, undangan aktif selamanya.</p>{/if}
     <ul class="package-features">
       <li><Icon name="check" size={16} /> Subdomain eksklusif (slug.marryme.web.id)</li>
       <li><Icon name="check" size={16} /> Dunia 3D interaktif seumur hidup event</li>
@@ -257,13 +270,13 @@
     </ul>
   </div>
 
-  {#if invitation.status === 'active'}
+  {#if invitation.status === 'active' && !(inTrial && isTako)}
     <div class="success-box">
       <span class="success-icon"><Icon name="party" size={40} /></span>
       <div>
-        <strong>{isFreePackage ? 'Paket Gratis Aktif!' : 'Pembayaran Terverifikasi!'}</strong>
+        <strong>{isFreePackage ? 'Paket Gratis Aktif!' : isPaid ? 'Aktif Selamanya!' : 'Pembayaran Terverifikasi!'}</strong>
         <p>Undangan pernikahan kalian sudah aktif dan bisa dibagikan ke tamu.</p>
-        <p class="muted-text">Aktif sejak: {fmtDate(invitation.activated_at || '')}</p>
+        <p class="muted-text">{isPaid ? `Dibayar: ${fmtDate(plan?.paid_at || '')}` : `Aktif sejak: ${fmtDate(invitation.activated_at || '')}`}</p>
       </div>
     </div>
 
@@ -292,7 +305,12 @@
 
    {:else if isTako}
     <div class="tako-card">
-      <h4>Bayar Online</h4>
+      <h4>{inTrial ? 'Aktifkan Selamanya' : 'Bayar Online'}</h4>
+      {#if plan?.phase === 'trial'}
+        <p class="tako-trial">⏳ Uji coba: undangan bisa dibuka tamu sampai {fmtDate(plan.trial_ends_at || '')}.</p>
+      {:else if plan?.phase === 'trial_ended'}
+        <p class="tako-trial ended">Masa uji coba berakhir. Tamu belum bisa membuka undangan sampai pembayaran selesai.</p>
+      {/if}
       <p class="section-desc">Pembayaran diproses oleh Tako (tako.id). Undangan <strong>aktif otomatis</strong> begitu pembayaran berhasil, tanpa unggah bukti transfer.</p>
       <div class="tako-methods" role="radiogroup" aria-label="Metode pembayaran">
         {#each TAKO_METHODS as m (m.id)}
@@ -667,6 +685,30 @@
     color: #292321;
   }
   .form-save-footer.mt-16 { margin-top: 16px; }
+  .package-normal {
+    margin-right: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #a1938e;
+  }
+  .package-offer {
+    margin: -6px 0 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #a97625;
+  }
+  .tako-trial {
+    margin: 6px 0 4px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #fff8ec;
+    color: #6b4e16;
+    font-size: 0.85rem;
+  }
+  .tako-trial.ended {
+    background: #fff1f2;
+    color: #9f1239;
+  }
   .tako-card {
     margin-top: 8px;
     padding: 20px;

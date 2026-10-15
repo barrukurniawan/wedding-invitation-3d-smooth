@@ -69,3 +69,16 @@ export function initials(name: string | null | undefined, fallback = '?'): strin
   if (parts.length === 0) return fallback
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase()
 }
+
+// Paket undangan (uji coba / berbayar / gratis lama) untuk label admin.
+export function planLabel(plan: { phase: string; trial_ends_at: string | null } | undefined | null): { label: string; tone: string } | null {
+  if (!plan) return null
+  if (plan.phase === 'paid') return { label: 'Berbayar · selamanya', tone: 'green' }
+  if (plan.phase === 'free') return { label: 'Gratis (akun lama)', tone: '' }
+  if (plan.phase === 'trial_ended') return { label: 'Uji coba habis', tone: 'red' }
+  if (plan.phase === 'trial' && plan.trial_ends_at) {
+    const hours = Math.max(0, Math.round((new Date(plan.trial_ends_at).getTime() - Date.now()) / 3_600_000))
+    return { label: `Uji coba · sisa ${hours >= 24 ? `${Math.floor(hours / 24)} hr ${hours % 24} j` : `${hours} jam`}`, tone: 'amber' }
+  }
+  return null
+}

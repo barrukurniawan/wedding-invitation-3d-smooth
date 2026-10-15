@@ -1,6 +1,6 @@
 # Rencana: Uji Coba 3 Hari, Bayar Sekali Aktif Selamanya
 
-Status: **rencana (2026-10-15), belum ada kode.** Lanjutan branch `tako_payment` (dikerjakan sebelum Tako naik live,
+Status: **dikerjakan (2026-10-15), lolos uji lokal end-to-end (Tako tiruan); menunggu uji bayar asli.** Lanjutan branch `tako_payment` (dikerjakan sebelum Tako naik live,
 supaya pengguna berbayar pertama langsung memakai model ini).
 
 ## Model baru (permintaan)

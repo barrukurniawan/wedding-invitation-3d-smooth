@@ -129,6 +129,8 @@
       const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
       window.history.replaceState({}, '', clean)
     }
+    // Kembali dari halaman bayar Tako: langsung buka tab Pembayaran (status dicek di sana).
+    if (params.get('bayar') === 'tako') activeTab = 'pembayaran'
     void bootstrap()
   })
 
@@ -137,6 +139,43 @@
     if (code === 'OAUTH_DENIED') return 'Proses masuk Google dibatalkan.'
     if (code === 'USER_SUSPENDED') return 'Akun ini belum dapat digunakan.'
     return 'Login Google belum berhasil.'
+  }
+
+  // ── Paket: uji coba / aktif selamanya ─────────────────────────────────────
+  const plan = $derived(invitation?.trial ?? null)
+  const planBoxStatus = $derived(
+    plan?.phase === 'trial' || plan?.phase === 'trial_ended' ? plan.phase : (invitation?.status ?? ''),
+  )
+  let nowTick = $state(Date.now())
+  $effect(() => {
+    if (plan?.phase !== 'trial' && !plan?.offer_expires_at) return
+    const timer = setInterval(() => (nowTick = Date.now()), 30_000)
+    return () => clearInterval(timer)
+  })
+  const fmtWib = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB'
+      : ''
+  const fmtRp = (n: number | null) => (n == null ? '' : `Rp${n.toLocaleString('id-ID')}`)
+  function remainingLabel(iso: string | null) {
+    if (!iso) return ''
+    const ms = Math.max(0, new Date(iso).getTime() - nowTick)
+    const d = Math.floor(ms / 86_400_000)
+    const h = Math.floor((ms % 86_400_000) / 3_600_000)
+    const m = Math.floor((ms % 3_600_000) / 60_000)
+    return d > 0 ? `${d} hari ${h} jam` : h > 0 ? `${h} jam ${m} menit` : `${m} menit`
+  }
+  const offerActive = $derived(Boolean(plan?.offer_expires_at && new Date(plan.offer_expires_at).getTime() > nowTick))
+  function openPayment() {
+    activeTab = 'pembayaran'
+    ownerTabs?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function planLabel(status: string) {
+    if (plan?.phase === 'trial') return 'Uji coba'
+    if (plan?.phase === 'trial_ended') return 'Uji coba habis'
+    if (plan?.phase === 'paid' && status === 'active') return 'Aktif selamanya'
+    return statusLabel(status)
   }
 
   function statusLabel(status: string) {
@@ -416,9 +455,13 @@
       },
       {
         id: 'pembayaran',
-        label: 'Pembayaran & Verifikasi Admin',
+        label: invitation.trial?.phase === 'trial' || invitation.trial?.phase === 'trial_ended' ? 'Pembayaran (aktif selamanya)' : 'Pembayaran & Verifikasi Admin',
         category: 'Status',
-        done: invitation.status === 'active' || invitation.status === 'pending_verification',
+        // Uji coba belum dihitung selesai walau statusnya 'active'.
+        done:
+          invitation.trial?.phase === 'trial' || invitation.trial?.phase === 'trial_ended'
+            ? false
+            : invitation.status === 'active' || invitation.status === 'pending_verification',
         targetTab: 'pembayaran',
       },
     ]
@@ -535,8 +578,8 @@
               </p>
             </div>
             <div class="status-badge-box">
-              <span class="badge large" data-status={invitation.status}>
-                {statusLabel(invitation.status)}
+              <span class="badge large" data-status={planBoxStatus}>
+                {planLabel(invitation.status)}
               </span>
             </div>
           </div>
@@ -549,7 +592,7 @@
           </div>
 
           <!-- Status Consequence Alert Banner -->
-          <div class="status-alert-box" data-status={invitation.status}>
+          <div class="status-alert-box" data-status={planBoxStatus}>
              {#if invitation.status === 'draft' && invitation.rejection_reason}
                <div class="status-alert-content">
                  <span class="alert-icon"><Icon name="alert" size={20} /></span>
@@ -574,11 +617,32 @@
                   <p>Bukti transfer telah diterima. Tim admin sedang memproses verifikasi. Undangan akan otomatis aktif setelah disetujui.</p>
                 </div>
               </div>
+            {:else if plan?.phase === 'trial' || plan?.phase === 'trial_ended'}
+              <div class="status-alert-content">
+                <span class="alert-icon"><Icon name={plan.phase === 'trial' ? 'clock' : 'alert'} size={20} /></span>
+                <div>
+                  {#if plan.phase === 'trial'}
+                    <strong>Uji coba: undangan bisa dibuka tamu sampai {fmtWib(plan.trial_ends_at)} (sisa {remainingLabel(plan.trial_ends_at)})</strong>
+                    <p>Semua fitur bisa dipakai. Bayar sekali agar undangan aktif selamanya. Selama uji coba, tamu melihat label kecil "3 Hari Aktif · MarryMe".</p>
+                  {:else}
+                    <strong>Masa uji coba berakhir. Tamu belum bisa membuka undangan kalian.</strong>
+                    <p>Semua isi tetap tersimpan. Bayar sekali untuk mengaktifkannya kembali, dan undangan aktif selamanya.</p>
+                  {/if}
+                  <div class="trial-cta">
+                    <button type="button" class="trial-pay-btn" onclick={openPayment}>
+                      Aktifkan selamanya ·
+                      {#if offerActive}<s>{fmtRp(plan.normal_price)}</s>{/if}
+                      {fmtRp(plan.price)}
+                    </button>
+                    {#if offerActive}<span class="trial-offer">Harga khusus sampai {fmtWib(plan.offer_expires_at)}</span>{/if}
+                  </div>
+                </div>
+              </div>
             {:else if invitation.status === 'active'}
               <div class="status-alert-content">
                 <span class="alert-icon"><Icon name="party" size={20} /></span>
                 <div>
-                  <strong>Status: Aktif! (Dunia 3D Sudah Terbit)</strong>
+                  <strong>{plan?.phase === 'paid' ? 'Status: Aktif selamanya' : 'Status: Aktif! (Dunia 3D Sudah Terbit)'}</strong>
                   <p>Undangan pernikahan kalian sudah aktif dan dapat diakses publik oleh seluruh keluarga serta para tamu.</p>
                 </div>
               </div>

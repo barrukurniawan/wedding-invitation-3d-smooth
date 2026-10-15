@@ -6,7 +6,7 @@
     message = '',
     onRetry
   }: {
-    state: 'loading' | 'notFound' | 'expired' | 'suspended' | 'error' | 'invalid'
+    state: 'loading' | 'notFound' | 'expired' | 'suspended' | 'inactive' | 'error' | 'invalid'
     message?: string
     onRetry?: () => void
   } = $props()
@@ -17,6 +17,8 @@
 
   const content = $derived.by(() => {
     if (state === 'expired') return { code: '410', title: 'Undangan telah berakhir', detail: 'Masa aktif undangan ini sudah selesai.' }
+    // Uji coba habis: tidak menyebut pembayaran ke tamu.
+    if (state === 'inactive') return { code: '⏸', title: 'Undangan ini sedang tidak aktif', detail: 'Silakan hubungi pasangan pengantin atau coba lagi nanti.' }
     if (state === 'suspended') return { code: 'OFF', title: 'Undangan tidak tersedia', detail: 'Halaman ini sedang tidak dapat diakses.' }
     if (state === 'error') return { code: 'ERR', title: 'Gagal memuat undangan', detail: message || 'Terjadi kendala saat menghubungi server.' }
     if (state === 'loading') return { code: '3D', title: 'Menyiapkan undangan', detail: 'Memuat detail acara dan ruang interaktif.' }

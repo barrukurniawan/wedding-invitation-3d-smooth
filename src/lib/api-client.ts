@@ -28,6 +28,8 @@ export interface WeddingConfig {
   preset?: '3d_summer' | '2d_garden'
   venue?: VenueId
   character_style?: CharacterStyle
+  /** Undangan masa uji coba (tamu melihat label "3 Hari Aktif · MarryMe"). */
+  trial?: boolean
   /** Base URL CDN aset (jsDelivr) dari server; null/undefined = pakai server sendiri. */
   asset_cdn?: string | null
   /** Alamat kirim hadiah (dashboard pemilik; semua opsional). */
@@ -104,6 +106,20 @@ export interface OwnerInvitation {
   } | null
   /** Akun mendaftar di masa gratis: tidak pernah ditagih (users.free_plan). */
   free_plan?: boolean
+  /** Paket undangan untuk dashboard (uji coba / sudah bayar / gratis). */
+  trial?: InvitationPlan
+}
+
+export interface InvitationPlan {
+  /** trial: uji coba berjalan · trial_ended: uji coba habis · paid: aktif selamanya · free: akun lama gratis */
+  phase: 'trial' | 'trial_ended' | 'paid' | 'free' | 'none'
+  trial_ends_at: string | null
+  paid_at: string | null
+  /** Harga yang harus dibayar sekarang (harga khusus bila berlaku). */
+  price: number | null
+  normal_price: number | null
+  /** Terisi bila harga khusus masih berlaku. */
+  offer_expires_at: string | null
 }
 
 export interface AdminInvitation {
@@ -421,6 +437,16 @@ export async function uploadAdminMusic(file: File): Promise<{ bgm_url: string; b
   })
 }
 
+/** Admin: perpanjang uji coba gratis (+3 hari). */
+export function extendInvitationTrial(id: number) {
+  return request<void>(`/admin/invitations/${id}/trial/extend`, { method: 'POST' })
+}
+
+/** Admin: tandai sudah bayar (aktif selamanya). */
+export function markInvitationPaid(id: number) {
+  return request<void>(`/admin/invitations/${id}/mark-paid`, { method: 'POST' })
+}
+
 export function activateInvitation(id: number) {
   return request<void>(`/admin/invitations/${id}/activate`, { method: 'POST' })
 }
@@ -606,6 +632,7 @@ export interface AdminSubdomain {
   total_views: number
   last_visit: string | null
   rsvp: { total: number; hadir: number; ragu: number; tidakHadir: number }
+  plan?: InvitationPlan
 }
 
 export interface TrafficSourceCount {
@@ -729,6 +756,8 @@ export interface PublicPricing {
   currency: 'IDR'
   currentPrice: number
   isFree: boolean
+  /** Lama uji coba (hari) untuk akun baru berbayar; null saat gratis. */
+  trialDays?: number | null
   normalPrice: number | null
   afterPromoPrice: number | null
   promoActive: boolean

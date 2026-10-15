@@ -14,7 +14,7 @@
   import ConfirmDialog from './ui/ConfirmDialog.svelte'
   import Icon from './ui/Icon.svelte'
   import SubdomainDetail from './SubdomainDetail.svelte'
-  import { fmtNumber, fmtRelative, fmtShortDate, statusMeta } from './format'
+  import { fmtNumber, fmtRelative, fmtShortDate, statusMeta, planLabel } from './format'
 
   type Filter = 'all' | 'pending' | 'active' | 'draft' | 'other'
   type SortKey = 'created' | 'views' | 'last_visit' | 'slug'
@@ -190,7 +190,10 @@
                 <span class="cell-sub">{item.owner_email || 'tanpa email'}</span>
               </td>
               <td><span class="adm-pill">{designLabel(item)}</span></td>
-              <td><span class="adm-status" style="--dot: {meta.color}">{meta.label}</span></td>
+              <td>
+                <span class="adm-status" style="--dot: {meta.color}">{meta.label}</span>
+                {#if planLabel(item.plan)}{@const p = planLabel(item.plan)}<span class="cell-sub"><span class="adm-pill {p?.tone}">{p?.label}</span></span>{/if}
+              </td>
               <td class="num">
                 <span class="cell-main strong">{fmtNumber(item.views)}</span>
                 <span class="cell-sub">{fmtNumber(item.total_views)} total</span>
@@ -250,6 +253,11 @@
     onClose={() => (selectedId = null)}
     onActivate={(item) => openDialog('activate', item)}
     onReject={(item) => openDialog('reject', item)}
+    onChanged={async (message) => {
+      await load()
+      notice = message
+      setTimeout(() => (notice = ''), 4000)
+    }}
   />
 {/if}
 

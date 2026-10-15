@@ -16,7 +16,12 @@
   const items = $derived([
     ['Tamu perlu install aplikasi?', 'Tidak. Tamu cukup membuka link di browser HP atau laptop. Tidak ada yang perlu diunduh.'],
     ['HP tamu yang lama bisa membuka undangan 3D?', 'Bisa. Dunia 3D punya mode hemat otomatis untuk HP kelas menengah. Untuk HP yang benar-benar lama, kalian bisa memilih desain 2D pixel yang sangat ringan.'],
-    ['Berapa lama undangan aktif?', 'Sampai 7 hari setelah tanggal resepsi. Setelah itu link tidak lagi dibuka untuk tamu, tetapi data ucapan dan RSVP tetap bisa kalian lihat di dashboard selama 30 hari berikutnya.'],
+    [
+      'Berapa lama undangan aktif?',
+      pricing && !pricing.isFree && pricing.trialDays
+        ? `Undangan baru langsung bisa dibuka tamu selama ${pricing.trialDays} hari uji coba, dengan semua fitur. Bayar sekali, undangan aktif selamanya.`
+        : 'Sampai 7 hari setelah tanggal resepsi. Setelah itu link tidak lagi dibuka untuk tamu, tetapi data ucapan dan RSVP tetap bisa kalian lihat di dashboard selama 30 hari berikutnya.',
+    ],
     ['Bisa ganti desain atau venue setelah undangan dibuat?', 'Bisa, kapan saja dari menu Pengaturan di dashboard. Nama, acara, foto, dan ucapan tamu tidak perlu diisi ulang.'],
     ['Bagaimana cara bayarnya?', bayar],
     ['Data tamu aman?', 'Ucapan, RSVP, dan daftar kontak hanya bisa dilihat oleh pemilik akun. Login memakai akun Google, jadi tidak ada kata sandi yang perlu disimpan.'],

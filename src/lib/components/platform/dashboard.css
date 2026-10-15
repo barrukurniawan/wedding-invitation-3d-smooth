@@ -2274,3 +2274,50 @@
 .tema-info-card .tema-slug-input span { text-transform: none; letter-spacing: 0; }
 div.tema-card { cursor: default; }
 div.tema-card:hover { transform: none; }
+
+/* Paket uji coba (PLAN_TRIAL_3_HARI.md) */
+.hero-progress-card .status-alert-box[data-status='trial'] {
+  border-left-color: #f5b942;
+}
+.hero-progress-card .status-alert-box[data-status='trial_ended'] {
+  border-left-color: #fca5a5;
+  background: rgba(127, 29, 29, 0.28);
+}
+.hero-progress-card .badge[data-status='trial']::before {
+  background: #f5b942;
+}
+.hero-progress-card .badge[data-status='trial_ended']::before {
+  background: #fca5a5;
+}
+.trial-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+}
+.trial-pay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: #f5b942;
+  color: #3b2207;
+  font: 800 0.88rem/1.1 'Outfit', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.6);
+}
+.trial-pay-btn:hover {
+  background: #ffd27a;
+}
+.trial-pay-btn s {
+  font-weight: 600;
+  opacity: 0.6;
+}
+.trial-offer {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffe1a6;
+}
