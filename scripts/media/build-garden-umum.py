@@ -306,14 +306,21 @@ def place_in_cell(img):
 
 def build_woman():
     rows = {}
+    strips = {name: strip_frames(cutout(SRC / 'karakter-jalan' / f'{name}.jpeg')) for name in WOMAN_SOURCES.values()}
+    palette = woman_palette([f for frames in strips.values() for f in frames])
     for direction, name in WOMAN_SOURCES.items():
-        frames = strip_frames(cutout(SRC / 'karakter-jalan' / f'{name}.jpeg'))
+        frames = strips[name]
         idle, walk = frames[0], frames[1:]
         assert len(walk) >= WALK_FRAMES, f'{name}: hanya {len(walk)} frame jalan'
         # Siklus jalan sumber bisa 7-9 frame: ambil 7 yang tersebar merata supaya loop tetap mulus.
         picks = [walk[int(k * len(walk) / WALK_FRAMES)] for k in range(WALK_FRAMES)]
         factor = IDLE_HEIGHT / idle.height
-        rows[direction] = [place_in_cell(scale_box(f, factor)) for f in [idle, *picks]]
+        # Satu strip = satu gambar AI: ukuran 'piksel'-nya sama. Median antar-frame mencegah satu frame salah baca.
+        periods = [float(np.median([grid_axis(f, axis)[0] for f in frames])) for axis in (0, 1)]
+        native = [sample_grid(f, periods) for f in [idle, *picks]]
+        # Ukuran asli gambar AI ~46-49 px (timur-laut ~60): samakan tinggi idle ke 46 dengan nearest.
+        factor = IDLE_HEIGHT / native[0].height
+        rows[direction] = [place_in_cell(pixel_outline(resize_nearest(f, factor), saturation=1.05)) for f in native]
     for direction, source in WOMAN_MIRROR.items():
         rows[direction] = [c.transpose(Image.FLIP_LEFT_RIGHT) for c in rows[source]]
     atlas = Image.new('RGBA', (CELL * (WALK_FRAMES + 1), CELL * len(WOMAN_DIRS)))
@@ -322,6 +329,94 @@ def build_woman():
             atlas.alpha_composite(cell, (c * CELL, r * CELL))
     atlas.save(OUT / 'woman-atlas-umum.png', optimize=True)
     return atlas
+
+
+def grid_axis(img, axis, period=None):
+    """Periode & fase grid 'piksel' gambar AI di satu sumbu, dari puncak gradien warna (analisis Fourier).
+    Bila `period` diberikan, hanya fasenya yang dicari."""
+    a = np.asarray(img).astype(np.float32)
+    rgb, op = a[..., :3], a[..., 3] > 0
+    if axis == 0:
+        g = (np.abs(np.diff(rgb, axis=1)).sum(2) * (op[:, 1:] & op[:, :-1])).sum(0)
+    else:
+        g = (np.abs(np.diff(rgb, axis=0)).sum(2) * (op[1:] & op[:-1])).sum(1)
+    g = g - g.mean()
+    n = np.arange(len(g))
+    periods = [period] if period else np.arange(8, 30, 0.05)
+    best = max(((abs(z), p, z) for p in periods for z in [(g * np.exp(-2j * np.pi * n / p)).sum()]),
+               key=lambda t: t[0])
+    _, period, z = best
+    edge = (np.angle(z) % (2 * np.pi)) * period / (2 * np.pi) + 0.5  # posisi batas antar 'piksel'
+    return period, edge
+
+
+def sample_grid(img, periods):
+    """Baca warna di tengah tiap kotak grid (median 5x5, tahan noise JPEG) -> sprite tajam resolusi asli.
+    `periods` (x, y) sama untuk satu strip; per frame hanya fase grid yang dicari."""
+    a = np.asarray(img)
+    h, w = a.shape[:2]
+    centers = []
+    for axis, size in ((0, w), (1, h)):
+        period, edge = grid_axis(img, axis, periods[axis])
+        start = edge - period * np.floor(edge / period) + period / 2
+        centers.append(np.arange(start - period, size, period))
+    out = []
+    for cy in centers[1]:
+        row = []
+        for cx in centers[0]:
+            x, y = int(round(cx)), int(round(cy))
+            if not (0 <= x < w and 0 <= y < h):
+                row.append((0, 0, 0, 0))
+                continue
+            win = a[max(0, y - 2):y + 3, max(0, x - 2):x + 3].reshape(-1, 4)
+            solid = win[win[:, 3] > 0]
+            if len(solid) * 2 < len(win):
+                row.append((0, 0, 0, 0))
+            else:
+                r, g, b = np.median(solid[:, :3], axis=0).astype(np.uint8)
+                row.append((r, g, b, 255))
+        out.append(row)
+    sprite = Image.fromarray(np.array(out, np.uint8), 'RGBA')
+    return sprite.crop(sprite.getbbox())
+
+
+def resize_nearest(img, factor):
+    if abs(factor - 1) < 0.03:
+        return img
+    return img.resize((max(1, round(img.width * factor)), max(1, round(img.height * factor))), Image.NEAREST)
+
+
+def woman_palette(frames, colors=40):
+    """Satu palet untuk semua arah (warna konsisten), diambil dari piksel opaque semua frame."""
+    px = np.concatenate([np.asarray(f)[..., :3][np.asarray(f)[..., 3] > 0][::7] for f in frames])
+    side = int(np.ceil(np.sqrt(len(px))))
+    sample = np.zeros((side * side, 3), np.uint8)
+    sample[: len(px)] = px
+    sample[len(px):] = px[0]
+    return Image.fromarray(sample.reshape(side, side, 3), 'RGB').quantize(colors=colors, method=Image.Quantize.MEDIANCUT)
+
+
+def scale_mode(img, factor, palette, coverage=0.45):
+    """Pengecilan gaya pixel art: warna dikunci ke palet, lalu tiap piksel hasil = warna paling dominan
+    di kotak sumbernya (bukan rata-rata, jadi tidak ada warna campuran/buram)."""
+    w, h = img.size
+    tw, th = max(1, round(w * factor)), max(1, round(h * factor))
+    a = np.asarray(img)
+    idx = np.asarray(img.convert('RGB').quantize(palette=palette, dither=Image.Dither.NONE))
+    pal = np.array(palette.getpalette()[: 3 * 256], np.uint8).reshape(-1, 3)
+    opaque = a[..., 3] > 0
+    xs = np.linspace(0, w, tw + 1).round().astype(int)
+    ys = np.linspace(0, h, th + 1).round().astype(int)
+    out = np.zeros((th, tw, 4), np.uint8)
+    for j in range(th):
+        for i in range(tw):
+            block = opaque[ys[j]:ys[j + 1], xs[i]:xs[i + 1]]
+            if block.size == 0 or block.mean() < coverage:
+                continue
+            counts = np.bincount(idx[ys[j]:ys[j + 1], xs[i]:xs[i + 1]][block], minlength=256)
+            out[j, i, :3] = pal[counts.argmax()]
+            out[j, i, 3] = 255
+    return pixel_outline(Image.fromarray(out, 'RGBA'), saturation=1.0)
 
 
 def scale_box(img, factor):
