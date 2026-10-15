@@ -54,7 +54,7 @@
           {#if pricing?.isFree}
             Undangan langsung aktif setelah dibuat. Tidak perlu kartu kredit.
           {:else}
-            Bayar via transfer bank, lalu unggah bukti. Admin memverifikasi dan undangan aktif.
+            Bayar via QRIS, GoPay &amp; aktivasi secara otomatis.
           {/if}
         </p>
       </div>

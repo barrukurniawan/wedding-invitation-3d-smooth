@@ -563,7 +563,7 @@
                 <span class="alert-icon"><Icon name="tip" size={20} /></span>
                 <div>
                   <strong>Status: Draft (Belum Dipublikasikan)</strong>
-                  <p>Lengkapi detail acara dan unggah bukti pada tab <em>Pembayaran</em> agar tim admin dapat memverifikasi &amp; mengaktifkan undangan kalian.</p>
+                  <p>Lengkapi detail acara, lalu selesaikan pembayaran di tab <em>Pembayaran</em> (QRIS, GoPay). Undangan aktif otomatis setelah pembayaran berhasil.</p>
                 </div>
               </div>
             {:else if invitation.status === 'pending_verification'}
