@@ -1,7 +1,16 @@
 <script lang="ts">
   import Icon from '$lib/components/icons/Icon.svelte'
   import type { OwnerInvitation, WeddingConfig } from '$lib/api-client'
-  import { ApiError, checkoutPayment, getPublicPricing, uploadPaymentProof, type PublicPricing } from '$lib/api-client'
+  import {
+    ApiError,
+    checkoutPayment,
+    createTakoPayment,
+    getPublicPricing,
+    getTakoPaymentStatus,
+    uploadPaymentProof,
+    type PublicPricing,
+    type TakoMethod,
+  } from '$lib/api-client'
   import { onMount } from 'svelte'
 
   // Harga & mode pembayaran dari API (bisa diubah di server tanpa rebuild web).
@@ -122,6 +131,107 @@
     }
   }
 
+  // ── Tako (tako.id): bayar online, undangan aktif otomatis ───────────────────
+  const TAKO_METHODS: { id: TakoMethod; label: string; hint: string }[] = [
+    { id: 'qris', label: 'QRIS', hint: 'Semua e-wallet & m-banking' },
+    { id: 'gopay', label: 'GoPay', hint: 'Aplikasi Gojek' },
+    { id: 'dana', label: 'DANA', hint: 'Aplikasi DANA' },
+    { id: 'paypal', label: 'PayPal', hint: 'Kartu / luar negeri' },
+  ]
+  const TAKO_POLL_MS = 5000
+  const TAKO_POLL_LIMIT_MS = 20 * 60 * 1000
+  const isTako = $derived(PAYMENT_MODE === 'tako' && PACKAGE_AMOUNT > 0)
+  let takoMethod = $state<TakoMethod>('qris')
+  let takoWaiting = $state(false)
+  let takoPaymentUrl = $state<string | null>(null)
+  let takoTimer: ReturnType<typeof setInterval> | undefined
+  let takoPollUntil = 0
+  let takoChecked = false
+
+  async function checkTako() {
+    try {
+      const s = await getTakoPaymentStatus()
+      if (s.invitationStatus === 'active') {
+        stopTakoPolling()
+        takoWaiting = false
+        paymentMsg = '✓ Pembayaran berhasil! Undangan kalian sudah aktif.'
+        onStatusChange('active')
+        return
+      }
+      const p = s.payment
+      if (p && (p.status === 'created' || p.status === 'pending')) {
+        takoWaiting = true
+        takoPaymentUrl = p.paymentUrl
+        if (p.method) takoMethod = p.method
+      } else {
+        if (takoWaiting && p?.status === 'failed') paymentMsg = 'Gagal: pembayaran gagal atau dibatalkan. Silakan coba lagi.'
+        takoWaiting = false
+        stopTakoPolling()
+      }
+    } catch {
+      // Gangguan sesaat: coba lagi di putaran berikutnya.
+    }
+  }
+
+  function startTakoPolling() {
+    stopTakoPolling()
+    takoPollUntil = Date.now() + TAKO_POLL_LIMIT_MS
+    takoTimer = setInterval(() => {
+      if (Date.now() > takoPollUntil) return stopTakoPolling()
+      if (!document.hidden) void checkTako()
+    }, TAKO_POLL_MS)
+  }
+
+  function stopTakoPolling() {
+    clearInterval(takoTimer)
+    takoTimer = undefined
+  }
+
+  async function payWithTako() {
+    if (submittingPayment) return
+    submittingPayment = true
+    paymentMsg = ''
+    // Tab dibuka saat klik (sebelum await) supaya tidak diblokir popup blocker.
+    const win = window.open('', '_blank')
+    try {
+      const { paymentUrl } = await createTakoPayment(takoMethod)
+      takoPaymentUrl = paymentUrl
+      takoWaiting = true
+      if (win) {
+        win.opener = null
+        win.location.href = paymentUrl
+        startTakoPolling()
+      } else {
+        location.href = paymentUrl
+      }
+    } catch (err) {
+      win?.close()
+      paymentMsg = `Gagal: ${err instanceof ApiError ? err.message : 'tidak dapat membuat pembayaran.'}`
+    } finally {
+      submittingPayment = false
+    }
+  }
+
+  // Saat tab Pembayaran dibuka / kembali dari Tako: cek tagihan yang masih terbuka.
+  $effect(() => {
+    if (!isTako || takoChecked || invitation.status === 'active') return
+    takoChecked = true
+    void checkTako().then(() => {
+      if (takoWaiting || new URLSearchParams(location.search).get('bayar') === 'tako') startTakoPolling()
+    })
+  })
+
+  onMount(() => {
+    const onVisible = () => {
+      if (!document.hidden && takoWaiting) void checkTako()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      stopTakoPolling()
+    }
+  })
+
   const isFreePackage = $derived(PAYMENT_MODE === 'manual' && PACKAGE_AMOUNT === 0)
   const isConfigure = $derived(PAYMENT_MODE !== 'midtrans' || !MIDTRANS_CLIENT_KEY || MIDTRANS_CLIENT_KEY.includes('YOUR_CLIENT_KEY'))
   const formattedPrice = $derived(PACKAGE_AMOUNT === 0 ? 'Gratis' : `Rp ${PACKAGE_AMOUNT.toLocaleString('id-ID')}`)
@@ -178,6 +288,58 @@
          <p>Undangan kalian sudah aktif tanpa pembayaran. Link dapat langsung dibagikan kepada tamu.</p>
        </div>
      </div>
+
+   {:else if isTako}
+    <div class="tako-card">
+      <h4>Bayar Online</h4>
+      <p class="section-desc">Pembayaran diproses oleh Tako (tako.id). Undangan <strong>aktif otomatis</strong> begitu pembayaran berhasil, tanpa unggah bukti transfer.</p>
+      <div class="tako-methods" role="radiogroup" aria-label="Metode pembayaran">
+        {#each TAKO_METHODS as m (m.id)}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={takoMethod === m.id}
+            class="tako-method"
+            class:active={takoMethod === m.id}
+            disabled={takoWaiting || submittingPayment}
+            onclick={() => (takoMethod = m.id)}
+          >
+            <strong>{m.label}</strong>
+            <span>{m.hint}</span>
+          </button>
+        {/each}
+      </div>
+
+      {#if takoWaiting}
+        <div class="tako-waiting">
+          <span class="btn-spinner dark"></span>
+          <div>
+            <strong>Menunggu pembayaran…</strong>
+            <p>Selesaikan pembayaran di halaman Tako. Status di sini diperbarui otomatis.</p>
+          </div>
+        </div>
+        <div class="tako-actions">
+          {#if takoPaymentUrl}
+            <a class="pay-btn" href={takoPaymentUrl} target="_blank" rel="noopener noreferrer">Buka halaman pembayaran</a>
+          {/if}
+          <button type="button" class="tako-link" onclick={() => void checkTako()}>Sudah bayar? Cek status</button>
+          <button type="button" class="tako-link" onclick={() => { takoWaiting = false; stopTakoPolling(); paymentMsg = '' }}>Ganti metode</button>
+        </div>
+      {:else}
+        <button type="button" class="pay-btn" disabled={submittingPayment} onclick={payWithTako}>
+          {#if submittingPayment}
+            <span class="btn-spinner"></span> Membuat tagihan...
+          {:else}
+            Bayar {formattedPrice} dengan {TAKO_METHODS.find((m) => m.id === takoMethod)?.label}
+          {/if}
+        </button>
+      {/if}
+      <p class="tako-note">Ada kendala pembayaran? Hubungi admin lewat tombol chat di kanan bawah.</p>
+    </div>
+
+    {#if paymentMsg}
+      <p class="payment-msg" class:success-msg={paymentMsg.startsWith('✓')} class:error-msg={paymentMsg.startsWith('Gagal')}>{paymentMsg}</p>
+    {/if}
 
    {:else}
     <!-- Payment Mode Selector -->
@@ -504,4 +666,75 @@
     color: #292321;
   }
   .form-save-footer.mt-16 { margin-top: 16px; }
+  .tako-card {
+    margin-top: 8px;
+    padding: 20px;
+    border: 1px solid #eadbd6;
+    border-radius: 14px;
+    background: #fffdfb;
+  }
+  .tako-card h4 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    color: #292321;
+  }
+  .tako-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin: 14px 0 16px;
+  }
+  .tako-method {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 2px solid #eadbd6;
+    border-radius: 12px;
+    background: white;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .tako-method strong { font-size: 0.95rem; color: #292321; }
+  .tako-method span { font-size: 0.75rem; color: #8a7d78; }
+  .tako-method.active { border-color: #8f1d45; box-shadow: 0 6px 18px -10px rgba(143, 29, 69, 0.55); }
+  .tako-method:disabled { cursor: default; opacity: 0.7; }
+  .tako-method.active:disabled { opacity: 1; }
+  .tako-waiting {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background: #fff8ec;
+    color: #6b4e16;
+  }
+  .tako-waiting strong { display: block; font-size: 0.9rem; }
+  .tako-waiting p { margin: 2px 0 0; font-size: 0.8rem; }
+  .btn-spinner.dark { border-color: rgba(107, 78, 22, 0.25); border-top-color: #6b4e16; flex-shrink: 0; margin-top: 2px; }
+  .tako-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+  }
+  .tako-actions .pay-btn { text-decoration: none; }
+  .tako-link {
+    padding: 4px 0;
+    background: none;
+    border: none;
+    color: #8f1d45;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .tako-note {
+    margin: 14px 0 0;
+    font-size: 0.78rem;
+    color: #8a7d78;
+  }
 </style>

@@ -13,6 +13,8 @@ import invitationRoutes from './routes/invitations.js'
 import tenantConfigRoutes from './routes/tenant-config.js'
 import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
+import takoWebhookRoutes from './routes/tako-webhook.js'
+import { reconcileTakoPayments } from './services/takoPayments.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
 import supportRoutes from './routes/support.js'
@@ -40,7 +42,13 @@ app.use(helmet({
   contentSecurityPolicy: false,
   referrerPolicy: false,
 }))
-app.use(express.json({ limit: '64kb' }))
+app.use(express.json({
+  limit: '64kb',
+  // Callback Tako ditandatangani atas body JSON: simpan raw body untuk verifikasi HMAC.
+  verify: (req, res, buf) => {
+    if (req.originalUrl.startsWith('/api/payment/tako/')) req.rawBody = buf.toString('utf8')
+  },
+}))
 app.use(cookieParser())
 
 app.get('/api/health', (req, res) => {
@@ -64,6 +72,7 @@ app.use('/api/my', requireRootHost, tenantPaymentRoutes)
 app.use('/api/my', requireRootHost, uploadRoutes)
 app.use('/api/my/contacts', requireRootHost, contactRoutes)
 app.use('/api/support', requireRootHost, supportRoutes)
+app.use('/api/payment/tako', takoWebhookRoutes)
 app.use('/api/payment', midtransWebhookRoutes)
 app.use('/api/admin', requireRootHost, adminRoutes)
 app.use('/api/multiplayer', multiplayerRoutes)
@@ -112,6 +121,12 @@ async function start() {
       process.exit(0)
     })
   }
+  // Callback Tako tidak di-retry: cek pembayaran yang masih terbuka tiap 5 menit.
+  const takoTimer = setInterval(() => {
+    reconcileTakoPayments().catch((error) => console.error('[Tako] reconcile failed:', error.message))
+  }, 5 * 60 * 1000)
+  takoTimer.unref()
+
   process.once('SIGINT', shutdown)
   process.once('SIGTERM', shutdown)
 }

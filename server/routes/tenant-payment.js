@@ -6,6 +6,10 @@ import { buildPublicUrl } from '../services/host.js'
 import { randomUUID } from 'node:crypto'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { invitationPriceIdr, paymentMode } from '../services/paymentConfig.js'
+import { rateLimit } from 'express-rate-limit'
+import { z } from 'zod'
+import { TAKO_METHODS, TakoError, createTakoGift, takoConfigured } from '../services/tako.js'
+import { openTakoPayments, syncTakoPayment } from '../services/takoPayments.js'
 
 const router = Router()
 const PAYMENT_MODE = paymentMode()
@@ -122,5 +126,140 @@ router.post(
     }
   },
 )
+
+// ── Tako (tako.id): pembayaran online otomatis ──────────────────────────────────────
+const takoLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `tako:${req.user.id}`,
+  message: { error: { code: 'RATE_LIMITED', message: 'Terlalu sering membuat pembayaran. Coba lagi beberapa menit lagi.' } },
+})
+const takoSchema = z.object({ method: z.enum(TAKO_METHODS) }).strict()
+const REUSE_MINUTES = 30
+
+async function ownerInvitation(userId) {
+  const [rows] = await pool.query(
+    'SELECT id, slug, status FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 1',
+    [userId],
+  )
+  return rows[0] || null
+}
+
+function takoPayload(row) {
+  try {
+    return typeof row.provider_payload === 'string' ? JSON.parse(row.provider_payload) : row.provider_payload || {}
+  } catch {
+    return {}
+  }
+}
+
+router.post('/payment/tako', requireUser, requireCsrf, takoLimit, async (req, res, next) => {
+  const parsed = takoSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Pilih metode pembayaran.' } })
+  const method = parsed.data.method
+  try {
+    if (paymentMode() !== 'tako') {
+      return res.status(409).json({ error: { code: 'TAKO_DISABLED', message: 'Pembayaran online belum dibuka.' } })
+    }
+    const amount = invitationPriceIdr()
+    if (!takoConfigured() || !Number.isInteger(amount) || amount <= 0) {
+      return res.status(503).json({ error: { code: 'PAYMENT_NOT_CONFIGURED', message: 'Pembayaran online belum dikonfigurasi.' } })
+    }
+    const invitation = await ownerInvitation(req.user.id)
+    if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    if (!['draft', 'awaiting_payment', 'pending_verification'].includes(invitation.status)) {
+      return res.status(409).json({ error: { code: 'NOT_PAYABLE', message: 'Undangan ini tidak memerlukan pembayaran.' } })
+    }
+
+    // Tagihan yang sama (metode & nominal) dalam 30 menit terakhir dipakai ulang supaya tidak dobel.
+    const [recent] = await pool.query(
+      `SELECT * FROM payments WHERE invitation_id = ? AND provider = 'tako' AND status = 'created'
+         AND amount = ? AND created_at > UTC_TIMESTAMP() - INTERVAL ? MINUTE
+       ORDER BY id DESC`,
+      [invitation.id, amount, REUSE_MINUTES],
+    )
+    const reusable = recent.find((row) => takoPayload(row).method === method && takoPayload(row).paymentUrl)
+    if (reusable) return res.json({ paymentId: Number(reusable.id), paymentUrl: takoPayload(reusable).paymentUrl, reused: true })
+
+    const gift = await createTakoGift({
+      name: req.user.displayName || 'Pengguna MarryMe',
+      email: req.user.email || 'admin@marryme.web.id',
+      amount,
+      paymentMethod: method,
+      message: `MarryMe #${invitation.id} ${invitation.slug}`,
+    })
+    const paymentId = await withTransaction(async (connection) => {
+      if (invitation.status === 'draft') {
+        await transitionInvitation({
+          invitationId: invitation.id,
+          toStatus: 'awaiting_payment',
+          actorType: 'user',
+          actorId: req.user.id,
+          reason: `Pembayaran Tako dibuat (${method})`,
+          connection,
+        })
+      }
+      const [result] = await connection.query(
+        `INSERT INTO payments (invitation_id, provider, provider_order_id, amount, status, provider_status, provider_payload)
+         VALUES (?, 'tako', ?, ?, 'created', 'pending', ?)`,
+        [invitation.id, gift.transactionId, amount, JSON.stringify({ method, giftId: gift.giftId, paymentUrl: gift.paymentUrl })],
+      )
+      return Number(result.insertId)
+    })
+    res.status(201).json({ paymentId, paymentUrl: gift.paymentUrl, reused: false })
+  } catch (error) {
+    if (error instanceof TakoError) {
+      console.error('[Tako] create payment failed:', error.status, error.message)
+      const message = error.status === 429
+        ? 'Terlalu sering. Tunggu sebentar lalu coba lagi.'
+        : error.status === 400
+          ? `Tako menolak pembayaran: ${error.message}`
+          : 'Layanan pembayaran sedang bermasalah. Coba lagi beberapa saat lagi.'
+      return res.status(error.status === 429 ? 429 : 502).json({ error: { code: 'TAKO_ERROR', message } })
+    }
+    next(error)
+  }
+})
+
+// Dipanggil dashboard saat menunggu/kembali dari halaman bayar Tako: cek langsung ke API Tako
+// (menutup risiko callback yang hilang) lalu kembalikan status terbaru.
+router.get('/payment/tako/status', requireUser, async (req, res, next) => {
+  try {
+    const invitation = await ownerInvitation(req.user.id)
+    if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    if (takoConfigured()) {
+      for (const id of await openTakoPayments(invitation.id)) {
+        try {
+          await syncTakoPayment(id)
+        } catch (error) {
+          console.error(`[Tako] status check payment ${id}:`, error.message)
+        }
+      }
+    }
+    const [[latest]] = await pool.query(
+      `SELECT id, status, provider_status, provider_payload, UNIX_TIMESTAMP(created_at) AS created_epoch
+       FROM payments WHERE invitation_id = ? AND provider = 'tako' ORDER BY id DESC LIMIT 1`,
+      [invitation.id],
+    )
+    const [[inv]] = await pool.query('SELECT status FROM invitations WHERE id = ?', [invitation.id])
+    res.json({
+      invitationStatus: inv.status,
+      payment: latest
+        ? {
+            id: Number(latest.id),
+            status: latest.status,
+            providerStatus: latest.provider_status,
+            method: takoPayload(latest).method || null,
+            paymentUrl: ['created', 'pending'].includes(latest.status) ? takoPayload(latest).paymentUrl || null : null,
+            created_at: new Date(Number(latest.created_epoch) * 1000).toISOString(),
+          }
+        : null,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
 
 export default router

@@ -366,6 +366,33 @@ export function checkoutPayment() {
   return request<{ token: string; redirect_url: string }>('/my/payment/checkout', { method: 'POST' })
 }
 
+export type TakoMethod = 'qris' | 'gopay' | 'dana' | 'paypal'
+
+export interface TakoPaymentStatus {
+  invitationStatus: string
+  payment: {
+    id: number
+    status: 'created' | 'pending' | 'received' | 'failed' | 'cancelled'
+    providerStatus: string | null
+    method: TakoMethod | null
+    paymentUrl: string | null
+    created_at: string
+  } | null
+}
+
+/** Buat (atau pakai ulang) tagihan Tako; nominal ditentukan server. */
+export function createTakoPayment(method: TakoMethod) {
+  return request<{ paymentId: number; paymentUrl: string; reused: boolean }>('/my/payment/tako', {
+    method: 'POST',
+    body: JSON.stringify({ method }),
+  })
+}
+
+/** Cek status pembayaran Tako (server mengecek langsung ke Tako). */
+export function getTakoPaymentStatus() {
+  return request<TakoPaymentStatus>('/my/payment/tako/status')
+}
+
 export function getAdminInvitations() {
   return request<AdminInvitation[]>('/admin/invitations')
 }
