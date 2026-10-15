@@ -181,6 +181,20 @@
     }
   }
 
+  // Tombol "Sudah bayar? Cek status": selalu beri jawaban, bukan diam bila belum ada pembayaran.
+  let takoChecking = $state(false)
+  let takoCheckNote = $state('')
+  async function manualTakoCheck() {
+    takoChecking = true
+    takoCheckNote = ''
+    await checkTako()
+    takoChecking = false
+    if (takoWaiting) {
+      const jam = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      takoCheckNote = `Belum ada pembayaran masuk (dicek pukul ${jam}). Kalau baru saja membayar, tunggu sebentar; status di sini diperbarui otomatis.`
+    }
+  }
+
   function startTakoPolling() {
     stopTakoPolling()
     takoPollUntil = Date.now() + TAKO_POLL_LIMIT_MS
@@ -341,9 +355,10 @@
           {#if takoPaymentUrl}
             <a class="pay-btn" href={takoPaymentUrl} target="_blank" rel="noopener noreferrer">Buka halaman pembayaran</a>
           {/if}
-          <button type="button" class="tako-link" onclick={() => void checkTako()}>Sudah bayar? Cek status</button>
-          <button type="button" class="tako-link" onclick={() => { takoWaiting = false; stopTakoPolling(); paymentMsg = '' }}>Ganti metode</button>
+          <button type="button" class="tako-link" disabled={takoChecking} onclick={() => void manualTakoCheck()}>{takoChecking ? 'Memeriksa...' : 'Sudah bayar? Cek status'}</button>
+          <button type="button" class="tako-link" onclick={() => { takoWaiting = false; takoCheckNote = ''; stopTakoPolling(); paymentMsg = '' }}>Ganti metode</button>
         </div>
+        {#if takoCheckNote}<p class="tako-check-note" role="status">{takoCheckNote}</p>{/if}
       {:else}
         <button type="button" class="pay-btn" disabled={submittingPayment} onclick={payWithTako}>
           {#if submittingPayment}
@@ -775,6 +790,15 @@
     text-decoration: underline;
     cursor: pointer;
   }
+  .tako-check-note {
+    margin: 10px 0 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #f4f1ef;
+    color: #554b47;
+    font-size: 0.82rem;
+  }
+  .tako-link:disabled { opacity: 0.6; cursor: wait; }
   .tako-note {
     margin: 14px 0 0;
     font-size: 0.78rem;
