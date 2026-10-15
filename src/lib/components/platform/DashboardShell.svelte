@@ -172,7 +172,7 @@
   }
 
   function planLabel(status: string) {
-    if (plan?.phase === 'trial') return 'Uji coba'
+    if (plan?.phase === 'trial') return 'Aktif Terbatas'
     if (plan?.phase === 'trial_ended') return 'Uji coba habis'
     if (plan?.phase === 'paid' && status === 'active') return 'Aktif selamanya'
     return statusLabel(status)
