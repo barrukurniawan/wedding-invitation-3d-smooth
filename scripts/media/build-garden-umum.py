@@ -316,7 +316,10 @@ def build_woman():
         picks = [walk[int(k * len(walk) / WALK_FRAMES)] for k in range(WALK_FRAMES)]
         factor = IDLE_HEIGHT / idle.height
         # Satu strip = satu gambar AI: ukuran 'piksel'-nya sama. Median antar-frame mencegah satu frame salah baca.
-        periods = [float(np.median([grid_axis(f, axis)[0] for f in frames])) for axis in (0, 1)]
+        # Piksel dianggap persegi: periode vertikal (lebih stabil) dipakai untuk kedua sumbu, supaya
+        # proporsi tidak melebar bila periode horizontal salah terbaca (mis. 14 vs 16 px).
+        period = float(np.median([grid_axis(f, 1)[0] for f in frames]))
+        periods = [period, period]
         native = [sample_grid(f, periods) for f in [idle, *picks]]
         # Ukuran asli gambar AI ~46-49 px (timur-laut ~60): samakan tinggi idle ke 46 dengan nearest.
         factor = IDLE_HEIGHT / native[0].height
