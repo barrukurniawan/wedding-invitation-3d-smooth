@@ -31,7 +31,7 @@ test('every style defines the same asset keys and the files exist', () => {
     const assets = characterStyleAssets(style)
     assert.deepEqual(Object.keys(assets).sort(), keys)
     for (const file of Object.values(assets)) {
-      assert.ok(existsSync(path.join(presetDir, file)), `${style}: ${file} tidak ada`)
+      assert.ok(existsSync(path.join(presetDir, file.split('?')[0])), `${style}: ${file} tidak ada`)
     }
   }
   assert.notEqual(characterStyleAssets('umum').couple, characterStyleAssets('hijab').couple)

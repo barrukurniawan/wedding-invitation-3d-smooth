@@ -27,7 +27,8 @@ const STYLE_ASSETS = {
     hosts: 'assets/wedding-hosts-umum.webp',
     coverBlank: 'assets/wedding-card-blank-umum.webp',
     ceremonyBackground: 'assets/ceremony-background-umum.webp',
-    womanAtlas: 'assets/woman-atlas-umum.png',
+    // ?v=: nama file sama, isi diganti (versi lebih tajam); nginx/Cloudflare menyimpan preset immutable.
+    womanAtlas: 'assets/woman-atlas-umum.png?v=20261015b',
   },
 }
 
