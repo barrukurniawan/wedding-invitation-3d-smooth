@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { MAX_MESSAGE_LENGTH, afterSchema, messageSchema, serializeMessage } from './support.js'
+import { MAX_MESSAGE_LENGTH, adminMessageSchema, afterSchema, messageSchema, serializeMessage } from './support.js'
 
 test('message body is trimmed and required', () => {
   assert.equal(messageSchema.parse({ body: '  halo  ' }).body, 'halo')
@@ -26,5 +26,12 @@ test('after cursor defaults to 0 and rejects negatives', () => {
 
 test('serializeMessage builds an ISO timestamp from epoch seconds', () => {
   const m = serializeMessage({ id: 5, sender: 'user', body: 'x', context: null, read_at: null, created_epoch: 1791500000 })
-  assert.deepEqual(m, { id: 5, sender: 'user', body: 'x', context: null, read: false, created_at: new Date(1791500000 * 1000).toISOString() })
+  assert.deepEqual(m, { id: 5, sender: 'user', body: 'x', context: null, read: false, emailed: false, created_at: new Date(1791500000 * 1000).toISOString() })
+})
+
+test('admin message: sendEmail is opt-in and strictly boolean', () => {
+  assert.equal(adminMessageSchema.parse({ body: 'halo' }).sendEmail, false)
+  assert.equal(adminMessageSchema.parse({ body: 'halo', sendEmail: true }).sendEmail, true)
+  assert.equal(adminMessageSchema.safeParse({ body: 'halo', sendEmail: 'yes' }).success, false)
+  assert.equal(adminMessageSchema.safeParse({ body: 'halo', context: 'x' }).success, false)
 })

@@ -4,12 +4,12 @@ import { rateLimit } from 'express-rate-limit'
 import { z } from 'zod'
 import pool from '../db.js'
 import { COOKIE_NAME, cookieOptions, createSession, deleteSession, hashSessionToken, requireAdmin } from '../auth.js'
-import { sendActivationEmail } from '../services/email.js'
+import { isEmailConfigured, sendActivationEmail, sendSupportMessageEmail } from '../services/email.js'
 import { buildPublicUrl } from '../services/host.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { stripAdminConfigMetadata } from '../services/adminConfig.js'
 import { classifySource, normalizePath, sumBy } from '../services/trafficSource.js'
-import { afterSchema, insertMessage, listMessages, markRead, messageSchema, notMigrated } from '../services/support.js'
+import { adminMessageSchema, afterSchema, insertMessage, listMessages, markEmailed, markRead, notMigrated } from '../services/support.js'
 import { toIsoString } from '../services/dates.js'
 
 const router = Router()
@@ -477,6 +477,52 @@ router.get('/support/threads', requireAdmin, async (req, res, next) => {
   }
 })
 
+// Semua akun pemilik (termasuk yang belum pernah chat) supaya admin bisa menyapa duluan.
+// Urutan: ada pesan belum dibaca, lalu percakapan terbaru, lalu akun tanpa chat (login terbaru).
+router.get('/support/accounts', requireAdmin, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id AS user_id, u.display_name, u.email,
+              UNIX_TIMESTAMP(u.last_login_at) AS last_login_epoch,
+              i.slug, i.status AS invitation_status, wc.preset,
+              t.total, t.unread, m.body AS last_body, m.sender AS last_sender, UNIX_TIMESTAMP(m.created_at) AS last_epoch
+       FROM users u
+       LEFT JOIN invitations i ON i.id = (
+         SELECT id FROM invitations WHERE owner_user_id = u.id AND deleted_at IS NULL ORDER BY id DESC LIMIT 1
+       )
+       LEFT JOIN wedding_configs wc ON wc.invitation_id = i.id
+       LEFT JOIN (
+         SELECT user_id, MAX(id) AS last_id, COUNT(*) AS total,
+                SUM(sender = 'user' AND read_at IS NULL) AS unread
+         FROM support_messages GROUP BY user_id
+       ) t ON t.user_id = u.id
+       LEFT JOIN support_messages m ON m.id = t.last_id
+       WHERE u.status <> 'deleted'
+       ORDER BY (t.unread > 0) DESC, t.last_id IS NULL, t.last_id DESC, u.last_login_at DESC, u.id DESC`,
+    )
+    res.json({
+      emailEnabled: isEmailConfigured(),
+      accounts: rows.map((r) => ({
+        user_id: Number(r.user_id),
+        name: r.display_name,
+        email: r.email || null,
+        slug: r.slug || null,
+        public_url: r.slug ? buildPublicUrl(r.slug) : null,
+        invitation_status: r.invitation_status || null,
+        preset: r.preset || null,
+        last_login_at: r.last_login_epoch ? new Date(Number(r.last_login_epoch) * 1000).toISOString() : null,
+        total: Number(r.total || 0),
+        unread: Number(r.unread || 0),
+        last_body: r.last_body ?? null,
+        last_sender: r.last_sender ?? null,
+        last_at: r.last_epoch ? new Date(Number(r.last_epoch) * 1000).toISOString() : null,
+      })),
+    })
+  } catch (error) {
+    if (!notMigrated(res, error)) next(error)
+  }
+})
+
 const supportUserId = (req) => z.coerce.number().int().positive().safeParse(req.params.userId)
 
 router.get('/support/threads/:userId/messages', requireAdmin, async (req, res, next) => {
@@ -494,13 +540,21 @@ router.get('/support/threads/:userId/messages', requireAdmin, async (req, res, n
 router.post('/support/threads/:userId/messages', requireAdmin, async (req, res, next) => {
   const userId = supportUserId(req)
   if (!userId.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID pengguna tidak valid.' } })
-  const parsed = messageSchema.omit({ context: true }).safeParse(req.body)
+  const parsed = adminMessageSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed.error)
   try {
-    const [users] = await pool.query("SELECT id FROM users WHERE id = ? AND status <> 'deleted'", [userId.data])
-    if (!users[0]) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Pengguna tidak ditemukan.' } })
-    const message = await insertMessage(userId.data, 'admin', parsed.data.body)
-    res.status(201).json({ message })
+    const [users] = await pool.query("SELECT id, display_name, email FROM users WHERE id = ? AND status <> 'deleted'", [userId.data])
+    const user = users[0]
+    if (!user) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Pengguna tidak ditemukan.' } })
+    let message = await insertMessage(userId.data, 'admin', parsed.data.body)
+    // Email hanya bila dicentang admin. Gagal kirim email tidak menggagalkan pesan chat.
+    let email = 'skipped'
+    if (parsed.data.sendEmail && isEmailConfigured() && user.email) {
+      const sent = await sendSupportMessageEmail(user.email, { name: user.display_name, body: parsed.data.body })
+      email = sent ? 'sent' : 'failed'
+      if (sent) message = await markEmailed(message.id)
+    }
+    res.status(201).json({ message, email })
   } catch (error) {
     if (!notMigrated(res, error)) next(error)
   }

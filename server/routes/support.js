@@ -19,6 +19,15 @@ function invalid(res, error) {
   return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: error.issues[0]?.message || 'Data tidak valid.' } })
 }
 
+// Balasan admin terbaru yang belum dibaca: dipakai gelembung pratinjau di atas tombol chat.
+async function unreadPreview(userId) {
+  const [rows] = await pool.query(
+    "SELECT id, body FROM support_messages WHERE user_id = ? AND sender = 'admin' AND read_at IS NULL ORDER BY id DESC LIMIT 1",
+    [userId],
+  )
+  return rows[0] ? { id: Number(rows[0].id), body: String(rows[0].body).slice(0, 160) } : null
+}
+
 async function unreadCount(userId) {
   const [rows] = await pool.query(
     "SELECT COUNT(*) AS n FROM support_messages WHERE user_id = ? AND sender = 'admin' AND read_at IS NULL",
@@ -29,7 +38,8 @@ async function unreadCount(userId) {
 
 router.get('/unread', requireUser, async (req, res, next) => {
   try {
-    res.json({ unread: await unreadCount(req.user.id) })
+    const unread = await unreadCount(req.user.id)
+    res.json({ unread, preview: unread > 0 ? await unreadPreview(req.user.id) : null })
   } catch (error) {
     if (!notMigrated(res, error)) next(error)
   }

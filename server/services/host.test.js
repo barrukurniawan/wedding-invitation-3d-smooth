@@ -24,6 +24,8 @@ test('rejects reserved, nested, malformed, and suffix-confusion hosts', () => {
   for (const hostname of [
     'admin.marryme.web.id',
     'admin.localhost',
+    'send.marryme.web.id',
+    'rsend.marryme.web.id',
     'foo.bar.marryme.web.id',
     'foo.bar.localhost',
     '-foo.marryme.web.id',

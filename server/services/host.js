@@ -1,6 +1,8 @@
 const DEFAULT_BASE_DOMAIN = 'marryme.web.id'
 export const RESERVED_SLUGS = new Set([
   'www', 'api', 'admin', 'app', 'login', 'dashboard', 'static', 'assets', 'support',
+  // Dipakai DNS email (Resend): send/rsend.marryme.web.id bukan undangan.
+  'send', 'rsend',
 ])
 export const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 

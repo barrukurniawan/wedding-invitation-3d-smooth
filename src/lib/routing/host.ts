@@ -4,7 +4,8 @@ export type HostContext =
   | { type: 'invalid' }
 
 const BASE_DOMAIN = (import.meta.env.VITE_BASE_DOMAIN || 'marryme.web.id').toLowerCase()
-const RESERVED = new Set(['www', 'api', 'admin', 'app', 'login', 'dashboard', 'static', 'assets', 'support'])
+// Sinkron dengan RESERVED_SLUGS di server/services/host.js (send/rsend dipakai DNS email Resend).
+const RESERVED = new Set(['www', 'api', 'admin', 'app', 'login', 'dashboard', 'static', 'assets', 'support', 'send', 'rsend'])
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 
 export function classifyBrowserHost(hostname: string): HostContext {

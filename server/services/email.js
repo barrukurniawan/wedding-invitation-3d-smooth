@@ -15,6 +15,18 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+// Alamat pengirim: MAIL_FROM (mis. "MarryMe <admin@marryme.web.id>"). Untuk SMTP Gmail lama, SMTP_USER
+// sendiri adalah alamat email, jadi tetap dipakai sebagai cadangan.
+const mailFrom = () => process.env.MAIL_FROM || `"MarryMe" <${process.env.SMTP_USER}>`
+const dashboardUrl = () => `${process.env.ROOT_ORIGIN || 'http://localhost:5173'}/account`
+
+export function isEmailConfigured() {
+  return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS)
+}
+
+const escapeHtml = (value) =>
+  String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+
 /**
  * Send activation email to the user.
  * @param {string} toEmail 
@@ -44,7 +56,7 @@ export async function sendActivationEmail(toEmail, { bride_name, groom_name, pub
       <p>Sekarang kalian sudah bisa menyebarkan undangan ini kepada keluarga dan kerabat, memantau buku tamu dan RSVP, serta mengedit informasi kapan pun diperlukan melalui dashboard.</p>
       
       <div style="margin: 30px 0;">
-        <a href="${process.env.ROOT_ORIGIN || 'http://localhost:5173'}/account" 
+        <a href="${dashboardUrl()}" 
            style="background-color: #8f1d45; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
           Buka Dashboard
         </a>
@@ -59,7 +71,7 @@ export async function sendActivationEmail(toEmail, { bride_name, groom_name, pub
 
   try {
     const info = await transporter.sendMail({
-      from: `"MarryMe" <${process.env.SMTP_USER}>`,
+      from: mailFrom(),
       to: toEmail,
       subject: 'Undangan Aktif - MarryMe by Jago Institute',
       html: htmlContent,
@@ -68,6 +80,49 @@ export async function sendActivationEmail(toEmail, { bride_name, groom_name, pub
     return true
   } catch (error) {
     console.error(`[EmailService] Failed to send email to ${toEmail}:`, error)
+    return false
+  }
+}
+
+/**
+ * Salinan pesan chat admin ke email pemilik akun (hanya bila admin mencentang "Kirim juga ke email").
+ * Isi pesan teks bebas, jadi selalu di-escape. Mengembalikan true/false, tidak melempar error.
+ */
+export async function sendSupportMessageEmail(toEmail, { name, body }) {
+  if (!isEmailConfigured() || !toEmail) return false
+  const greeting = name ? `Halo ${name},` : 'Halo,'
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+      <h2 style="color: #8f1d45; margin-bottom: 4px;">Pesan dari Admin MarryMe</h2>
+      <p>${escapeHtml(greeting)}</p>
+      <div style="background-color: #f8f4f0; padding: 16px 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #eadbd6; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(body)}</div>
+      <p>Kamu bisa membalas lewat chat di dashboard MarryMe, atau langsung membalas email ini.</p>
+      <div style="margin: 24px 0;">
+        <a href="${dashboardUrl()}"
+           style="background-color: #8f1d45; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+          Balas di Dashboard
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #666; margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;">
+        Salam hangat,<br>
+        Tim MarryMe by Jago Institute
+      </p>
+    </div>
+  `
+  const text = `${greeting}\n\n${body}\n\nBalas lewat chat di dashboard: ${dashboardUrl()}\natau langsung balas email ini.\n\nTim MarryMe by Jago Institute`
+  try {
+    const info = await transporter.sendMail({
+      from: mailFrom(),
+      replyTo: process.env.MAIL_REPLY_TO || mailFrom(),
+      to: toEmail,
+      subject: 'Pesan dari Admin MarryMe',
+      html,
+      text,
+    })
+    console.log(`[EmailService] Support message emailed to ${toEmail}. MessageId: ${info.messageId}`)
+    return true
+  } catch (error) {
+    console.error(`[EmailService] Failed to email support message to ${toEmail}:`, error.message)
     return false
   }
 }
