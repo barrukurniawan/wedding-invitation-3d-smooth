@@ -173,7 +173,7 @@
 
   function planLabel(status: string) {
     if (plan?.phase === 'trial') return 'Aktif Terbatas'
-    if (plan?.phase === 'trial_ended') return 'Uji coba habis'
+    if (plan?.phase === 'trial_ended') return 'Masa Aktif Habis'
     if (plan?.phase === 'paid' && status === 'active') return 'Aktif selamanya'
     return statusLabel(status)
   }
@@ -625,8 +625,8 @@
                     <strong>Aktif sampai {fmtWib(plan.trial_ends_at)} (sisa {remainingLabel(plan.trial_ends_at)})</strong>
                     <p>Bayar sekali agar undangan aktif selamanya. Saat ini undangan hanya 3 Hari aktif.</p>
                   {:else}
-                    <strong>Masa uji coba berakhir. Tamu belum bisa membuka undangan kalian.</strong>
-                    <p>Semua isi tetap tersimpan. Bayar sekali untuk mengaktifkannya kembali, dan undangan aktif selamanya.</p>
+                    <strong>Masa aktif habis. Ayo aktifkan kembali hanya dengan {fmtRp(plan.price)}!</strong>
+                    <p>Tamu belum bisa membuka undangan kalian. Semua isi tetap tersimpan; bayar sekali dan undangan aktif selamanya.</p>
                   {/if}
                   <div class="trial-cta">
                     <button type="button" class="trial-pay-btn" onclick={openPayment}>
