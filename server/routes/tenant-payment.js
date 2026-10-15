@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { TAKO_METHODS, TakoError, createTakoGift, takoConfigured } from '../services/tako.js'
 import { openTakoPayments, syncTakoPayment } from '../services/takoPayments.js'
 import { isFreeForUser } from '../services/freePlan.js'
+import { priceFor } from '../services/trial.js'
 
 const router = Router()
 const PAYMENT_MODE = paymentMode()
@@ -142,7 +143,8 @@ const REUSE_MINUTES = 30
 
 async function ownerInvitation(userId) {
   const [rows] = await pool.query(
-    'SELECT id, slug, status FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 1',
+    `SELECT id, slug, status, trial_ends_at, paid_at, offer_price, offer_expires_at
+     FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 1`,
     [userId],
   )
   return rows[0] || null
@@ -164,17 +166,19 @@ router.post('/payment/tako', requireUser, requireCsrf, takoLimit, async (req, re
     if (paymentMode() !== 'tako') {
       return res.status(409).json({ error: { code: 'TAKO_DISABLED', message: 'Pembayaran online belum dibuka.' } })
     }
-    const amount = invitationPriceIdr()
+    const invitation = await ownerInvitation(req.user.id)
+    if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    // Harga ditentukan server: harga khusus (email pengingat) bila masih berlaku, kalau tidak harga normal.
+    const amount = priceFor(invitation).amount
     if (!takoConfigured() || !Number.isInteger(amount) || amount <= 0) {
       return res.status(503).json({ error: { code: 'PAYMENT_NOT_CONFIGURED', message: 'Pembayaran online belum dikonfigurasi.' } })
     }
-    const invitation = await ownerInvitation(req.user.id)
-    if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
     if (await isFreeForUser(req.user.id)) {
       // Akun yang mendaftar di masa gratis tidak pernah ditagih; dashboard mengaktifkannya otomatis.
       return res.status(409).json({ error: { code: 'FREE_PLAN', message: 'Akun kamu termasuk paket gratis. Muat ulang dashboard untuk mengaktifkan undangan.' } })
     }
-    if (!['draft', 'awaiting_payment', 'pending_verification'].includes(invitation.status)) {
+    const inTrial = invitation.status === 'active' && invitation.paid_at == null && invitation.trial_ends_at != null
+    if (!inTrial && !['draft', 'awaiting_payment', 'pending_verification'].includes(invitation.status)) {
       return res.status(409).json({ error: { code: 'NOT_PAYABLE', message: 'Undangan ini tidak memerlukan pembayaran.' } })
     }
 

@@ -59,12 +59,33 @@ export async function syncTakoPayment(paymentId) {
 
 async function activateInvitation(connection, payment) {
   const [rows] = await connection.query(
-    'SELECT status FROM invitations WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
+    'SELECT status, paid_at, trial_ends_at FROM invitations WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
     [payment.invitation_id],
   )
-  const path = PATH_TO_ACTIVE[rows[0]?.status]
-  if (!path) return false // sudah aktif, kedaluwarsa, dll.: pembayaran tetap tercatat untuk admin.
-  await connection.query('UPDATE invitations SET payment_submitted_at = UTC_TIMESTAMP() WHERE id = ?', [payment.invitation_id])
+  const inv = rows[0]
+  if (!inv) return false
+  // Sudah bayar = aktif selamanya: uji coba berakhir, harga khusus tidak berlaku lagi.
+  const wasUnpaid = inv.paid_at == null
+  await connection.query(
+    `UPDATE invitations
+     SET payment_submitted_at = UTC_TIMESTAMP(), paid_at = COALESCE(paid_at, UTC_TIMESTAMP()),
+         trial_ends_at = NULL, offer_expires_at = NULL
+     WHERE id = ?`,
+    [payment.invitation_id],
+  )
+  const path = PATH_TO_ACTIVE[inv.status]
+  if (!path) {
+    // Uji coba aktif / habis (status sudah active): cukup dicatat sebagai lunas.
+    if (inv.status === 'active' && wasUnpaid) {
+      await connection.query(
+        `INSERT INTO invitation_status_events (invitation_id, from_status, to_status, actor_type, reason, payment_id)
+         VALUES (?, 'active', 'active', 'system', 'Pembayaran Tako berhasil; aktif selamanya', ?)`,
+        [payment.invitation_id, payment.id],
+      )
+      return true
+    }
+    return false // ditangguhkan/kedaluwarsa dll.: pembayaran tetap tercatat untuk admin.
+  }
   for (const toStatus of path) {
     await transitionInvitation({
       invitationId: payment.invitation_id,

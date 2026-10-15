@@ -34,6 +34,8 @@ router.get('/', async (req, res) => {
     row.gift_shipping = publicGiftShipping(row)
     for (const key of ['gift_recipient', 'gift_address', 'gift_phone', 'gift_phone_public', 'gift_note']) delete row[key]
     row.asset_cdn = assetCdnBase()
+    // Undangan masa uji coba: tamu melihat label kecil "3 Hari Aktif · MarryMe".
+    row.trial = Boolean(req.invitationTrial)
     res.json(row)
   } catch (err) {
     console.error('GET /api/config error:', err.message)

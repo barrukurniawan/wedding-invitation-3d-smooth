@@ -1,6 +1,7 @@
 // Harga & promo peluncuran untuk landing page dan halaman pembayaran.
 // Semua nilai dari env supaya bisa diubah tanpa rebuild web (cukup restart api).
 import { invitationPriceIdr, paymentMode } from './paymentConfig.js'
+import { trialConfig } from './trial.js'
 
 const toIdr = (value, fallback = null) => {
   if (value == null || value === '') return fallback
@@ -27,6 +28,8 @@ export function pricingInfo(env = process.env, now = new Date()) {
     currency: 'IDR',
     currentPrice,
     isFree: currentPrice === 0,
+    // Akun baru (berbayar): uji coba sekian hari, bayar sekali aktif selamanya. null saat gratis.
+    trialDays: currentPrice === 0 ? null : trialConfig(env).hours / 24,
     normalPrice: promoActive ? normalPrice : null,
     afterPromoPrice: promoActive ? afterPromoPrice : null,
     promoActive,

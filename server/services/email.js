@@ -126,3 +126,53 @@ export async function sendSupportMessageEmail(toEmail, { name, body }) {
     return false
   }
 }
+
+const fmtWib = (iso) =>
+  new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' WIB'
+const fmtRp = (n) => `Rp${Number(n).toLocaleString('id-ID')}`
+
+/**
+ * Pengingat uji coba (sisa ≤ 24 jam) + harga khusus bila ada. Mengembalikan true/false, tidak melempar error.
+ */
+export async function sendTrialReminderEmail(toEmail, { name, slug, publicUrl, trialEndsAt, ended, normalPrice, offerPrice, offerExpiresAt }) {
+  if (!isEmailConfigured() || !toEmail) return false
+  const hello = name ? `Halo ${escapeHtml(name)},` : 'Halo,'
+  const status = ended
+    ? `Masa uji coba undangan <strong>${escapeHtml(slug)}.marryme.web.id</strong> sudah berakhir, jadi tamu belum bisa membukanya.`
+    : `Undangan <strong>${escapeHtml(slug)}.marryme.web.id</strong> bisa dibuka tamu sampai <strong>${fmtWib(trialEndsAt)}</strong>.`
+  const offer = offerPrice
+    ? `<div style="background-color: #fff7e6; padding: 16px 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #f3d9a4;">
+        <p style="margin: 0 0 6px; font-size: 13px; color: #8a6a1f; font-weight: bold;">HARGA KHUSUS UNTUK KALIAN</p>
+        <p style="margin: 0; font-size: 22px;"><s style="color: #999; font-size: 15px;">${fmtRp(normalPrice)}</s> <strong style="color: #8f1d45;">${fmtRp(offerPrice)}</strong></p>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #706662;">Berlaku sampai ${fmtWib(offerExpiresAt)}. Bayar sekali, undangan aktif selamanya.</p>
+      </div>`
+    : `<p>Bayar sekali ${fmtRp(normalPrice)}, undangan aktif selamanya.</p>`
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+      <h2 style="color: #8f1d45; margin-bottom: 4px;">${ended ? 'Uji coba undangan kalian sudah berakhir' : 'Uji coba undangan kalian segera berakhir'}</h2>
+      <p>${hello}</p>
+      <p>${status}</p>
+      ${offer}
+      <p>Bayar lewat QRIS, GoPay, DANA, atau PayPal langsung dari dashboard. Undangan aktif otomatis, semua isi tetap tersimpan.</p>
+      <div style="margin: 24px 0;">
+        <a href="${dashboardUrl()}" style="background-color: #8f1d45; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Aktifkan selamanya</a>
+      </div>
+      <p style="font-size: 13px; color: #666;">Lihat undangan: <a href="${publicUrl}" style="color: #8f1d45;">${escapeHtml(slug)}.marryme.web.id</a></p>
+      <p style="font-size: 13px; color: #666; margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;">Salam hangat,<br>Tim MarryMe by Jago Institute</p>
+    </div>
+  `
+  try {
+    const info = await transporter.sendMail({
+      from: mailFrom(),
+      replyTo: process.env.MAIL_REPLY_TO || mailFrom(),
+      to: toEmail,
+      subject: offerPrice ? `Harga khusus ${fmtRp(offerPrice)} untuk undangan kalian` : 'Uji coba undangan kalian segera berakhir',
+      html,
+    })
+    console.log(`[EmailService] Trial reminder sent to ${toEmail}. MessageId: ${info.messageId}`)
+    return true
+  } catch (error) {
+    console.error(`[EmailService] Failed to send trial reminder to ${toEmail}:`, error.message)
+    return false
+  }
+}

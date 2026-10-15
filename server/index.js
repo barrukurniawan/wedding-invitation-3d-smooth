@@ -15,6 +15,7 @@ import tenantPaymentRoutes from './routes/tenant-payment.js'
 import midtransWebhookRoutes from './routes/midtrans-webhook.js'
 import takoWebhookRoutes from './routes/tako-webhook.js'
 import { reconcileTakoPayments } from './services/takoPayments.js'
+import { sendTrialReminders } from './services/trialReminders.js'
 import uploadRoutes, { servePublicMusic, servePublicPhoto } from './routes/upload.js'
 import contactRoutes from './routes/contacts.js'
 import supportRoutes from './routes/support.js'
@@ -121,9 +122,11 @@ async function start() {
       process.exit(0)
     })
   }
-  // Callback Tako tidak di-retry: cek pembayaran yang masih terbuka tiap 5 menit.
+  // Tiap 5 menit: cek pembayaran Tako yang masih terbuka (callback tidak di-retry) dan kirim email
+  // pengingat uji coba yang jatuh tempo.
   const takoTimer = setInterval(() => {
     reconcileTakoPayments().catch((error) => console.error('[Tako] reconcile failed:', error.message))
+    sendTrialReminders().catch((error) => console.error('[Trial] reminders failed:', error.message))
   }, 5 * 60 * 1000)
   takoTimer.unref()
 

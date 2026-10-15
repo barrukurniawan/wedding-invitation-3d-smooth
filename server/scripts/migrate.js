@@ -25,6 +25,7 @@ const migrations = [
   '018_character_style.sql',
   '019_support_message_email.sql',
   '020_users_free_plan.sql',
+  '021_invitation_trial.sql',
 ]
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDirectory = process.env.MIGRATIONS_DIR

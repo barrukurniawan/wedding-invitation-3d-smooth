@@ -4,6 +4,7 @@ import pool from '../db.js'
 import { RESERVED_SLUGS, SLUG_PATTERN, buildPublicUrl } from '../services/host.js'
 import { requireCsrf, requireUser } from '../userAuth.js'
 import { isFreeForUser } from '../services/freePlan.js'
+import { ownerTrialState, trialConfig } from '../services/trial.js'
 import { transitionInvitation, withTransaction } from '../services/invitationState.js'
 import { DEFAULT_VENUE, VENUE_IDS } from '../services/venues.js'
 
@@ -20,6 +21,12 @@ const createSchema = z.object({
   preset: z.enum(['3d_summer', '2d_garden']).optional(),
   venue: z.enum(VENUE_IDS).optional(),
 }).strict()
+
+// Info paket untuk dashboard pemilik (gratis / uji coba / sudah bayar).
+async function withOwnerFields(serialized, row, userId) {
+  const free = await isFreeForUser(userId)
+  return { ...serialized, free_plan: free, trial: ownerTrialState(row, { free }) }
+}
 
 function serializeInvitation(row) {
   return {
@@ -107,8 +114,36 @@ router.get('/me', requireUser, async (req, res, next) => {
         })
       }
     }
+    if (!free) {
+      // Undangan draft dari sebelum ada uji coba (belum bayar, belum uji coba): mulai uji coba 72 jam sekarang.
+      const [ownedRows] = await pool.query(
+        `SELECT id, status FROM invitations
+         WHERE owner_user_id = ? AND deleted_at IS NULL AND paid_at IS NULL AND trial_ends_at IS NULL LIMIT 1`,
+        [req.user.id],
+      )
+      if (ownedRows[0]?.status === 'draft' || ownedRows[0]?.status === 'awaiting_payment') {
+        await withTransaction(async (connection) => {
+          if (ownedRows[0].status === 'awaiting_payment') {
+            await transitionInvitation({ invitationId: ownedRows[0].id, toStatus: 'draft', actorType: 'system', reason: 'Beralih ke uji coba', connection })
+          }
+          await transitionInvitation({
+            invitationId: ownedRows[0].id,
+            toStatus: 'active',
+            actorType: 'system',
+            reason: `Uji coba ${trialConfig().hours} jam dimulai`,
+            connection,
+            allowFreeActivation: true,
+          })
+          await connection.query(
+            'UPDATE invitations SET trial_ends_at = UTC_TIMESTAMP() + INTERVAL ? HOUR WHERE id = ?',
+            [trialConfig().hours, ownedRows[0].id],
+          )
+        })
+      }
+    }
     const [rows] = await pool.query(
       `SELECT i.id, i.slug, i.status, i.payment_proof_url, i.payment_submitted_at, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
+              i.trial_ends_at, i.paid_at, i.offer_price, i.offer_expires_at,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        LEFT JOIN wedding_configs c ON c.invitation_id = i.id
@@ -119,7 +154,7 @@ router.get('/me', requireUser, async (req, res, next) => {
     if (!rows[0]) {
       return res.json({ invitation: null })
     }
-    res.json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free } })
+    res.json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free, trial: ownerTrialState(rows[0], { free }) } })
   } catch (error) {
     next(error)
   }
@@ -178,7 +213,8 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
           ?, ?, ?, ?, 'Asia/Jakarta',
           DATE_ADD(?, INTERVAL 7 DAY), DATE_ADD(?, INTERVAL 37 DAY)
         )`,
-       [req.user.id, slug, free ? 'active' : 'draft', receptionMysql, receptionMysql, receptionMysql],
+       // Akun gratis: aktif biasa. Akun berbayar: aktif sebagai uji coba 72 jam (trial_ends_at di bawah).
+       [req.user.id, slug, 'active', receptionMysql, receptionMysql, receptionMysql],
     )
     const invitationId = Number(insert.insertId)
 
@@ -205,21 +241,23 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
       [invitationId, brideName, groomName, receptionMysql, defaultEventDateIndo, defaultEventDateIndo, groomName, preset, venue],
     )
 
-    if (free) {
-      await connection.query(
-        'UPDATE invitations SET activated_at = UTC_TIMESTAMP() WHERE id = ?',
-        [invitationId],
-      )
-      await connection.query(
-        `INSERT INTO invitation_status_events
-           (invitation_id, from_status, to_status, actor_type, reason)
-         VALUES (?, 'draft', 'active', 'system', 'Paket gratis: aktivasi otomatis')`,
-        [invitationId],
-      )
-    }
+    const trialHours = trialConfig().hours
+    await connection.query(
+      `UPDATE invitations SET activated_at = UTC_TIMESTAMP(),
+         trial_ends_at = IF(?, NULL, UTC_TIMESTAMP() + INTERVAL ? HOUR)
+       WHERE id = ?`,
+      [free ? 1 : 0, trialHours, invitationId],
+    )
+    await connection.query(
+      `INSERT INTO invitation_status_events
+         (invitation_id, from_status, to_status, actor_type, reason)
+       VALUES (?, 'draft', 'active', 'system', ?)`,
+      [invitationId, free ? 'Paket gratis: aktivasi otomatis' : `Uji coba ${trialHours} jam dimulai`],
+    )
 
     const [rows] = await connection.query(
       `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
+              i.trial_ends_at, i.paid_at, i.offer_price, i.offer_expires_at,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        JOIN wedding_configs c ON c.invitation_id = i.id
@@ -227,7 +265,7 @@ router.post('/', requireUser, requireCsrf, async (req, res, next) => {
       [invitationId],
     )
     await connection.commit()
-    res.status(201).json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free } })
+    res.status(201).json({ invitation: { ...serializeInvitation(rows[0]), free_plan: free, trial: ownerTrialState(rows[0], { free }) } })
   } catch (error) {
     await connection.rollback()
     if (error?.code === 'ER_DUP_ENTRY') {
@@ -264,6 +302,7 @@ router.patch('/slug', requireUser, requireCsrf, async (req, res, next) => {
 
     const [ownedRows] = await connection.query(
       `SELECT i.id, i.slug, i.status, i.reception_at, i.timezone, i.expires_at, i.retention_until, i.activated_at, i.rejection_reason,
+              i.trial_ends_at, i.paid_at, i.offer_price, i.offer_expires_at,
               c.bride_name, c.groom_name, c.wedding_date, c.resepsi_date, c.resepsi_location
        FROM invitations i
        LEFT JOIN wedding_configs c ON c.invitation_id = i.id
@@ -279,7 +318,7 @@ router.patch('/slug', requireUser, requireCsrf, async (req, res, next) => {
 
     if (current.slug === newSlug) {
       await connection.rollback()
-      return res.json({ invitation: serializeInvitation(current) })
+      return res.json({ invitation: await withOwnerFields(serializeInvitation(current), current, req.user.id) })
     }
 
     const [existing] = await connection.query(
@@ -304,7 +343,7 @@ router.patch('/slug', requireUser, requireCsrf, async (req, res, next) => {
 
     current.slug = newSlug
     await connection.commit()
-    res.json({ invitation: serializeInvitation(current) })
+    res.json({ invitation: await withOwnerFields(serializeInvitation(current), current, req.user.id) })
   } catch (error) {
     await connection.rollback()
     next(error)

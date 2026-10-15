@@ -11,6 +11,7 @@ import { stripAdminConfigMetadata } from '../services/adminConfig.js'
 import { classifySource, normalizePath, sumBy } from '../services/trafficSource.js'
 import { adminMessageSchema, afterSchema, insertMessage, listMessages, markEmailed, markRead, notMigrated } from '../services/support.js'
 import { toIsoString } from '../services/dates.js'
+import { ownerTrialState, priceFor, trialConfig } from '../services/trial.js'
 
 const router = Router()
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
@@ -282,6 +283,7 @@ router.get('/subdomains', requireAdmin, async (req, res, next) => {
     const [rows] = await pool.query(
       `SELECT i.id, i.slug, i.status, UNIX_TIMESTAMP(i.created_at) AS created_epoch, i.activated_at, i.expires_at,
               i.payment_proof_url, i.payment_submitted_at, i.rejection_reason,
+              i.trial_ends_at, i.paid_at, i.offer_price, i.offer_expires_at, u.free_plan,
               c.bride_name, c.groom_name, c.preset, c.venue,
               u.email AS owner_email, u.display_name AS owner_name,
               COALESCE(v.views, 0) AS views, COALESCE(v.uniques, 0) AS uniques,
@@ -334,6 +336,8 @@ router.get('/subdomains', requireAdmin, async (req, res, next) => {
         total_views: Number(r.total_views),
         last_visit: fromEpoch(r.last_visit_epoch),
         rsvp: { total: Number(r.rsvp_total), hadir: Number(r.rsvp_hadir), ragu: Number(r.rsvp_ragu), tidakHadir: Number(r.rsvp_tidak) },
+        // Paket: free (akun lama) | trial | trial_ended | paid | none
+        plan: ownerTrialState(r, { free: Number(r.free_plan) === 1 }),
       })),
     })
   } catch (error) {
@@ -711,6 +715,68 @@ router.post('/invitations/:id/activate', requireAdmin, async (req, res, next) =>
       }).catch(e => console.error('[EmailService] Error in background send:', e))
     }
 
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Perpanjang uji coba gratis (+TRIAL_DAYS) dari sekarang atau dari akhir uji coba yang masih berjalan.
+router.post('/invitations/:id/trial/extend', requireAdmin, async (req, res, next) => {
+  const invId = Number(req.params.id)
+  if (!Number.isInteger(invId) || invId <= 0) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  try {
+    const hours = trialConfig().hours
+    const [result] = await pool.query(
+      `UPDATE invitations
+       SET trial_ends_at = GREATEST(trial_ends_at, UTC_TIMESTAMP()) + INTERVAL ? HOUR
+       WHERE id = ? AND deleted_at IS NULL AND paid_at IS NULL AND trial_ends_at IS NOT NULL AND status = 'active'`,
+      [hours, invId],
+    )
+    if (!result.affectedRows) return res.status(409).json({ error: { code: 'NOT_IN_TRIAL', message: 'Undangan ini tidak sedang/pernah uji coba atau sudah dibayar.' } })
+    await pool.query(
+      `INSERT INTO invitation_status_events (invitation_id, from_status, to_status, actor_type, actor_id, reason)
+       VALUES (?, 'active', 'active', 'admin', ?, ?)`,
+      [invId, req.admin.id, `Admin: uji coba diperpanjang ${hours} jam`],
+    )
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Tandai sudah bayar (mis. transfer manual): aktif selamanya, dicatat sebagai pembayaran 'manual'.
+router.post('/invitations/:id/mark-paid', requireAdmin, async (req, res, next) => {
+  const invId = Number(req.params.id)
+  if (!Number.isInteger(invId) || invId <= 0) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'ID undangan tidak valid.' } })
+  try {
+    const done = await withTransaction(async (connection) => {
+      const [rows] = await connection.query(
+        `SELECT id, status, paid_at, offer_price, offer_expires_at FROM invitations
+         WHERE id = ? AND deleted_at IS NULL FOR UPDATE`,
+        [invId],
+      )
+      const inv = rows[0]
+      if (!inv || inv.paid_at != null || inv.status !== 'active') return false
+      const [payment] = await connection.query(
+        `INSERT INTO payments (invitation_id, provider, provider_order_id, amount, status, provider_status)
+         VALUES (?, 'manual', ?, ?, 'received', 'admin')`,
+        [invId, `admin_${invId}_${Date.now()}`, priceFor(inv).amount ?? 0],
+      )
+      await connection.query(
+        `UPDATE invitations SET paid_at = UTC_TIMESTAMP(), trial_ends_at = NULL, offer_expires_at = NULL,
+           payment_submitted_at = COALESCE(payment_submitted_at, UTC_TIMESTAMP())
+         WHERE id = ?`,
+        [invId],
+      )
+      await connection.query(
+        `INSERT INTO invitation_status_events (invitation_id, from_status, to_status, actor_type, actor_id, reason, payment_id)
+         VALUES (?, 'active', 'active', 'admin', ?, 'Admin: ditandai sudah bayar (aktif selamanya)', ?)`,
+        [invId, req.admin.id, Number(payment.insertId)],
+      )
+      return true
+    })
+    if (!done) return res.status(409).json({ error: { code: 'NOT_PAYABLE', message: 'Undangan tidak aktif atau sudah dibayar.' } })
     res.status(204).end()
   } catch (error) {
     next(error)
