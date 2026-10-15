@@ -623,7 +623,7 @@
                 <div>
                   {#if plan.phase === 'trial'}
                     <strong>Uji coba: undangan bisa dibuka tamu sampai {fmtWib(plan.trial_ends_at)} (sisa {remainingLabel(plan.trial_ends_at)})</strong>
-                    <p>Semua fitur bisa dipakai. Bayar sekali agar undangan aktif selamanya. Selama uji coba, tamu melihat label kecil "3 Hari Aktif · MarryMe".</p>
+                    <p>Bayar sekali agar undangan aktif selamanya. Saat ini undangan hanya 3 Hari aktif.</p>
                   {:else}
                     <strong>Masa uji coba berakhir. Tamu belum bisa membuka undangan kalian.</strong>
                     <p>Semua isi tetap tersimpan. Bayar sekali untuk mengaktifkannya kembali, dan undangan aktif selamanya.</p>
