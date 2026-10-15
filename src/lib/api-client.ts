@@ -625,7 +625,26 @@ export interface SupportMessage {
   body: string
   context: string | null
   read: boolean
+  /** Pesan admin yang juga dikirim ke email pemilik. */
+  emailed?: boolean
   created_at: string
+}
+
+/** Akun pemilik untuk menu Pesan admin (termasuk yang belum pernah chat). */
+export interface SupportAccount {
+  user_id: number
+  name: string | null
+  email: string | null
+  slug: string | null
+  public_url: string | null
+  invitation_status: string | null
+  preset: '3d_summer' | '2d_garden' | null
+  last_login_at: string | null
+  total: number
+  unread: number
+  last_body: string | null
+  last_sender: 'user' | 'admin' | null
+  last_at: string | null
 }
 
 export interface SupportThread {
@@ -642,7 +661,7 @@ export interface SupportThread {
 }
 
 export function getSupportUnread() {
-  return request<{ unread: number }>('/support/unread')
+  return request<{ unread: number; preview: { id: number; body: string } | null }>('/support/unread')
 }
 
 export function getSupportMessages(after = 0, markRead = false) {
@@ -665,8 +684,15 @@ export function getAdminSupportMessages(userId: number, after = 0) {
   return request<{ messages: SupportMessage[] }>(`/admin/support/threads/${userId}/messages?after=${after}`)
 }
 
-export function sendAdminSupportReply(userId: number, body: string) {
-  return request<{ message: SupportMessage }>(`/admin/support/threads/${userId}/messages`, { method: 'POST', body: JSON.stringify({ body }) })
+export function getAdminSupportAccounts() {
+  return request<{ accounts: SupportAccount[]; emailEnabled: boolean }>('/admin/support/accounts')
+}
+
+export function sendAdminSupportReply(userId: number, body: string, sendEmail = false) {
+  return request<{ message: SupportMessage; email: 'sent' | 'failed' | 'skipped' }>(`/admin/support/threads/${userId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body, sendEmail }),
+  })
 }
 
 export interface PublicPricing {

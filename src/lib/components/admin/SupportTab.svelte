@@ -1,43 +1,61 @@
 <script lang="ts">
-  // Pesan bantuan dari pemilik akun: daftar percakapan (kiri) + isi & balasan (kanan).
+  // Pesan bantuan: daftar akun (kiri) + isi percakapan & balasan (kanan). Tab "Semua akun" memuat
+  // pemilik yang belum pernah chat, supaya admin bisa menyapa duluan.
   // Polling: daftar tiap 15 dtk, percakapan yang dibuka tiap 8 dtk.
   import { onMount, tick } from 'svelte'
   import {
     ApiError,
+    getAdminSupportAccounts,
     getAdminSupportMessages,
-    getAdminSupportThreads,
     sendAdminSupportReply,
+    type SupportAccount,
     type SupportMessage,
-    type SupportThread,
   } from '$lib/api-client'
   import Icon from './ui/Icon.svelte'
-  import { fmtRelative, initials } from './format'
+  import { fmtRelative, initials, statusMeta } from './format'
 
   let { onUnreadChange }: { onUnreadChange?: () => void } = $props()
 
-  let threads = $state<SupportThread[]>([])
+  let accounts = $state<SupportAccount[]>([])
+  let emailEnabled = $state(false)
   let loadingThreads = $state(true)
   let errorMsg = $state('')
   let query = $state('')
+  let view = $state<'threads' | 'all'>('threads')
   let selectedId = $state<number | null>(null)
   let messages = $state<SupportMessage[]>([])
   let loadingMessages = $state(false)
   let draft = $state('')
   let sending = $state(false)
   let sendError = $state('')
+  // Centang "Kirim juga ke email": default mati, kembali mati setelah setiap pesan.
+  let sendEmail = $state(false)
+  let emailNotice = $state<{ ok: boolean; text: string } | null>(null)
   let list = $state<HTMLElement | null>(null)
 
-  const selected = $derived(threads.find((t) => t.user_id === selectedId) ?? null)
+  const threadCount = $derived(accounts.filter((a) => a.total > 0).length)
+  const selected = $derived(accounts.find((a) => a.user_id === selectedId) ?? null)
   const visible = $derived(
-    threads.filter((t) => {
+    accounts.filter((a) => {
+      if (view === 'threads' && a.total === 0) return false
       const q = query.trim().toLowerCase()
-      return !q || [t.name, t.email, t.slug, t.last_body].some((v) => v?.toLowerCase().includes(q))
+      return !q || [a.name, a.email, a.slug, a.last_body].some((v) => v?.toLowerCase().includes(q))
     }),
+  )
+  const canEmail = $derived(emailEnabled && Boolean(selected?.email))
+  const emailHint = $derived(
+    !emailEnabled
+      ? 'Email belum diatur di server (SMTP).'
+      : !selected?.email
+        ? 'Akun ini tidak punya alamat email.'
+        : `Salinan pesan dikirim ke ${selected.email}`,
   )
 
   async function loadThreads() {
     try {
-      threads = (await getAdminSupportThreads()).threads
+      const res = await getAdminSupportAccounts()
+      accounts = res.accounts
+      emailEnabled = res.emailEnabled
       errorMsg = ''
     } catch (error) {
       errorMsg = error instanceof ApiError && error.status === 503 ? error.message : 'Gagal memuat pesan.'
@@ -55,10 +73,15 @@
     selectedId = userId
     messages = []
     sendError = ''
+    emailNotice = null
+    sendEmail = false
+    draft = ''
+    const account = accounts.find((a) => a.user_id === userId)
+    if (!account?.total) return
     loadingMessages = true
     try {
       messages = (await getAdminSupportMessages(userId)).messages
-      threads = threads.map((t) => (t.user_id === userId ? { ...t, unread: 0 } : t))
+      accounts = accounts.map((a) => (a.user_id === userId ? { ...a, unread: 0 } : a))
       onUnreadChange?.()
       void scrollToBottom()
     } finally {
@@ -78,15 +101,28 @@
     }
   }
 
+  function greet() {
+    const name = selected?.name?.trim()
+    draft = selected?.slug
+      ? `Halo${name ? ` ${name}` : ''}, terima kasih sudah membuat undangan di MarryMe! 🙏 Ada yang bisa kami bantu atau ingin ditanyakan?`
+      : `Halo${name ? ` ${name}` : ''}, terima kasih sudah bergabung di MarryMe! 🙏 Ada yang bisa kami bantu untuk mulai membuat undangan?`
+  }
+
   async function reply() {
     const text = draft.trim()
     if (!text || !selectedId || sending) return
     sending = true
     sendError = ''
+    emailNotice = null
+    const withEmail = sendEmail && canEmail
+    const to = selected?.email
     try {
-      const { message } = await sendAdminSupportReply(selectedId, text)
+      const { message, email } = await sendAdminSupportReply(selectedId, text, withEmail)
       messages = [...messages, message]
       draft = ''
+      sendEmail = false
+      if (email === 'sent') emailNotice = { ok: true, text: `Terkirim juga ke email ${to}` }
+      else if (email === 'failed') emailNotice = { ok: false, text: 'Email gagal terkirim. Pesan chat tetap tersimpan.' }
       void scrollToBottom()
       void loadThreads()
     } catch (error) {
@@ -123,37 +159,47 @@
     <div class="adm-card-head" style="margin-bottom: 10px">
       <div>
         <h2 class="adm-card-title">Pesan Bantuan</h2>
-        <p class="adm-card-sub">{threads.length} percakapan dari pemilik akun</p>
+        <p class="adm-card-sub">{threadCount} percakapan · {accounts.length} akun pemilik</p>
       </div>
+    </div>
+    <div class="adm-seg views" role="group" aria-label="Tampilan daftar">
+      <button type="button" class:active={view === 'threads'} onclick={() => (view = 'threads')}>Percakapan</button>
+      <button type="button" class:active={view === 'all'} onclick={() => (view = 'all')}>Semua akun</button>
     </div>
     <label class="adm-search">
       <Icon name="search" size={16} />
-      <input class="adm-input" type="search" placeholder="Cari nama, email, subdomain" bind:value={query} aria-label="Cari percakapan" />
+      <input class="adm-input" type="search" placeholder="Cari nama, email, subdomain" bind:value={query} aria-label="Cari akun" />
     </label>
     <ul>
       {#if loadingThreads}
         <li class="adm-empty">Memuat...</li>
       {/if}
-      {#each visible as t (t.user_id)}
+      {#each visible as a (a.user_id)}
         <li>
-          <button type="button" class="thread" class:active={t.user_id === selectedId} class:unread={t.unread > 0} onclick={() => openThread(t.user_id)}>
-            <span class="adm-avatar">{initials(t.name || t.email)}</span>
+          <button type="button" class="thread" class:active={a.user_id === selectedId} class:unread={a.unread > 0} onclick={() => openThread(a.user_id)}>
+            <span class="adm-avatar">{initials(a.name || a.email)}</span>
             <span class="thread-text">
               <span class="row">
-                <strong>{t.name || t.email || 'Pengguna'}</strong>
-                <span class="when">{fmtRelative(t.last_at)}</span>
+                <strong>{a.name || a.email || 'Pengguna'}</strong>
+                <span class="when">{a.last_at ? fmtRelative(a.last_at) : ''}</span>
               </span>
-              <span class="sub">{t.slug ? `${t.slug}.marryme.web.id` : t.email || 'belum punya subdomain'}</span>
+              <span class="sub">{a.slug ? `${a.slug}.marryme.web.id` : a.email || 'belum punya subdomain'}</span>
               <span class="row">
-                <span class="preview">{t.last_sender === 'admin' ? 'Anda: ' : ''}{t.last_body}</span>
-                {#if t.unread > 0}<span class="count">{t.unread}</span>{/if}
+                {#if a.total > 0}
+                  <span class="preview">{a.last_sender === 'admin' ? 'Anda: ' : ''}{a.last_body}</span>
+                {:else}
+                  <span class="preview muted">Belum pernah chat · login {fmtRelative(a.last_login_at).toLowerCase()}</span>
+                {/if}
+                {#if a.unread > 0}<span class="count">{a.unread}</span>{/if}
               </span>
             </span>
           </button>
         </li>
       {:else}
         {#if !loadingThreads}
-          <li class="adm-empty">{threads.length ? 'Tidak ada yang cocok.' : 'Belum ada pesan dari pengguna.'}</li>
+          <li class="adm-empty">
+            {#if query.trim()}Tidak ada yang cocok.{:else if view === 'threads'}Belum ada percakapan. Buka tab <strong>Semua akun</strong> untuk menyapa pemilik undangan.{:else}Belum ada akun.{/if}
+          </li>
         {/if}
       {/each}
     </ul>
@@ -161,6 +207,7 @@
 
   <section class="adm-card conversation">
     {#if selected}
+      {@const meta = selected.invitation_status ? statusMeta(selected.invitation_status) : null}
       <header>
         <button type="button" class="adm-iconbtn back" aria-label="Kembali ke daftar" onclick={() => (selectedId = null)}>
           <Icon name="chevron" size={16} />
@@ -168,7 +215,11 @@
         <span class="adm-avatar">{initials(selected.name || selected.email)}</span>
         <div class="who">
           <strong>{selected.name || 'Pengguna'}</strong>
-          <span>{selected.email || 'tanpa email'}{selected.slug ? ` · ${selected.slug}.marryme.web.id` : ''}</span>
+          <span>
+            {selected.email || 'tanpa email'}{selected.slug ? ` · ${selected.slug}.marryme.web.id` : ''}
+            {#if meta} · <span class="adm-status" style="--dot: {meta.color}">{meta.label}</span>{/if}
+            {#if selected.preset} · {selected.preset === '2d_garden' ? '2D' : '3D'}{/if}
+          </span>
         </div>
         {#if selected.public_url}
           <a class="adm-btn ghost sm" href={selected.public_url} target="_blank" rel="noreferrer"><Icon name="external" size={14} /> Undangan</a>
@@ -178,6 +229,13 @@
       <div class="messages" bind:this={list}>
         {#if loadingMessages}
           <p class="adm-empty">Memuat percakapan...</p>
+        {:else if messages.length === 0}
+          <div class="empty-thread">
+            <span class="adm-kpi-icon static"><Icon name="message" size={18} /></span>
+            <p>Belum ada pesan. Mulai percakapan dengan <strong>{selected.name || selected.email || 'pengguna ini'}</strong>.</p>
+            <p class="hint">Pesan muncul di dashboard mereka (login terakhir: {fmtRelative(selected.last_login_at).toLowerCase()}). Centang <em>Kirim juga ke email</em> supaya mereka tahu lewat email.</p>
+            <button type="button" class="adm-btn ghost sm" onclick={greet}>Pakai sapaan</button>
+          </div>
         {/if}
         {#each messages as m (m.id)}
           <div class="bubble {m.sender}">
@@ -186,6 +244,7 @@
               {time(m.created_at)}
               {#if m.sender === 'user' && m.context} · dari <em>{m.context}</em>{/if}
               {#if m.sender === 'admin'} · {m.read ? 'Dibaca' : 'Terkirim'}{/if}
+              {#if m.emailed} · <span title="Juga dikirim ke email">✉ Email</span>{/if}
             </span>
           </div>
         {/each}
@@ -199,13 +258,23 @@
           void reply()
         }}
       >
-        <textarea class="adm-input" bind:value={draft} onkeydown={onKeydown} rows="2" maxlength="2000" placeholder="Tulis balasan… (Enter untuk kirim, Shift+Enter baris baru)" aria-label="Balasan"></textarea>
-        <button type="submit" class="adm-btn" disabled={sending || !draft.trim()}>{sending ? 'Mengirim...' : 'Kirim'}</button>
+        <textarea class="adm-input" bind:value={draft} onkeydown={onKeydown} rows="2" maxlength="2000" placeholder="Tulis pesan… (Enter untuk kirim, Shift+Enter baris baru)" aria-label="Pesan"></textarea>
+        <div class="composer-actions">
+          <label class="email-toggle" class:disabled={!canEmail} title={emailHint}>
+            <input type="checkbox" bind:checked={sendEmail} disabled={!canEmail} />
+            <Icon name="mail" size={15} />
+            <span>Kirim juga ke email</span>
+          </label>
+          <button type="submit" class="adm-btn send" disabled={sending || !draft.trim()} aria-label={sendEmail ? 'Kirim pesan dan email' : 'Kirim pesan'}>
+            {#if sending}Mengirim...{:else}<Icon name="send" size={16} /> Kirim{/if}
+          </button>
+        </div>
       </form>
+      {#if emailNotice}<p class="email-notice" class:fail={!emailNotice.ok}>✉ {emailNotice.text}</p>{:else if !canEmail}<p class="email-notice muted">{emailHint}</p>{/if}
     {:else}
       <div class="placeholder">
         <span class="adm-kpi-icon static"><Icon name="message" size={18} /></span>
-        <p>Pilih percakapan di kiri untuk membaca dan membalas.</p>
+        <p>Pilih percakapan atau akun di kiri untuk membaca, membalas, atau menyapa duluan.</p>
       </div>
     {/if}
   </section>
@@ -315,13 +384,13 @@
     min-width: 0;
   }
   .who strong,
-  .who span {
+  .who > span {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .who span {
+  .who > span {
     font-size: 12px;
     color: var(--adm-muted);
   }
@@ -370,14 +439,84 @@
   }
   .composer {
     display: flex;
-    align-items: flex-end;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
     padding: 12px;
     border-top: 1px solid var(--adm-line);
   }
   .composer textarea {
     min-height: 0;
     resize: none;
+  }
+  .composer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .email-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--adm-ink-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .email-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--adm-accent);
+    cursor: inherit;
+  }
+  .email-toggle.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .send {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .email-notice {
+    margin: 0;
+    padding: 0 14px 10px;
+    font-size: 12px;
+    color: #15803d;
+    text-align: right;
+  }
+  .email-notice.fail {
+    color: #c0262d;
+  }
+  .email-notice.muted,
+  .preview.muted {
+    color: var(--adm-muted);
+    font-weight: 400;
+  }
+  .views {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  .views button {
+    flex: 1;
+  }
+  .empty-thread {
+    margin: auto;
+    max-width: 380px;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    text-align: center;
+    color: var(--adm-ink-2);
+    font-size: 13.5px;
+  }
+  .empty-thread p {
+    margin: 0;
+  }
+  .empty-thread .hint {
+    font-size: 12px;
+    color: var(--adm-muted);
   }
   .send-error {
     padding: 8px 18px 0;

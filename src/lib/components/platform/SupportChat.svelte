@@ -20,6 +20,26 @@
   let errorMsg = $state('')
   let loaded = $state(false)
   let disabled = $state(false)
+  // Pratinjau balasan admin terbaru yang belum dibaca (gelembung di atas tombol chat).
+  let preview = $state<{ id: number; body: string } | null>(null)
+  const DISMISS_KEY = 'marryme_support_preview_dismissed'
+  let dismissedId = $state(readDismissed())
+  function readDismissed() {
+    try {
+      return Number(localStorage.getItem(DISMISS_KEY)) || 0
+    } catch {
+      return 0
+    }
+  }
+  function dismissPreview() {
+    if (!preview) return
+    dismissedId = preview.id
+    try {
+      localStorage.setItem(DISMISS_KEY, String(preview.id))
+    } catch {
+      // Penyimpanan diblokir: cukup untuk sesi ini.
+    }
+  }
 
   // Penarik perhatian: label "Butuh bantuan?" + animasi, sampai pengguna pernah
   // membuka chat (diingat per browser), dan lagi saat ada balasan admin belum dibaca.
@@ -41,6 +61,9 @@
     }
   }
   const attention = $derived(!open && (!seen || unread > 0))
+  const showPreview = $derived(!open && unread > 0 && preview !== null && preview.id !== dismissedId)
+  // Percakapan yang dimulai admin (admin menyapa duluan): sambutan "ada kendala?" tidak relevan.
+  const adminStarted = $derived(messages[0]?.sender === 'admin')
   let list = $state<HTMLElement | null>(null)
   let input = $state<HTMLTextAreaElement | null>(null)
 
@@ -66,8 +89,11 @@
         }
         loaded = true
         unread = 0
+        preview = null
       } else {
-        unread = (await getSupportUnread()).unread
+        const res = await getSupportUnread()
+        unread = res.unread
+        preview = res.preview ?? null
       }
     } catch (error) {
       // Migrasi belum jalan atau sesi habis: sembunyikan widget, jangan ganggu dashboard.
@@ -139,15 +165,17 @@
       <header>
         <div>
           <strong>Bantuan MarryMe</strong>
-          <span>Ada error atau kendala? Tulis di sini, admin akan membalas.</span>
+          <span>{adminStarted ? 'Pesan dari tim MarryMe. Balas langsung di sini kapan saja.' : 'Ada error atau kendala? Tulis di sini, admin akan membalas.'}</span>
         </div>
         <button type="button" class="close" aria-label="Tutup chat" onclick={toggle}><Icon name="close" size={16} /></button>
       </header>
 
       <div class="messages" bind:this={list}>
-        <div class="bubble admin intro">
-          <Icon name="chat" size={16} /> Halo! Ceritakan kendalamu, misalnya halaman mana yang error dan apa yang terjadi. Balasan admin muncul di sini.
-        </div>
+        {#if !adminStarted}
+          <div class="bubble admin intro">
+            <Icon name="chat" size={16} /> Halo! Ceritakan kendalamu, misalnya halaman mana yang error dan apa yang terjadi. Balasan admin muncul di sini.
+          </div>
+        {/if}
         {#each messages as m (m.id)}
           <div class="bubble {m.sender}">
             <p>{m.body}</p>
@@ -181,6 +209,16 @@
         <button type="submit" disabled={sending || !draft.trim()}>{sending ? '…' : 'Kirim'}</button>
       </form>
     </section>
+  {/if}
+
+  {#if showPreview && preview}
+    <div class="chat-preview" transition:fly={{ y: 10, duration: 200 }}>
+      <button type="button" class="preview-open" onclick={toggle} aria-label="Buka pesan dari Admin MarryMe">
+        <strong>Admin MarryMe</strong>
+        <span>{preview.body}</span>
+      </button>
+      <button type="button" class="preview-close" aria-label="Tutup pratinjau" onclick={dismissPreview}><Icon name="close" size={14} /></button>
+    </div>
   {/if}
 
   <button
@@ -303,6 +341,59 @@
     line-height: 20px;
     text-align: center;
     border: 2px solid #fff;
+  }
+  .chat-preview {
+    position: fixed;
+    right: 20px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    z-index: 80;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    width: min(300px, calc(100vw - 40px));
+    padding: 12px 8px 12px 14px;
+    border-radius: 18px 18px 6px 18px;
+    background: #fff;
+    border: 1px solid #ebe8e6;
+    box-shadow: 0 18px 40px -18px rgba(40, 20, 25, 0.45);
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  }
+  .preview-open {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    color: #181314;
+  }
+  .preview-open strong {
+    display: block;
+    font-size: 12px;
+    color: #8f1d45;
+  }
+  .preview-open span {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .preview-close {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #8a8083;
+  }
+  .preview-close:hover {
+    background: #f4f1ef;
   }
   .chat-panel {
     position: fixed;
@@ -454,6 +545,10 @@
     .chat-fab {
       right: 16px;
       bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .chat-preview {
+      right: 16px;
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     }
     .chat-panel ~ .chat-fab {
       display: none;
