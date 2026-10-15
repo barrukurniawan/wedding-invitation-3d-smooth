@@ -63,6 +63,10 @@
   const DEMO_URL =
     (import.meta.env.VITE_DEMO_INVITATION_URL as string | undefined) ||
     'https://kia-toni.marryme.web.id'
+  // Demo venue Pantai Sunset (undangan demo 3D dengan venue pantai).
+  const DEMO_BEACH_URL =
+    (import.meta.env.VITE_DEMO_BEACH_URL as string | undefined) ||
+    'https://jajangglia.marryme.web.id'
 
   // Workspace Navigation & Sub-tabs
   let activeTab = $state<'edit' | 'tamu' | 'pembayaran' | 'pengaturan' | 'kirim'>('edit')
@@ -544,7 +548,7 @@
       <Hero {pricing} {stats} demoUrl={DEMO_URL} {busy} onCta={openLogin} />
     {/if}
 
-    <DesignCatalog {pricing} demoUrl={DEMO_URL} onSelect={openLogin} />
+    <DesignCatalog {pricing} demoUrl={DEMO_URL} demoBeachUrl={DEMO_BEACH_URL} onSelect={openLogin} />
 
     <FeatureBlocks demoUrl={DEMO_URL} onCta={openLogin} />
 

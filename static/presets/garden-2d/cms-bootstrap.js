@@ -511,7 +511,7 @@
     // Load config.js fallback
     try {
       const fallbackScript = document.createElement('script');
-      fallbackScript.src = 'config.js';
+      fallbackScript.src = 'config.js?v=20261015c';
       fallbackScript.onload = () => {
         apply(window.WEDDING);
         launchGame();

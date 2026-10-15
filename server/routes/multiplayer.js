@@ -479,7 +479,8 @@ router.get(['/content', '/api/content'], async (req, res) => {
       // Fall through to default
     }
 
-    // Default configuration
+    // Default configuration (demo Faris & Eliza): gaya busana Umum, sama dengan default undangan baru.
+    const demoStyle = characterStyleAssets('umum')
     const defaultConfig = {
       demo: true,
       profile: {
@@ -492,20 +493,21 @@ router.get(['/content', '/api/content'], async (req, res) => {
         cover: 'assets/wedding-card.webp',
         map: 'assets/garden.webp',
         gate: 'assets/front-gate.webp',
-        couple: 'assets/mempelai.webp',
+        couple: demoStyle.couple,
+        coverBlank: demoStyle.coverBlank,
         pianistIdle: 'assets/pianist-idle.webp',
         pianistPlaying: 'assets/pianist.webp',
         singerIdle: 'assets/singer-idle.webp',
         singerPlaying: 'assets/singer.webp',
-        guests: 'assets/wedding-guests-v2.webp',
-        seated: 'assets/seated-guests.webp',
-        hosts: 'assets/wedding-hosts.webp',
+        guests: demoStyle.guests,
+        seated: demoStyle.seated,
+        hosts: demoStyle.hosts,
         music: 'assets/wedding-song-complete.m4a',
         click: 'assets/button-pop.mp3',
       },
       characters: {
         men: { atlas: 'assets/character-atlas.png', frames: 9 },
-        woman: { atlas: 'assets/woman-atlas.png', frames: 7 },
+        woman: { atlas: demoStyle.womanAtlas, frames: 7 },
       },
       places: [
         {
@@ -517,6 +519,7 @@ router.get(['/content', '/api/content'], async (req, res) => {
           y: 0.27,
           description: '',
           fields: [],
+          ceremonyBackground: demoStyle.ceremonyBackground,
           events: [
             {
               title: 'Akad Nikah',

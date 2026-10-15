@@ -4,7 +4,7 @@ window.WEDDING = {
   demo: true,
   characters: {
     men: {atlas: 'assets/character-atlas.png', frames: 9},
-    woman: {atlas: 'assets/woman-atlas.png', frames: 7}
+    woman: {atlas: 'assets/woman-atlas-umum.png?v=20261015b', frames: 7}
   },
   places: [
     {id:'ceremony',title:'Akad & Resepsi',subtitle:'Jadwal hari bahagia kami',symbol:'♡',x:.50,y:.27,description:'',fields:[],events:[
