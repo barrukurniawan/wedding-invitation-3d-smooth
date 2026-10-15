@@ -16,7 +16,7 @@ const toDate = (value) => {
 }
 
 export function pricingInfo(env = process.env, now = new Date()) {
-  const currentPrice = invitationPriceIdr(env) ?? 0
+  const currentPrice = invitationPriceIdr(env, now.getTime()) ?? 0
   const normalPrice = toIdr(env.PRICE_NORMAL_IDR, null)
   const afterPromoPrice = toIdr(env.PRICE_AFTER_PROMO_IDR, null)
   const promoEndsAt = toDate(env.PROMO_ENDS_AT)

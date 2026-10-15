@@ -30,7 +30,10 @@ test('promo hides itself after the deadline', () => {
   assert.equal(p.promoActive, false)
   assert.equal(p.normalPrice, null)
   assert.equal(p.promoEndsAt, null)
-  assert.equal(p.currentPrice, 0)
+  // Setelah promo, harga otomatis pindah ke PRICE_AFTER_PROMO_IDR (uji coba 3 hari untuk akun baru).
+  assert.equal(p.currentPrice, 49999)
+  assert.equal(p.isFree, false)
+  assert.equal(p.trialDays, 3)
 })
 
 test('no promo when normal price is missing or not higher than current', () => {
