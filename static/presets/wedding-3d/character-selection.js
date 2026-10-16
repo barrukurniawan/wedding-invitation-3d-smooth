@@ -24,7 +24,10 @@ export function createCharacterSelection({renderer,host,characters,onStart,defer
     layer.appendChild(renderer.domElement);
     renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';
     renderer.setClearColor(0x000000,0);
-    document.querySelector('input[name="character"]').focus({preventScroll:true});
+    // MarryMe: Pria 1 langsung terpilih supaya "Tiba di pulau" bisa diklik tanpa memilih ulang.
+    const first=document.querySelector('input[name="character"]');
+    first.checked=true;selected=Object.hasOwn(characters,first.value)?first.value:null;start.disabled=!selected;
+    first.focus({preventScroll:true});
   }
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
   function choose(event){
@@ -47,7 +50,7 @@ export function createCharacterSelection({renderer,host,characters,onStart,defer
     onStart(rig);
   }
   form.addEventListener('submit',begin);
-  // Expose native radio navigation once the scene is ready, without picking for the user.
+  // Expose native radio navigation once the scene is ready, with the first character preselected.
   if(!deferOpen)open();
   function update(time){
     if(!opened||started)return;
