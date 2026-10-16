@@ -20,6 +20,7 @@ export function createArrivalHost({scene,detail}){
 
 const element=(tag,className,text)=>{const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;};
 const count=value=>Array.from(new Intl.Segmenter('id',{granularity:'grapheme'}).segment(value)).length;
+const RSVP_ENABLED=false,INTRO_STEP=3;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function createArrivalExperience({host,getPlayer,getEnabled,onPause,onComplete,onResume}){
   const dialog=document.getElementById('arrivalDialog'),content=document.getElementById('arrivalContent'),title=document.getElementById('arrivalTitle'),stepLabel=document.getElementById('arrivalStep'),back=document.getElementById('arrivalBack'),next=document.getElementById('arrivalNext'),close=document.getElementById('arrivalClose'),status=document.getElementById('arrivalStatus');
@@ -32,8 +33,8 @@ export function createArrivalExperience({host,getPlayer,getEnabled,onPause,onCom
   function focusTitle(){title.focus({preventScroll:true});}
   function show(){
     content.replaceChildren();status.textContent='';dialog.scrollTop=0;
-    stepLabel.textContent=step===5?'RSVP TERSIMPAN':`SELAMAT DATANG · ${Math.min(step+1,5)} / 5`;
-    back.hidden=revisiting||step===0||step===5;next.hidden=step===4;close.hidden=!revisiting;next.textContent=step===5?'Jelajahi pulau':step===3?'Konfirmasi kehadiran':'Lanjut';
+    stepLabel.textContent=step===5?'RSVP TERSIMPAN':RSVP_ENABLED?`SELAMAT DATANG · ${Math.min(step+1,5)} / 5`:'SELAMAT DATANG';
+    back.hidden=!RSVP_ENABLED||revisiting||step===0||step===5;next.hidden=step===4;close.hidden=!revisiting;next.textContent=step===5||(!RSVP_ENABLED&&step===INTRO_STEP)?'Jelajahi pulau':step===3?'Konfirmasi kehadiran':'Lanjut';
     if(step===0){title.textContent='Selamat datang di pulau kami!';content.append(element('p','','Halo! Saya petugas penyambut di pulau pernikahan Andi & Ratna. Senang sekali kamu sudah tiba dengan selamat di dermaga.'),element('p','','Sebelum berjalan-jalan, yuk kenalan dengan pulau ini dan kedua mempelai. Setelah itu, saya akan mencatat nama dan konfirmasi kehadiranmu.'));}
     if(step===1){title.textContent='Jalan santai, temukan ceritanya';const list=element('ul','arrival-guide');
       for(const [label,text] of [['Berjalan',matchMedia('(pointer: coarse)').matches?'Gerakkan joystick di kiri bawah layar.':'Gunakan WASD atau tombol panah untuk berjalan.'],['Melihat sekeliling','Geser layar untuk memutar kamera. Cubit layar atau gunakan tombol + dan − untuk mengatur jarak.'],['Berinteraksi','Dekati venue, lalu sentuh papan tombol yang muncul di map. Di komputer, kamu juga bisa menekan E.']]){const item=element('li','');item.append(element('strong','',label),element('span','',text));list.append(item);}content.append(list);}
@@ -58,15 +59,15 @@ export function createArrivalExperience({host,getPlayer,getEnabled,onPause,onCom
     catch(error){status.textContent=error.name==='AbortError'?'Koneksi terlalu lama. Coba simpan lagi; isianmu tetap ada.':error.message||'Koneksi terputus. Coba simpan lagi.';form.querySelectorAll('input,button').forEach(el=>el.disabled=false);document.getElementById('arrivalSubmit').focus();}
     finally{clearTimeout(timeout);sending=false;back.disabled=false;close.disabled=false;form.removeAttribute('aria-busy');}
   }
-  function open(revisit=false){if(active)return;revisiting=revisit;step=revisit?4:0;active=true;near=false;marker.hidden=true;document.body.classList.add('arriving-island');onPause();dialog.showModal();show();}
+  function open(revisit=false){if(active)return;revisiting=revisit;step=revisit?4:RSVP_ENABLED?0:INTRO_STEP;active=true;near=false;marker.hidden=true;document.body.classList.add('arriving-island');onPause();dialog.showModal();show();}
   function finish(){Object.assign(draft,confirmed);active=false;dialog.close();document.body.classList.remove('arriving-island');if(!completed){completed=true;onComplete({...draft});}else onResume({...draft});}
-  back.onclick=()=>{if(sending||step<=0)return;step--;show();};next.onclick=()=>{if(sending)return;if(step===5)finish();else if(step<4){step++;show();}};close.onclick=()=>{if(revisiting&&!sending)finish();};
+  back.onclick=()=>{if(sending||step<=0)return;step--;show();};next.onclick=()=>{if(sending)return;if(step===5||(!RSVP_ENABLED&&step===INTRO_STEP))finish();else if(step<4){step++;show();}};close.onclick=()=>{if(revisiting&&!sending)finish();};
   dialog.addEventListener('cancel',event=>{event.preventDefault();if(revisiting&&!sending)finish();});
   marker.onclick=()=>{if(near&&getEnabled())open(true);};
   addEventListener('keydown',event=>{if(event.key.toLowerCase()!=='e'||event.repeat||['INPUT','TEXTAREA','BUTTON','SELECT'].includes(event.target.tagName)||event.target.isContentEditable)return;if(near&&getEnabled()&&!active){event.preventDefault();open(true);}});
   const location=new T.Vector3(ARRIVAL.hostX,pierHeight(ARRIVAL.hostZ),ARRIVAL.hostZ),anchor=location.clone().add(new T.Vector3(0,3.6,0)),projected=new T.Vector3();
   return {get active(){return active;},get completed(){return completed;},start(){open();},update(camera,width,height){
-    near=completed&&!active&&getEnabled()&&getPlayer().root.position.distanceToSquared(location)<5**2;
+    near=RSVP_ENABLED&&completed&&!active&&getEnabled()&&getPlayer().root.position.distanceToSquared(location)<5**2;
     if(!near){marker.hidden=true;return;}projected.copy(anchor).project(camera);const x=(projected.x*.5+.5)*width,y=(-projected.y*.5+.5)*height;marker.hidden=projected.z<-1||projected.z>1||x<90||x>width-90||y<60||y>height-105;if(!marker.hidden)marker.style.transform=`translate3d(${x}px,${y}px,0) translate(-50%,-100%)`;
   }};
 }
