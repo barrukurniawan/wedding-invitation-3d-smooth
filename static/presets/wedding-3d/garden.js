@@ -136,8 +136,8 @@ bench(gx,gz,3.1);for(const x of [-1.45,1.45])beam([gx+x,1.1,gz],[gx+x,4.2,gz],.0
 const signx=7,signz=10;box('#bd945b',signx,1.45,signz,3.3,1.85,.17);for(const x of [-1.45,1.45])cyl('#73572f',signx+x,1.3,signz,.11,2.6);flowerLine([signx-1.7,2.45,signz],[signx+1.7,2.45,signz],9,.28);
 function textSign(){const c=document.createElement('canvas');c.width=512;c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#bd945b';ctx.fillRect(0,0,512,256);ctx.strokeStyle='#f3dbab';ctx.lineWidth=4;ctx.strokeRect(16,16,480,224);ctx.fillStyle='#453b28';ctx.textAlign='center';ctx.font='24px Georgia';ctx.fillText('WELCOME TO',256,83);ctx.font='43px Georgia';ctx.fillText('Andi & Ratna',256,146);ctx.font='20px Georgia';ctx.fillText('OUR LITTLE WEDDING WORLD',256,194);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;const m=new T.Mesh(new T.PlaneGeometry(3.25,1.8),new T.MeshBasicMaterial({map:tex}));m.position.set(signx,1.45,signz+.1);scene.add(m)}textSign();
 for(let i=0;i<140;i++){let x=rand(-28,28),z=rand(-18,18);if(Math.abs(x)<3.4||Math.abs(z+2)<3||Math.hypot(x,z+1.5)<4||x<-9&&z>0&&z<15||x<-11&&z<-5||x>12&&z<-4||x>16&&z>3&&z<11||z>11&&z<15)continue;bouquet(x,.13,z,rand(.3,.65))}
-// MarryMe: tiang lampu digeser ke rumput (≥1 unit dari tepi jalur) supaya tidak terlihat menghalangi jalan.
-const LAMP_POSTS=[[-6,12.9],[6,11.2],[-8.1,-5.6],[8.1,-5.6],[-10.4,13],[12,11.3],[-11,-13],[11,-13]];
+// MarryMe: tiang lampu dipindah ke pinggiran pulau (≥5 unit dari jalur mana pun) supaya tidak ada tiang di area jalan.
+const LAMP_POSTS=[[-26,-18],[-18,-18],[18,-18],[26,-18],[-28,-12],[28,-12],[-29,19],[29,19]];
 for(const [x,z] of LAMP_POSTS){cyl('#425438',x,1.1,z,.06,2.2);box('#b98f48',x,2.3,z,.34,.56,.34);box('#ffe2a0',x,2.3,z+.18,.23,.37,.01);mesh(GEO.cone,'#4a6040',x,2.72,z,.28,.3,.28)}
 for(const [x1,z1,x2,z2] of [[11,-16,28,-16],[-27,-16,-10,-16]]){const ps=[];for(let i=0;i<=24;i++){const t=i/24;const x=x1+(x2-x1)*t,z=z1+(z2-z1)*t,y=5.8-Math.sin(t*Math.PI)*1.2;ps.push([x,y,z]);if(i%2===0)ball('#ffdf93',x,y-.13,z,.08)}tube(ps,.018,'#675731')}
 // Spatial foliage clusters let the GPU skip flowers and leaves outside the camera view.
