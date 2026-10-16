@@ -69,3 +69,14 @@
 @media(max-width:600px){#weddingIntro{padding-top:13svh}.intro-ornament{font-size:27px;margin-bottom:14px}.intro-kicker{font-size:.72rem;letter-spacing:.23em}.intro-names{font-size:clamp(2.55rem,11.6vw,4.3rem)}.intro-copy{margin:17px 0 25px}.intro-note{left:20px;bottom:84px;font-size:.82rem}.intro-start{min-width:172px}}
 @media(max-height:550px){#weddingIntro{padding-top:24px}.intro-ornament{display:none}.intro-kicker{margin-bottom:10px}.intro-names{font-size:3.2rem}.intro-copy{margin:12px 0 16px}.intro-start{min-height:48px;padding:11px 24px}.intro-note{bottom:24px}}
 @media(prefers-reduced-motion:reduce){.intro-content{animation:none}.intro-start{transition:none}}
+
+/* MarryMe: layar muat bertema laut biru dengan ombak bergerak (bukan hijau). */
+#loading{background:linear-gradient(180deg,#bfe6f2 0%,#5cc0d8 38%,#1f8db5 70%,#0b5f86 100%);overflow:hidden;color:#fff;text-shadow:0 2px 14px #0b4a6b99}
+#loading .loading-text{position:relative;z-index:2;padding:0 24px;text-align:center;font:26px Georgia,serif;letter-spacing:.2px;animation:loading-bob 2.4s ease-in-out infinite}
+#loading::before,#loading::after{content:"";position:absolute;left:-50%;width:200%;height:46%;bottom:-6%;background-repeat:repeat-x;background-size:50% 100%;z-index:1}
+#loading::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 200' preserveAspectRatio='none'%3E%3Cpath d='M0 60 Q100 20 200 60 T400 60 T600 60 T800 60 V200 H0Z' fill='%2336a8cb' fill-opacity='.55'/%3E%3C/svg%3E");animation:loading-wave 7s linear infinite}
+#loading::after{bottom:-14%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 200' preserveAspectRatio='none'%3E%3Cpath d='M0 70 Q100 110 200 70 T400 70 T600 70 T800 70 V200 H0Z' fill='%230b6f9c' fill-opacity='.7'/%3E%3C/svg%3E");animation:loading-wave 4.5s linear infinite reverse}
+@keyframes loading-wave{from{transform:translateX(0)}to{transform:translateX(25%)}}
+@keyframes loading-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){#loading::before,#loading::after,#loading .loading-text{animation:none}}
+@media(max-width:600px){#loading .loading-text{font-size:19px}}
