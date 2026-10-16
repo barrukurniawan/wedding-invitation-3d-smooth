@@ -2,7 +2,7 @@ import {lagoonDistance} from './lagoon.js';
 import {LAWN_LEVEL} from './island.js';
 import {createLawnGeometry,grassSandBlend} from './ground-surface.js';
 // Detailed low-poly garden assets. Native mesh geometry, shared instancing and seeded layout.
-export function enrichGarden({T,scene,mesh,box,ball,cyl,beam,tube,mat,GEO,rand,rnd,treeLocations,gardenPaths,waterMat,performanceProfile,groundMaterial}){
+export function enrichGarden({LAMP_POSTS,T,scene,mesh,box,ball,cyl,beam,tube,mat,GEO,rand,rnd,treeLocations,gardenPaths,waterMat,performanceProfile,groundMaterial}){
  const mobile=performanceProfile.mobile;
  const samples=gardenPaths.map(p=>({points:p.curve.getPoints(160),r:p.width/2}));
  function pathDist(x,z){let nearest=Infinity;for(const p of samples){for(const q of p.points){const d=Math.hypot(q.x-x,q.z-z)-p.r;if(d<nearest)nearest=d}}return Math.min(nearest,Math.hypot(x,z+1.5)-8)}
@@ -63,6 +63,6 @@ export function enrichGarden({T,scene,mesh,box,ball,cyl,beam,tube,mat,GEO,rand,r
  const blooms=[[-5.6,11],[-9.3,11.3],[5.1,11.6],[12.8,9.8],[-11.5,-5.5],[-23.8,-5.7],[10.2,-3.6],[25.6,2.8],[17.8,9.8],[-7.3,4.7],[-27.1,11.4],[5.8,-15.5],[-7,-15.4]];
  for(const [bx,bz] of blooms)for(let j=0;j<3;j++){const x=bx+j*.40-.4,z=bz+(j%2)*.30,h=.44+j*.14;beam([x,.02,z],[x,h,z],.035,'#5c833c');for(let k=0;k<5;k++){const a=k*Math.PI*2/5;const o=ball('#fff0cf',x+Math.cos(a)*.19,h+Math.sin(a)*.17,z,.13,.18,.075);o.rotation.z=-a+Math.PI/2;}ball('#e4b443',x,h,z+.09,.115,.115,.08);ball('#7f9f46',x-.12,h*.38,z,.13,.07,.075);ball('#789342',x+.10,h*.3,z,.12,.06,.07)}
  // Chunky lantern housings with luminous cream panes.
- for(const [x,z] of [[-6,15],[6,15],[-8,-4],[8,-4],[-10.4,13.9],[12,12],[-11,-13],[11,-13]]){cyl('#ad8752',x,2.0,z,.23,.1);cyl('#d8ac6b',x,2.63,z,.28,.13);cyl('#8c693d',x,2.32,z,.21,.53);const pane=new T.MeshStandardMaterial({color:'#ffe7a2',emissive:'#ffd072',emissiveIntensity:.35,roughness:.7});cyl(pane,x,2.34,z,.215,.35);for(let k=0;k<4;k++){const a=k*Math.PI/2;beam([x+Math.cos(a)*.21,2.08,z+Math.sin(a)*.21],[x+Math.cos(a)*.21,2.58,z+Math.sin(a)*.21],.028,'#9d7946')}}
+ for(const [x,z] of LAMP_POSTS){cyl('#ad8752',x,2.0,z,.23,.1);cyl('#d8ac6b',x,2.63,z,.28,.13);cyl('#8c693d',x,2.32,z,.21,.53);const pane=new T.MeshStandardMaterial({color:'#ffe7a2',emissive:'#ffd072',emissiveIntensity:.35,roughness:.7});cyl(pane,x,2.34,z,.215,.35);for(let k=0;k<4;k++){const a=k*Math.PI/2;beam([x+Math.cos(a)*.21,2.08,z+Math.sin(a)*.21],[x+Math.cos(a)*.21,2.58,z+Math.sin(a)*.21],.028,'#9d7946')}}
  return {grassCount:tufts.length,update(t){wind.value=t}};
 }
