@@ -1,0 +1,15 @@
+import * as T from './vendor/three.module.js';
+// Clear blue sky, a cool horizon and softly sculpted cloud banks.
+export function createAtmosphere(scene){
+ const sunDirection=new T.Vector3(-28,23,18).normalize();
+ const sky=new T.Mesh(new T.SphereGeometry(1800,32,18),new T.ShaderMaterial({side:T.BackSide,depthWrite:false,uniforms:{sunDirection:{value:sunDirection},zenith:{value:new T.Color('#368fdb')},horizon:{value:new T.Color('#a8d4f1')},lower:{value:new T.Color('#badbe9')}},vertexShader:'varying vec3 vDirection;void main(){vDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:`varying vec3 vDirection;uniform vec3 sunDirection;uniform vec3 zenith;uniform vec3 horizon;uniform vec3 lower;void main(){vec3 d=normalize(vDirection);float h=smoothstep(-.15,.58,d.y);vec3 color=mix(horizon,zenith,h);color=mix(color,lower,(1.-smoothstep(-.55,.02,d.y)));float glow=pow(max(dot(d,sunDirection),0.),22.);color+=vec3(.24,.12,.035)*glow;gl_FragColor=vec4(color,1.);#include <tonemapping_fragment>\n#include <colorspace_fragment>}`.replace(';#include',';\n#include')}));sky.name='Clear blue sky with warm sunlight';sky.renderOrder=-100;sky.frustumCulled=false;scene.add(sky);
+ // Sparse rounded cloud clusters stay outside the playable garden and never occlude it.
+ const g=new T.IcosahedronGeometry(1,2),p=g.attributes.position,colors=[];const top=new T.Color('#fff5df'),bottom=new T.Color('#c9c1d3');for(let i=0;i<p.count;i++){const c=bottom.clone().lerp(top,T.MathUtils.smoothstep(p.getY(i),-.8,.65));colors.push(c.r,c.g,c.b)}g.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+ const cloudMat=new T.MeshBasicMaterial({vertexColors:true,fog:false});
+ const specs=[[-65,7,-42,1.0],[-34,12,-68,1.25],[8,9,-76,1.1],[48,23,-64,.95],[72,7,-20,1.3],[70,22,40,1.1],[30,8,71,1.2],[-17,24,76,1.1],[-61,9,59,1.25],[-80,25,5,.95]];
+ const shapes=[[-6,-.7,0,4,1.6,2.4],[-3,.7,0,3.6,2.8,2.8],[.5,2,0,4.2,3.6,3.1],[4,.6,0,3.6,2.7,2.6],[7,-.8,.2,3.8,1.5,2.3],[0,-.8,0,7,1.3,2.7]];
+ const clouds=new T.InstancedMesh(g,cloudMat,specs.length*shapes.length);clouds.name='Slow drifting cream clouds';const o=new T.Object3D();let k=0;for(const [cx,cy,cz,cs] of specs){const x=cx*3.6,y=cy*1.6+34,z=cz*3.6,s=cs*1.6;const a=Math.atan2(x,z);for(const [dx,dy,dz,sx,sy,sz]of shapes){o.position.set(x+Math.cos(a)*dx*s,y+dy*s,z-Math.sin(a)*dx*s);o.rotation.set(0,a,0);o.scale.set(sx*s,sy*s,sz*s);o.updateMatrix();clouds.setMatrixAt(k++,o.matrix)}}clouds.frustumCulled=false;scene.add(clouds);
+ // Low-intensity sky reflection gives water and rounded surfaces a coherent environment.
+ const faceColors=['#e6d5c3','#f4d1aa','#c0dcee','#e5cb9f','#dae1e5','#d4dfed'];const faces=faceColors.map(color=>{const c=document.createElement('canvas');c.width=c.height=16;const ctx=c.getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,16,16);return c});const env=new T.CubeTexture(faces);env.colorSpace=T.SRGBColorSpace;env.needsUpdate=true;scene.environment=env;scene.environmentIntensity=.22;
+ return {update(t){clouds.position.x=Math.sin(t*.018)*2.2;clouds.position.z=Math.cos(t*.013)*1.4}};
+}

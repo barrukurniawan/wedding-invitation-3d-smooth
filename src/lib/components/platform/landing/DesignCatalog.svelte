@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Katalog desain: 3 kartu (3D Taman, 3D Pantai, 2D) dengan harga coret/promo dan badge.
+  // Katalog desain: 3D Taman, 3D Pantai, 2D, dan 3D Pulau (segera hadir, demo saja) dengan harga coret/promo dan badge.
   import type { PublicPricing } from '$lib/api-client'
   import { fmtIdr } from './format'
 
@@ -8,16 +8,18 @@
     demoUrl,
     demoBeachUrl = null,
     demo2dUrl = '/presets/garden-2d/index.html',
+    demoIslandUrl = '/presets/wedding-3d/index.html',
     onSelect,
   }: {
     pricing: PublicPricing | null
     demoUrl: string
     demoBeachUrl?: string | null
     demo2dUrl?: string
+    demoIslandUrl?: string
     onSelect: () => void
   } = $props()
 
-  type Card = { id: string; tag: string; tone: 'gold' | 'new' | 'light'; title: string; sub: string; desc: string; img: string; chips: string[]; demo: string | null }
+  type Card = { id: string; tag: string; tone: 'gold' | 'new' | 'light'; title: string; sub: string; desc: string; img: string; chips: string[]; demo: string | null; soon?: boolean }
 
   const cards = $derived<Card[]>([
     {
@@ -53,6 +55,18 @@
       chips: ['Ringan di HP lama', 'Multiplayer realtime', 'Pianis & danau'],
       demo: demo2dUrl,
     },
+    {
+      id: 'island',
+      tag: 'Desain baru',
+      tone: 'new',
+      title: 'Little Wedding Island',
+      sub: '3D · Pulau tropis',
+      desc: 'Pulau kecil di tengah laut biru: tamu tiba dengan perahu, menyeberangi jembatan, lalu menuju pelaminan dan tenda resepsi.',
+      img: '/media/designs/island.webp',
+      chips: ['Tiba dengan perahu', 'Pelaminan & tenda', 'RSVP & ucapan'],
+      demo: demoIslandUrl,
+      soon: true,
+    },
   ])
 
   const current = $derived(pricing ? (pricing.isFree ? 'GRATIS' : fmtIdr(pricing.currentPrice)) : null)
@@ -68,10 +82,11 @@
 
     <div class="grid">
       {#each cards as card (card.id)}
-        <article class="card">
+        <article class="card" class:is-soon={card.soon}>
           <div class="shot">
             <img src={card.img} alt="Pratinjau desain {card.title}" loading="lazy" decoding="async" />
             <span class="tag {card.tone}">{card.tag}</span>
+            {#if card.soon}<span class="ribbon">Coming soon</span>{/if}
           </div>
           <div class="body">
             <p class="sub">{card.sub}</p>
@@ -97,7 +112,11 @@
               {:else}
                 <span class="soon">Tersedia saat membuat undangan</span>
               {/if}
-              <button type="button" class="lp-btn primary sm" onclick={onSelect}>Pilih desain</button>
+              {#if card.soon}
+                <button type="button" class="lp-btn primary sm" disabled>Segera hadir</button>
+              {:else}
+                <button type="button" class="lp-btn primary sm" onclick={onSelect}>Pilih desain</button>
+              {/if}
             </div>
           </div>
         </article>
@@ -109,8 +128,8 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
   }
   .card {
     display: flex;
@@ -153,6 +172,27 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     backdrop-filter: blur(6px);
+  }
+  .ribbon {
+    position: absolute;
+    top: 26px;
+    right: -44px;
+    width: 180px;
+    padding: 7px 0;
+    transform: rotate(45deg);
+    background: #c8102e;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+  }
+  .is-soon .actions button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
   .tag.gold {
     background: var(--lp-gold);
@@ -251,7 +291,7 @@
     color: var(--muted);
     font-size: 0.78rem;
   }
-  @media (max-width: 1000px) {
+  @media (max-width: 1100px) {
     .grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
