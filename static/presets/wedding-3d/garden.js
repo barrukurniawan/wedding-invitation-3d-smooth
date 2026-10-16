@@ -181,13 +181,15 @@ let followPlayer=true;const keys=new Set();const stick={x:0,y:0};
 const obstacles=[[-5.5,-13,-2.4,-5.4],[2.4,-13,6.4,-5.4],[-22.4,-14,-13.6,-13.5],[-20.2,-12.4,-15.8,-10.4],[20.2,6.4,23.8,7.7],[5.2,9.6,8.8,10.4]];
 function walkable(x,z,ignoreGuest){if(arrivalHost.blocks(x,z))return false;if(weddingStage.blocks(x,z))return false;if(weddingDecor.blocks(x,z)||weddingCouple.blocks(x,z)||islandLife.blocks(x,z,ignoreGuest))return false;if(bridgeRail(x,z))return false;if((!insideIsland(x,z)&&!islandLife.onPier(x,z))||island.blocks(x,z))return false;if(Math.hypot(x,z+1.5)<2.9)return false;if(obstacles.some(([a,b,c,d])=>x>a-.3&&x<c+.3&&z>b-.3&&z<d+.3))return false;if(lagoonBlocks(x,z)&&!onBridge(x,z))return false;for(const dx of [-5.5,0,5.5])if(Math.hypot(x-(20+dx),z+10)<1.95)return false;return true}
 const velocity=new T.Vector2();
+// MarryMe: pemain 30% lebih cepat dari WALK_SPEED dasar (NPC tetap); langkah kaki ikut jarak tempuh.
+const PLAYER_SPEED=WALK_SPEED*1.3;
 function moveAvatar(dt,t){
   if(!gameStarted||arrival?.active||venueUI?.isOpen||photoMode?.active||moments?.busy)return;
   let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stick.x;
   let dz=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+stick.y;
   const len=Math.hypot(dx,dz),input=len>.08;
   dx=input?dx/Math.max(1,len):0;dz=input?dz/Math.max(1,len):0;
-  const wantedX=(dx*Math.cos(az)+dz*Math.sin(az))*WALK_SPEED,wantedZ=(-dx*Math.sin(az)+dz*Math.cos(az))*WALK_SPEED;
+  const wantedX=(dx*Math.cos(az)+dz*Math.sin(az))*PLAYER_SPEED,wantedZ=(-dx*Math.sin(az)+dz*Math.cos(az))*PLAYER_SPEED;
   const rate=input?11:19,decay=Math.exp(-rate*dt);
   const stepX=wantedX*dt+(velocity.x-wantedX)*(1-decay)/rate;
   const stepZ=wantedZ*dt+(velocity.y-wantedZ)*(1-decay)/rate;
