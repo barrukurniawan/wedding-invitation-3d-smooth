@@ -7,6 +7,9 @@
 
   let showPayment = $state(false)
   let activeTab = $state<'info' | 'gallery'>('info')
+  // URL foto yang gagal dimuat (link eksternal mati/dihapus): disembunyikan, bukan ikon rusak.
+  let brokenPhotos = $state<Record<string, true>>({})
+  const markBroken = (src: string) => (brokenPhotos[src] = true)
   let countdown = $state('')
 
   $effect(() => {
@@ -145,11 +148,12 @@
         </div>
 
         <div class="relative mx-4 aspect-[4/3] overflow-hidden rounded-xl w-card">
-          {#if $weddingConfig.wedding_photo}
+          {#if $weddingConfig.wedding_photo && !brokenPhotos[$weddingConfig.wedding_photo]}
             <img
               src={$weddingConfig.wedding_photo}
               alt="{$weddingConfig.bride_name} dan {$weddingConfig.groom_name}"
               class="h-full w-full object-cover"
+              onerror={() => markBroken($weddingConfig.wedding_photo)}
             />
           {/if}
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#fff8ef]/95 via-[#fff8ef]/65 to-transparent px-4 pb-4 pt-12 text-center">
@@ -206,12 +210,13 @@
             </div>
           {:else if activeTab === 'gallery'}
             <div class="grid grid-cols-2 gap-2">
-              {#each $weddingConfig.gallery_photos as photo, i}
+              {#each $weddingConfig.gallery_photos.filter((p) => !brokenPhotos[p]) as photo, i (photo)}
                 <div class="aspect-square overflow-hidden rounded-lg w-card">
                   <img
                     src={photo}
                     alt="Foto prewedding {i}"
                     class="h-full w-full object-cover"
+                    onerror={() => markBroken(photo)}
                   />
                 </div>
               {:else}
