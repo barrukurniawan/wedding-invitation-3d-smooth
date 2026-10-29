@@ -44,6 +44,11 @@
 - 2D "instant garden": the full-screen "Membuka taman" loader no longer covers the title/name screens; the garden loads behind them (small pill indicator). A character chosen before the garden is ready is queued (`pendingCharacter`, loader shows with `.ml-waiting`). Early "Mulai" clicks before game.js binds are queued by an inline script in the preset `index.html` (`__PENDING_CONTINUE`).
 - `app.html` fast path: invitation hosts fetch `/api/config` before the app bundle (`window.__EARLY_CONFIG`, consumed once by `getPublicConfig`) and preload core 2D images when the preset is 2D.
 
+## Demo Preset Little Wedding Island (wedding-3d)
+- Landing card "Little Wedding Island" (coming soon) links to `/presets/wedding-3d/index.html`. Source is ChatGPT-exported vanilla Three.js in `presets-src/wedding-3d/` (edit there, never in `static/`).
+- `npm run build:island` (`scripts/build-wedding-3d.mjs`, also run by `npm run build`) bundles all modules + CSS with esbuild into `static/presets/wedding-3d/app-[hash].{js,css}` + `index.html`; `assets/` stays in static. Commit the regenerated output. nginx: preset `index.html` no-cache, hashed files immutable.
+- MarryMe edits in the source: one arrival dialog (`RSVP_ENABLED=false`), first character preselected, player speed x1.3, `LAMP_POSTS` at island edges. `/api/wishes` and `/api/rsvp` don't exist on our API yet.
+
 ## Asset CDN (jsDelivr)
 - Design assets (2D preset images, models, nature, media) are mirrored to the public repo `barrukurniawan/marryme-assets` and served from `cdn.jsdelivr.net/gh/.../marryme-assets@<tag>` (Cloudflare Jakarta edge). Publish + byte-verify with `npm run assets:publish` (allowlist in `scripts/assets/cdn-manifest.mjs`; never add user uploads or private data).
 - Kill switch: server env `ASSET_CDN_BASE` (pinned tag only, validated in `server/services/assetCdn.js`), exposed as `asset_cdn` in `/api/config` and `assetCdn` in `/api/multiplayer/content`. Empty = everything from origin.

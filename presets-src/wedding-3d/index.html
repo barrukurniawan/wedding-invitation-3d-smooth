@@ -1,0 +1,85 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b5f86"><meta name="description" content="Jelajahi pulau pernikahan Andi & Ratna, dikelilingi pantai dan lautan biru."><title>Andi & Ratna — Taman 3D</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23142f2b'/%3E%3Cpath d='M8 26V14a8 8 0 0116 0v12M5 26h7m8 0h7' fill='none' stroke='%23f2cd86' stroke-width='3'/%3E%3C/svg%3E"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="venues.css"><link rel="stylesheet" href="moments.css"><link rel="stylesheet" href="arrival.css"><link rel="stylesheet" href="interface.css"></head><body class="choosing-character viewing-intro"><main inert id="scene" aria-label="Peta taman pernikahan 3D"></main><div id="gameControls" inert>
+  <header class="island-title"><h1><span>The Wedding of</span>Andi <i>&amp;</i> Ratna</h1>
+    <div id="akadCountdown" class="akad-countdown" aria-label="Hitung mundur menuju akad">
+      <p id="countdownLabel">Menuju akad · 20 Januari 2027</p>
+      <div class="countdown-units" aria-hidden="true"><span><strong id="countdownDays">—</strong><small>Hari</small></span><b>:</b><span><strong id="countdownHours">—</strong><small>Jam</small></span><b>:</b><span><strong id="countdownMinutes">—</strong><small>Menit</small></span><b>:</b><span><strong id="countdownSeconds">—</strong><small>Detik</small></span></div>
+      <span id="countdownAccessible" class="sr-only"></span>
+    </div>
+  </header>
+  <div id="joystick" role="group" aria-label="Joystick untuk berjalan"><div id="knob"></div></div>
+</div>
+<aside id="islandMenu" aria-label="Pengaturan pulau">
+  <button id="menuToggle" type="button" aria-label="Buka menu" aria-controls="menuPanel" aria-expanded="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+  <div id="menuPanel" hidden>
+    <h2>Pengaturan pulau</h2>
+    <div class="menu-audio" role="group" aria-label="Suara">
+      <button id="musicToggle" class="music-control" type="button" aria-label="Matikan musik" aria-pressed="false" aria-controls="gardenMusic"><span class="music-icon" aria-hidden="true">♪</span><span class="music-label">Musik: Siap</span><span class="menu-toggle-state" aria-hidden="true"></span></button>
+      <button id="ambienceToggle" class="music-control ambience-control" type="button" aria-label="Nyalakan suara suasana" aria-pressed="false"><span class="music-icon" aria-hidden="true">≈</span><span class="ambience-label">Suasana: Mati</span><span class="menu-toggle-state" aria-hidden="true"></span></button>
+    </div>
+    <h3>Tampilan kamera</h3>
+    <div class="view-tools" role="group" aria-label="Kontrol kamera">
+      <button data-place="player" class="active" type="button"><span aria-hidden="true">♙</span><span>Ikuti karakter</span></button>
+      <button id="home" data-place="all" type="button" title="Lihat seluruh pulau"><span aria-hidden="true">⌂</span><span>Seluruh pulau</span></button>
+      <button id="zoomIn" type="button" title="Perbesar"><span aria-hidden="true">+</span><span>Perbesar</span></button>
+      <button id="zoomOut" type="button" title="Perkecil"><span aria-hidden="true">−</span><span>Perkecil</span></button>
+      <button id="rotate" type="button" title="Putar otomatis" aria-pressed="false"><span aria-hidden="true">↻</span><span>Putar otomatis</span></button>
+      <button id="top" type="button" title="Tampak atas"><span aria-hidden="true">▦</span><span>Tampak atas</span></button>
+    </div>
+    <p id="hint">Joystick untuk berjalan · Sentuh penanda venue untuk informasi</p>
+  </div>
+</aside><span id="ambienceStatus" class="sr-only" role="status" aria-live="polite"></span><audio id="gardenMusic" src="assets/wedding-music.mp3" preload="metadata" loop></audio><span id="musicStatus" class="sr-only" role="status" aria-live="polite"></span><section id="weddingIntro" aria-labelledby="introTitle">
+  <div class="intro-content">
+    <span class="intro-ornament" aria-hidden="true">✧</span>
+    <h1 id="introTitle"><span class="intro-kicker">The Wedding of</span><span class="intro-names">Andi <em>&amp;</em> Ratna</span></h1>
+    <p class="intro-copy">Selamat datang di pulau kecil kami.</p>
+    <button id="introStart" class="intro-start" type="button" aria-controls="characterSelection" disabled>Mulai <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  </div>
+  <p class="intro-note">Sebuah perayaan, sejuta cerita.</p>
+</section><section id="characterSelection" aria-labelledby="characterTitle" hidden>
+  <div class="selection-panel">
+    <p class="selection-eyebrow">THE WEDDING OF ANDI &amp; RATNA</p>
+    <h2 id="characterTitle">Pilih karaktermu</h2>
+    <p class="selection-intro">Siap berlabuh di pulau pernikahan?</p>
+    <form id="characterForm">
+      <fieldset><legend class="sr-only">Pilih satu dari empat karakter</legend>
+        <div id="characterChoices" class="character-choices">
+          <label class="character-option" data-gender="male" data-character="male">
+            <input type="radio" name="character" value="male" required>
+            <span class="character-card"><span class="choice-check" aria-hidden="true">✓</span><span class="model-space" data-preview="male" aria-hidden="true"></span><span class="character-name">Pria 1</span><span class="character-description">Batik coklat</span></span>
+          </label>
+          <label class="character-option" data-gender="male" data-character="male2">
+            <input type="radio" name="character" value="male2" required>
+            <span class="character-card"><span class="choice-check" aria-hidden="true">✓</span><span class="model-space" data-preview="male2" aria-hidden="true"></span><span class="character-name">Pria 2</span><span class="character-description">Jas hitam · Peci</span></span>
+          </label>
+          <label class="character-option" data-gender="female" data-character="female">
+            <input type="radio" name="character" value="female" required>
+            <span class="character-card"><span class="choice-check" aria-hidden="true">✓</span><span class="model-space" data-preview="female" aria-hidden="true"></span><span class="character-name">Wanita 1</span><span class="character-description">Kebaya · Hijab pink</span></span>
+          </label>
+          <label class="character-option" data-gender="female" data-character="female2">
+            <input type="radio" name="character" value="female2" required>
+            <span class="character-card"><span class="choice-check" aria-hidden="true">✓</span><span class="model-space" data-preview="female2" aria-hidden="true"></span><span class="character-name">Wanita 2</span><span class="character-description">Kebaya sage · Sanggul</span></span>
+          </label>
+          <div id="characterPreviews" aria-hidden="true"></div>
+        </div>
+      </fieldset>
+      <button id="startGame" class="start-game" type="submit" disabled>Tiba di pulau</button>
+    </form>
+  </div>
+</section><dialog id="arrivalDialog" aria-labelledby="arrivalTitle" aria-describedby="arrivalContent">
+  <button id="arrivalClose" class="arrival-close" type="button" aria-label="Kembali menjelajah" hidden>×</button>
+  <div class="arrival-heading"><span class="arrival-badge" aria-hidden="true">✧</span><div><strong>Petugas Pulau</strong><small id="arrivalStep"></small></div></div>
+  <h2 id="arrivalTitle" tabindex="-1"></h2><div id="arrivalContent"></div>
+  <p id="arrivalStatus" role="status" aria-live="polite"></p>
+  <div class="arrival-actions"><button id="arrivalBack" class="arrival-secondary" type="button">Kembali</button><button id="arrivalNext" class="arrival-primary" type="button">Lanjut</button></div>
+</dialog><dialog id="venueDialog" aria-labelledby="venueTitle" aria-describedby="venueIntro">
+  <div class="venue-sheet">
+    <button type="button" id="venueClose" class="venue-close" aria-label="Tutup informasi venue">×</button>
+    <p id="venueLocation" class="venue-location"></p>
+    <h2 id="venueTitle"></h2>
+    <p id="venueIntro" class="venue-intro"></p>
+    <div id="venueContent"></div>
+    <div id="venuePagination" class="venue-pagination" hidden><button id="venuePrevious" type="button" aria-label="Sebelumnya">‹</button><span id="venuePage" aria-live="polite"></span><button id="venueNext" type="button" aria-label="Berikutnya">›</button></div>
+    <p id="venueStatus" class="venue-status" role="status" aria-live="polite"></p>
+    <button id="venueReturn" class="venue-return" type="button">Kembali ke pulau</button>
+  </div>
+</dialog><div id="loading" role="status"><span class="loading-text">Menyiapkan undangan untukmu :)</span></div><script type="module" src="music.js"></script><script type="module" src="garden.js"></script></body></html>
