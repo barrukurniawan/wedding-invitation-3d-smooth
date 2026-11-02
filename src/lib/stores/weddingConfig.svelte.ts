@@ -2,7 +2,7 @@ import { writable } from 'svelte/store'
 import { ApiError, defaultConfig, type WeddingConfig } from '../api-client'
 import { getConfig } from '../services/config'
 
-export type WeddingConfigStatus = 'idle' | 'loading' | 'ready' | 'notFound' | 'expired' | 'suspended' | 'inactive' | 'error'
+export type WeddingConfigStatus = 'idle' | 'loading' | 'ready' | 'private' | 'notFound' | 'expired' | 'suspended' | 'inactive' | 'error'
 
 export const weddingConfig = writable<WeddingConfig>(defaultConfig)
 export const configLoaded = writable(false)
@@ -17,6 +17,11 @@ export async function loadConfig() {
   try {
     const config = await getConfig()
     weddingConfig.set(config)
+    // Undangan privat tanpa kode valid: server hanya mengirim info akses, bukan data undangan.
+    if (config.access === 'none') {
+      configStatus.set('private')
+      return
+    }
     configLoaded.set(true)
     configStatus.set('ready')
   } catch (error) {

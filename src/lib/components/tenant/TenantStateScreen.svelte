@@ -4,10 +4,13 @@
   let {
     state,
     message = '',
+    reason = null,
     onRetry
   }: {
-    state: 'loading' | 'notFound' | 'expired' | 'suspended' | 'inactive' | 'error' | 'invalid'
+    state: 'loading' | 'private' | 'notFound' | 'expired' | 'suspended' | 'inactive' | 'error' | 'invalid'
     message?: string
+    /** Undangan privat: alasan kode ditolak (lihat server/middleware/guestAccess.js). */
+    reason?: string | null
     onRetry?: () => void
   } = $props()
 
@@ -16,6 +19,11 @@
   })
 
   const content = $derived.by(() => {
+    if (state === 'private') {
+      if (reason === 'DEVICE_LIMIT') return { code: '🔒', title: 'Link ini sudah dibuka di perangkat lain', detail: 'Link undangan ini hanya bisa dibuka di beberapa perangkat. Minta link undangan sendiri ke mempelai, atau minta mereka mereset perangkat untuk link ini.' }
+      if (reason === 'LINK_REVOKED') return { code: '🔒', title: 'Link undangan ini sudah tidak berlaku', detail: 'Silakan hubungi mempelai untuk mendapatkan link undangan yang baru.' }
+      return { code: '🔒', title: 'Undangan ini privat', detail: 'Undangan hanya bisa dibuka lewat link khusus yang dikirim mempelai kepada Anda.' }
+    }
     if (state === 'expired') return { code: '410', title: 'Undangan telah berakhir', detail: 'Masa aktif undangan ini sudah selesai.' }
     // Uji coba habis: tidak menyebut pembayaran ke tamu.
     if (state === 'inactive') return { code: '⏸', title: 'Undangan ini sedang tidak aktif', detail: 'Silakan hubungi pasangan pengantin atau coba lagi nanti.' }

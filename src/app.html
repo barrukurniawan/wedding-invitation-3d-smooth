@@ -81,7 +81,26 @@
       var h = location.hostname.toLowerCase()
       if (h === 'localhost' || h === '127.0.0.1' || h === 'marryme.web.id' || h === 'www.marryme.web.id') return
       if (location.pathname.indexOf('/admin') === 0) return
-      var p = fetch('/api/config', { credentials: 'same-origin' })
+      // Undangan privat: kode tamu (?k=) + ID perangkat, kunci sama dengan services/inviteAccess.ts.
+      var headers = {}
+      try {
+        var re = /^[A-Za-z0-9]{6,16}$/, kn = 'mm_invite_key:' + location.hostname
+        var k = (new URLSearchParams(location.search).get('k') || '').trim()
+        if (re.test(k)) localStorage.setItem(kn, k)
+        else k = localStorage.getItem(kn) || ''
+        if (re.test(k)) headers['X-Invite-Key'] = k
+        var d = localStorage.getItem('mm_device_id')
+        if (!d || !/^[A-Za-z0-9_-]{8,64}$/.test(d)) {
+          var b = new Uint8Array(16); crypto.getRandomValues(b)
+          d = Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2) }).join('')
+          localStorage.setItem('mm_device_id', d)
+        }
+        headers['X-Invite-Device'] = d
+      } catch (e) {
+        var k2 = (new URLSearchParams(location.search).get('k') || '').trim()
+        if (/^[A-Za-z0-9]{6,16}$/.test(k2)) headers['X-Invite-Key'] = k2
+      }
+      var p = fetch('/api/config', { credentials: 'same-origin', headers: headers })
       window.__EARLY_CONFIG = p
       p.then(function (r) { return r.ok ? r.clone().json() : null }).then(function (c) {
         if (!c || c.preset !== '2d_garden') return

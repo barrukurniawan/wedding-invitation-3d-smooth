@@ -51,6 +51,8 @@
 {#if $configStatus === 'ready' && InvitationApp}
   <InvitationApp />
   {#if $weddingConfig.trial}<TrialBadge />{/if}
+{:else if $configStatus === 'private'}
+  <TenantStateScreen state="private" reason={$weddingConfig.denied_reason ?? null} />
 {:else if $configStatus === 'expired'}
   <TenantStateScreen state="expired" />
 {:else if $configStatus === 'suspended'}

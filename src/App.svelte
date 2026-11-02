@@ -14,6 +14,8 @@
   import ReceptionistGuide from './lib/components/ui/ReceptionistGuide.svelte'
   import PerfDiagnostics from './lib/components/ui/PerfDiagnostics.svelte'
   import { highResolutionEnabled, resolveRenderQuality } from './lib/utils/renderQuality'
+  import { get } from 'svelte/store'
+  import { weddingConfig } from './lib/stores/weddingConfig.svelte'
 
   let World = $state<Component>()
   let lowPower = $state(false)
@@ -25,7 +27,10 @@
     beginRealProgress()
     try {
       const params = new URLSearchParams(window.location.search)
-      const raw = params.get('send')
+      // Undangan dengan kode tamu: nama & jenis kelamin dari daftar tamu (server), bukan dari URL,
+      // supaya link yang diteruskan tetap menulis nama tamu aslinya.
+      const serverGuest = get(weddingConfig).guest
+      const raw = serverGuest?.name || params.get('send')
       if (raw) {
         const titleCased = raw
           .trim()
@@ -37,7 +42,7 @@
       }
       
       // Auto gender selection
-      const g = params.get('g')
+      const g = serverGuest?.gender || params.get('g')
       if (g === 'f') {
         setGuestGender('female')
       } else {

@@ -6,6 +6,10 @@
   const credits = $derived(resolveVenue($weddingConfig.venue).credits ?? [])
 
   let showPayment = $state(false)
+  // Undangan privat: mode hide_details tanpa kode → tanpa alamat/rekening/buku tamu.
+  // Tombol bagikan hanya untuk undangan publik (link pribadi tamu tidak boleh ikut tersebar).
+  const restricted = $derived($weddingConfig.access === 'limited')
+  const shareable = $derived(!$weddingConfig.privacy || $weddingConfig.privacy === 'public')
   let activeTab = $state<'info' | 'gallery'>('info')
   // URL foto yang gagal dimuat (link eksternal mati/dihapus): disembunyikan, bukan ikon rusak.
   let brokenPhotos = $state<Record<string, true>>({})
@@ -69,7 +73,8 @@
       `${$weddingConfig.akad_date}\n` +
       `${displayAddress}\n\n` +
       'Yuk hadir dan berikan doa restu!\n' +
-      window.location.href
+      // Tanpa ?send=/&k=: link yang dibagikan tidak membawa nama atau kode pribadi tamu ini.
+      window.location.origin + window.location.pathname
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -109,6 +114,12 @@
           <button onclick={handleClose} class="modal-icon-button" aria-label="Tutup">✕</button>
         </div>
         <div class="space-y-4 p-5 pt-3 text-center">
+          {#if restricted}
+          <div class="rounded-xl border border-[var(--champagne)]/30 bg-white/65 p-4 text-center text-xs leading-relaxed text-[var(--ink)]/70">
+            <p class="font-semibold text-[var(--deep-rose)]">Khusus tamu undangan</p>
+            <p class="mt-1">QRIS, rekening, dan alamat kirim hadiah hanya bisa dilihat lewat link undangan yang dikirim mempelai.</p>
+          </div>
+          {:else}
           <div class="mx-auto overflow-hidden rounded-xl bg-white p-2 shadow-lg">
             {#if $weddingConfig.qris_image}
               <img src={$weddingConfig.qris_image} alt="QRIS {$weddingConfig.bride_name} dan {$weddingConfig.groom_name}" class="mx-auto aspect-square w-48 rounded-lg object-cover" />
@@ -138,6 +149,7 @@
             </div>
           {/if}
           {#if effectiveMapsUrl}<a class="block text-xs text-[var(--rose)] hover:text-[var(--champagne)]" href={effectiveMapsUrl} target="_blank" rel="noreferrer">Buka lokasi di Google Maps</a>{/if}
+          {/if}
         </div>
       {:else}
           <button onclick={handleClose} class="modal-icon-button absolute right-3 top-3 z-10" aria-label="Tutup">✕</button>
@@ -185,7 +197,7 @@
                     <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Akad Nikah</p>
                     <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.akad_date}</p>
                     <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.akad_time}</p>
-                    <p class="text-xs text-[var(--deep-rose)]/65">{$weddingConfig.akad_location}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/65">{restricted ? 'Lokasi khusus tamu undangan' : $weddingConfig.akad_location}</p>
                   </div>
                 </div>
               </div>
@@ -195,7 +207,7 @@
                     <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Resepsi</p>
                     <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.resepsi_date}</p>
                     <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.resepsi_time}</p>
-                    <p class="text-xs text-[var(--deep-rose)]/65">{$weddingConfig.resepsi_location}</p>
+                    <p class="text-xs text-[var(--deep-rose)]/65">{restricted ? 'Lokasi khusus tamu undangan' : $weddingConfig.resepsi_location}</p>
                   </div>
                 </div>
               </div>
@@ -232,12 +244,16 @@
           <button onclick={showQris} class="flex-1 rounded-lg py-2.5 text-xs font-semibold w-btn-ghost">
             QRIS / Rekening
           </button>
+          {#if !restricted}
           <button onclick={openGuestbook} class="flex-1 rounded-lg py-2.5 text-xs font-semibold w-btn-primary">
             Tulis Ucapan
           </button>
+          {/if}
+          {#if shareable}
           <button onclick={shareWhatsApp} class="rounded-lg border border-[#9bba9c]/60 bg-[#eef7ed] px-3 py-2.5 text-xs font-semibold text-[#47714c] transition hover:bg-white" title="Bagikan undangan" aria-label="Bagikan undangan">
              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13" /></svg>
           </button>
+          {/if}
         </div>
         {#if credits.length}
           <details class="px-4 pb-3 text-[10px] leading-relaxed text-[var(--deep-rose)]/60">

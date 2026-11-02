@@ -21,6 +21,8 @@
     if (window.__GARDEN_READY) el.src = src;
     else el.dataset.src = src;
   };
+  // Undangan privat: header kode tamu didefinisikan di <head> index.html.
+  const inviteHeaders = () => (typeof window.__inviteHeaders === 'function' ? window.__inviteHeaders() : {});
   const contentApiUrl = `/api/multiplayer/content?site=${encodeURIComponent(window.CMS_SITE)}${window.CMS_PREVIEW ? '&preview=1' : ''}`;
 
   // ── CDN aset (jsDelivr) dengan cadangan ke server sendiri ─────────────────────────────
@@ -308,10 +310,16 @@
   };
 
   function transformMarryMeConfig(c) {
-    if (!c) return null;
+    if (!c || c.access === 'none') return null;
     const style = STYLE_ASSETS[c.character_style] || STYLE_ASSETS.umum;
+    // Undangan privat (hide_details) tanpa kode: server mengosongkan alamat/rekening; jangan diisi
+    // data contoh ('BCA', 'Jakarta'), tampilkan "Khusus tamu undangan". Sama dengan server/routes/multiplayer.js.
+    const hidden = c.access === 'limited';
+    const HIDDEN_TEXT = 'Khusus tamu undangan';
+    const HIDDEN_HINT = 'Buka lewat link yang dikirim mempelai.';
     return {
       demo: false,
+      access: c.access || 'full',
       profile: {
         groom: c.groom_name || 'Toni',
         bride: c.bride_name || 'Kia',
@@ -354,17 +362,19 @@
               title: 'Akad Nikah',
               date: c.akad_date || 'Rabu, 15 Juli 2026',
               time: c.akad_time || '08:00 - 10:00 WIB',
-              venue: c.akad_location || 'Kediaman Mempelai Wanita',
-              address: c.venue_address || 'Jakarta',
-              mapsUrl: c.maps_url || '',
+              venue: hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai Wanita',
+              address: hidden ? HIDDEN_HINT : c.venue_address || 'Jakarta',
+              mapsUrl: hidden ? '' : c.maps_url || '',
+              restricted: hidden,
             },
             {
               title: 'Resepsi',
               date: c.resepsi_date || 'Rabu, 15 Juli 2026',
               time: c.resepsi_time || '11:00 - 14:00 WIB',
-              venue: c.resepsi_location || 'Gedung Serbaguna',
-              address: c.venue_address || 'Jakarta',
-              mapsUrl: c.maps_url || '',
+              venue: hidden ? HIDDEN_TEXT : c.resepsi_location || 'Gedung Serbaguna',
+              address: hidden ? HIDDEN_HINT : c.venue_address || 'Jakarta',
+              mapsUrl: hidden ? '' : c.maps_url || '',
+              restricted: hidden,
             },
           ],
         },
@@ -377,7 +387,9 @@
           y: 0.35,
           description: 'Kehadiran dan doa restu Anda merupakan hadiah terindah bagi kami.',
           fields: [],
-          sections: [
+          sections: hidden ? [
+            { title: 'Amplop digital', fields: [['Rekening & alamat kado', HIDDEN_TEXT + '. ' + HIDDEN_HINT]] },
+          ] : [
             {
               title: 'Rekening ' + (c.groom_name || 'Pengantin'),
               fields: [
@@ -450,7 +462,7 @@
           fields: [
             ['Undanganmu', `Pernikahan ${c.groom_name || 'Toni'} & ${c.bride_name || 'Kia'}`],
             ['Hari bahagia', c.akad_date || 'Rabu, 15 Juli 2026'],
-            ['Lokasi', c.akad_location || 'Kediaman Mempelai'],
+            ['Lokasi', hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai'],
             ['Jelajahi taman', 'Ada enam tempat untuk dikunjungi'],
           ],
         },
@@ -462,7 +474,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261012b';
+    script.src = 'game.js?v=20261102p';
     document.body.append(script);
   }
 
@@ -493,9 +505,13 @@
   try {
     // Pakai request yang sudah dimulai di <head> index.html bila URL-nya sama.
     const early = window.__CMS_CONTENT_URL === contentApiUrl ? await window.__CMS_CONTENT : null;
-    const response = early || (await fetch(contentApiUrl, { cache: 'no-store' }));
+    const response = early || (await fetch(contentApiUrl, { cache: 'no-store', headers: inviteHeaders() }));
     if (response.ok) {
       const data = await response.json();
+      // Undangan privat tanpa kode: tidak ada data (halaman utama menampilkan layar privat).
+      // Jangan jatuh ke config.js (data contoh Faris & Eliza).
+      if (!data.config) return;
+      data.config.access = data.access || 'full';
       cdnBase = await checkCdn(data.assetCdn || null);
       rewriteAssets(data.config);
       preloadCore(data.config);
@@ -529,10 +545,11 @@
   setInterval(async () => {
     if (document.hidden || document.querySelector('dialog[open]')) return;
     try {
-      const r = await fetch(contentApiUrl, { cache: 'no-store' });
+      const r = await fetch(contentApiUrl, { cache: 'no-store', headers: inviteHeaders() });
       if (!r.ok) return;
       const data = await r.json();
-      if (data.revision === revision) return;
+      if (!data.config || data.revision === revision) return;
+      data.config.access = data.access || 'full';
       rewriteAssets(data.config);
       const signature = JSON.stringify([data.config.assets, data.config.characters]);
       const mediaChanged = signature !== mediaSignature;

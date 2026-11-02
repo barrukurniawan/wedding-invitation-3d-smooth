@@ -1,3 +1,10 @@
+import { applyInviteHeaders } from './services/inviteAccess'
+
+/** Mode privasi undangan (PLAN_UNDANGAN_PRIVAT.md). Sinkron dengan server/services/guestAccess.js. */
+export type PrivacyMode = 'public' | 'hide_details' | 'private'
+/** full: semua · limited: tanpa alamat/peta/rekening/buku tamu · none: layar "undangan privat". */
+export type GuestAccessLevel = 'full' | 'limited' | 'none'
+
 /** Gaya busana karakter preset 2D. Sinkron dengan server/services/characterStyles.js. */
 export type CharacterStyle = 'hijab' | 'umum'
 
@@ -42,6 +49,16 @@ export interface WeddingConfig {
   gift_shipping?: { recipient: string | null; address: string; phone: string | null; note: string | null } | null
   slug?: string
   updated_at: string
+  /** Undangan privat (dari /api/config). */
+  privacy?: PrivacyMode
+  access?: GuestAccessLevel
+  /** Nama tamu dari daftar tamu (kode akses valid); menggantikan ?send= dari URL. */
+  guest?: { name: string; gender: 'm' | 'f' } | null
+  denied_reason?: 'DEVICE_LIMIT' | 'LINK_REVOKED' | 'INVALID_CODE' | null
+  /** Hanya di dashboard pemilik (/api/my/config). */
+  privacy_mode?: PrivacyMode
+  privacy_device_limit?: number | null
+  privacy_general_code?: string | null
 }
 
 export interface GuestbookEntry {
@@ -142,6 +159,15 @@ export interface InvitationContact {
   name: string
   phone: string
   gender: 'm' | 'f'
+  /** Kode akses link pribadi (undangan privat). */
+  access_code: string | null
+  revoked: boolean
+  first_opened_at: string | null
+  last_opened_at: string | null
+  open_count: number
+  /** Berapa kali perangkat lain ditolak (batas perangkat). */
+  denied_count: number
+  device_count: number
   created_at: string
   updated_at: string
 }
@@ -243,6 +269,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (csrfToken && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     headers.set('X-CSRF-Token', csrfToken)
   }
+  applyInviteHeaders(headers)
   const response = await fetch(`/api${path}`, { ...init, headers, credentials: 'same-origin' })
   if (!response.ok) {
     let message = 'Permintaan tidak dapat diproses.'
@@ -574,6 +601,25 @@ export function createMyContact(name: string, phone: string, gender: 'm' | 'f' =
     method: 'POST',
     body: JSON.stringify({ name, phone, gender }),
   })
+}
+
+export function setMyContactRevoked(id: string, revoked: boolean) {
+  return request<{ contact: InvitationContact }>(`/my/contacts/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ revoked }),
+  })
+}
+
+export function regenerateMyContactCode(id: string) {
+  return request<{ contact: InvitationContact }>(`/my/contacts/${encodeURIComponent(id)}/regenerate`, { method: 'POST' })
+}
+
+export function resetMyContactDevices(id: string) {
+  return request<{ contact: InvitationContact }>(`/my/contacts/${encodeURIComponent(id)}/devices`, { method: 'DELETE' })
+}
+
+export function regenerateMyGeneralCode() {
+  return request<{ privacy_general_code: string }>('/my/privacy/general-code', { method: 'POST' })
 }
 
 export function deleteMyContact(id: string) {

@@ -21,6 +21,9 @@
     return text.replace(/{bride}/g, bride).replace(/{groom}/g, groom)
   }
 
+  // Undangan privat (mode hide_details) tanpa kode: alamat & peta tidak dikirim server.
+  const restricted = $derived($weddingConfig.access === 'limited')
+
   const displayAddress = $derived(
     $weddingConfig.venue_address ||
     $weddingConfig.resepsi_location ||
@@ -58,7 +61,12 @@
         <p class="whitespace-pre-line text-sm leading-relaxed text-[var(--ink)] md:text-base">
           {parseText($activeNpcData.messages[currentMessageIndex])}
         </p>
-        {#if currentMessageIndex === 0 && (displayAddress || effectiveMapsUrl)}
+        {#if currentMessageIndex === 0 && restricted}
+          <p class="mt-4 rounded-xl border border-[var(--champagne)]/30 bg-white/65 px-3 py-3 text-xs leading-relaxed text-[var(--ink)]/70">
+            <span class="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--deep-rose)]/60">Alamat venue</span>
+            Khusus tamu undangan. Buka lewat link yang dikirim mempelai.
+          </p>
+        {:else if currentMessageIndex === 0 && (displayAddress || effectiveMapsUrl)}
           <a
             href={effectiveMapsUrl || undefined}
             class:opacity-60={!effectiveMapsUrl}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
+  import { inviteKey } from '../../services/inviteAccess'
 
   let iframeEl = $state<HTMLIFrameElement>()
   let loaded = $state(false)
@@ -12,10 +13,15 @@
     }
     if (typeof window !== 'undefined') {
       const currentParams = new URLSearchParams(window.location.search)
-      const sendName = currentParams.get('send')
+      // Nama tamu dari daftar tamu (kode valid) diutamakan di atas ?send= dari URL.
+      const serverGuest = $weddingConfig?.guest
+      const sendName = serverGuest?.name || currentParams.get('send')
       if (sendName) params.set('send', sendName)
-      const guestGender = currentParams.get('g')
+      const guestGender = serverGuest?.gender || currentParams.get('g')
       if (guestGender) params.set('g', guestGender)
+      // Kode tamu juga lewat URL iframe, untuk browser yang memblokir localStorage.
+      const key = inviteKey()
+      if (key) params.set('k', key)
     }
     const query = params.toString()
     return `/presets/garden-2d/index.html${query ? `?${query}` : ''}`

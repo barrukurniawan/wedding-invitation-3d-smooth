@@ -1,6 +1,10 @@
 <script lang="ts">
   import { activeModal, closeModal, setGuestName } from '../../stores/gameState.svelte'
   import { submitGuestbook, getGuestbookEntries, type GuestbookEntry } from '../../services/api'
+  import { weddingConfig } from '../../stores/weddingConfig.svelte'
+
+  // Undangan privat (mode hide_details) tanpa kode: buku tamu tidak bisa dibaca/ditulis.
+  const restricted = $derived($weddingConfig.access === 'limited')
 
   let form = $state<{ name: string; attendance: GuestbookEntry['attendance']; message: string }>({ name: '', attendance: 'Hadir', message: '' })
   let entries = $state<GuestbookEntry[]>([])
@@ -16,7 +20,7 @@
   }
 
   $effect(() => {
-    if ($activeModal === 'guestbook') {
+    if ($activeModal === 'guestbook' && !restricted) {
       showForm = true
       loadEntries()
     }
@@ -67,16 +71,27 @@
           </span>
           <div class="min-w-0 flex-1">
             <h3 class="text-lg font-bold text-[var(--deep-rose)]">Buku Tamu</h3>
-            <p class="guestbook-count text-xs text-[var(--ink)]/50">{entries.length} ucapan masuk</p>
+            {#if !restricted}<p class="guestbook-count text-xs text-[var(--ink)]/50">{entries.length} ucapan masuk</p>{/if}
           </div>
         </div>
+        {#if restricted}
+          <button class="modal-close rounded-lg px-3 py-1.5 text-xs font-medium w-tab" onclick={closeModal} aria-label="Tutup">✕</button>
+        {:else}
         <div class="guestbook-toggle-group flex shrink-0 items-center gap-2">
           <button class="guestbook-tab rounded-lg px-3 py-1.5 text-xs font-medium w-tab {showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = true)}>Tulis</button>
           <button class="guestbook-tab rounded-lg px-3 py-1.5 text-xs font-medium w-tab {!showForm ? 'w-tab-active' : ''}" onclick={() => (showForm = false)}>Baca</button>
         </div>
+        {/if}
       </div>
 
-      {#if showForm}
+      {#if restricted}
+        <div class="px-5 py-6 sm:px-6">
+          <div class="rounded-xl border border-[var(--champagne)]/30 bg-white/65 p-4 text-center text-xs leading-relaxed text-[var(--ink)]/70">
+            <p class="font-semibold text-[var(--deep-rose)]">Khusus tamu undangan</p>
+            <p class="mt-1">Buku tamu hanya bisa dibuka lewat link undangan yang dikirim mempelai.</p>
+          </div>
+        </div>
+      {:else if showForm}
         <form onsubmit={(e) => { e.preventDefault(); submitForm() }} class="guestbook-form flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:px-6">
           <div class="flex flex-col space-y-4">
           <div>
