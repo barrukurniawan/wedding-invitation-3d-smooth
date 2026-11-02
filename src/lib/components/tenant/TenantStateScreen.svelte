@@ -20,9 +20,9 @@
 
   const content = $derived.by(() => {
     if (state === 'private') {
-      if (reason === 'DEVICE_LIMIT') return { code: '🔒', title: 'Link ini sudah dibuka di perangkat lain', detail: 'Link undangan ini hanya bisa dibuka di beberapa perangkat. Minta link undangan sendiri ke mempelai, atau minta mereka mereset perangkat untuk link ini.' }
-      if (reason === 'LINK_REVOKED') return { code: '🔒', title: 'Link undangan ini sudah tidak berlaku', detail: 'Silakan hubungi mempelai untuk mendapatkan link undangan yang baru.' }
-      return { code: '🔒', title: 'Undangan ini privat', detail: 'Undangan hanya bisa dibuka lewat link khusus yang dikirim mempelai kepada Anda.' }
+      if (reason === 'DEVICE_LIMIT') return { code: '', title: 'Link ini sudah dibuka di perangkat lain', detail: 'Link undangan pribadi hanya bisa dibuka di beberapa perangkat. Minta link undangan sendiri ke mempelai, atau minta mereka mereset perangkat untuk link ini.' }
+      if (reason === 'LINK_REVOKED') return { code: '', title: 'Link undangan ini sudah tidak berlaku', detail: 'Silakan hubungi mempelai untuk mendapatkan link undangan yang baru.' }
+      return { code: '', title: 'Maaf, undangan ini khusus untuk tamu undangan', detail: 'Undangan hanya bisa dibuka lewat link pribadi yang dikirim mempelai. Kalau kamu tamu undangan, buka lagi dari pesan yang kamu terima.' }
     }
     if (state === 'expired') return { code: '410', title: 'Undangan telah berakhir', detail: 'Masa aktif undangan ini sudah selesai.' }
     // Uji coba habis: tidak menyebut pembayaran ke tamu.
@@ -34,6 +34,25 @@
   })
 </script>
 
+{#if state === 'private'}
+<main class="private-gate">
+  <div class="private-gate__card">
+    <div class="private-gate__art" aria-hidden="true">
+      <svg viewBox="0 0 120 96" width="120" height="96">
+        <rect x="10" y="22" width="100" height="64" rx="8" fill="#fff8ef" stroke="#c9a46a" stroke-width="2"/>
+        <path d="M12 26 60 60l48-34" fill="none" stroke="#c9a46a" stroke-width="2"/>
+        <circle cx="60" cy="58" r="15" fill="#8f1d45"/>
+        <rect x="53" y="56" width="14" height="10" rx="2" fill="#fff"/>
+        <path d="M55.5 56v-3a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+    </div>
+    <p class="private-gate__brand">UNDANGAN PRIVAT</p>
+    <h1>{content.title}</h1>
+    <p class="private-gate__detail">{content.detail}</p>
+    <p class="private-gate__foot">Dibuat dengan <a href="https://marryme.web.id" rel="noreferrer">MarryMe</a></p>
+  </div>
+</main>
+{:else}
 <main class="tenant-state">
   <div class="tenant-state__frame">
     <p class="tenant-state__brand">MARRYME</p>
@@ -47,8 +66,17 @@
     {/if}
   </div>
 </main>
+{/if}
 
 <style>
+  .private-gate { min-height: 100svh; display: grid; place-items: center; padding: 24px 16px; background: radial-gradient(circle at 50% 0%, #fbe9ee 0%, #f4f0e8 60%); color: #2d2525; }
+  .private-gate__card { width: min(100%, 440px); padding: 36px 28px 26px; border: 1px solid rgba(201, 164, 106, .35); border-radius: 24px; background: rgba(255, 255, 255, .78); box-shadow: 0 18px 50px rgba(143, 29, 69, .1); text-align: center; }
+  .private-gate__art { display: flex; justify-content: center; margin-bottom: 18px; }
+  .private-gate__brand { margin: 0; color: #a07a3c; font: 700 11px/1 system-ui, sans-serif; letter-spacing: .22em; }
+  .private-gate h1 { margin: 12px 0 0; color: #8f1d45; font: 600 clamp(24px, 6.2vw, 30px)/1.2 Georgia, serif; }
+  .private-gate__detail { margin: 14px auto 0; max-width: 360px; color: #6d6260; font: 400 15px/1.6 system-ui, sans-serif; }
+  .private-gate__foot { margin: 26px 0 0; color: #a3979a; font: 400 12px/1 system-ui, sans-serif; }
+  .private-gate__foot a { color: #8f1d45; font-weight: 600; text-decoration: none; }
   .tenant-state { min-height: 100svh; display: grid; place-items: center; padding: 24px; background: #f4f0e8; color: #20201e; }
   .tenant-state__frame { width: min(100%, 520px); border-left: 4px solid #bf3151; padding: 12px 0 12px 28px; }
   .tenant-state__brand { margin: 0 0 44px; color: #bf3151; font: 700 12px/1 system-ui, sans-serif; letter-spacing: .18em; }
