@@ -19,7 +19,7 @@
       if (sendName) params.set('send', sendName)
       const guestGender = serverGuest?.gender || currentParams.get('g')
       if (guestGender) params.set('g', guestGender)
-      // Kode tamu juga lewat URL iframe, untuk browser yang memblokir localStorage.
+      // Kode tamu diteruskan lewat URL iframe (preset 2D membacanya dari URL-nya sendiri).
       const key = inviteKey()
       if (key) params.set('k', key)
     }

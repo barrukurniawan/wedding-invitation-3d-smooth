@@ -1,10 +1,10 @@
 // Undangan privat (PLAN_UNDANGAN_PRIVAT.md): kode akses tamu (`?k=`) dan ID perangkat dikirim
-// sebagai header ke API. Kode disimpan per undangan supaya reload/bookmark tanpa `?k=` tetap jalan.
-// Kunci localStorage yang sama dibaca oleh app.html (fetch awal) dan preset 2D (cms-bootstrap.js, game.js).
+// sebagai header ke API. Kode HANYA diambil dari URL (tidak diingat browser): tanpa `?k=` = terkunci.
+// Link di riwayat WA/browser tetap membawa `?k=`. ID perangkat disimpan di localStorage (`mm_device_id`),
+// dibaca juga oleh app.html (fetch awal) dan preset 2D (index.html `__inviteHeaders`).
 
 const CODE_PATTERN = /^[A-Za-z0-9]{6,16}$/
 const DEVICE_KEY = 'mm_device_id'
-const keyStorageName = () => `mm_invite_key:${location.hostname}`
 
 function isInvitationHost() {
   if (typeof location === 'undefined') return false
@@ -32,18 +32,12 @@ function storageSet(name: string, value: string) {
 let memoryKey: string | null = null
 let memoryDevice: string | null = null
 
-/** Kode dari URL (diutamakan, lalu disimpan) atau dari penyimpanan. */
+/** Kode dari URL saja. */
 export function inviteKey(): string | null {
   if (!isInvitationHost()) return null
   if (memoryKey) return memoryKey
   const fromUrl = new URLSearchParams(location.search).get('k')?.trim() || ''
-  if (CODE_PATTERN.test(fromUrl)) {
-    storageSet(keyStorageName(), fromUrl)
-    memoryKey = fromUrl
-    return fromUrl
-  }
-  const stored = storageGet(keyStorageName())
-  memoryKey = stored && CODE_PATTERN.test(stored) ? stored : null
+  memoryKey = CODE_PATTERN.test(fromUrl) ? fromUrl : null
   return memoryKey
 }
 

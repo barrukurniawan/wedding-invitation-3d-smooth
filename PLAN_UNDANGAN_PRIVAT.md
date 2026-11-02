@@ -89,7 +89,7 @@ Karena frontend statis (adapter-static), penjagaan **harus di API**, bukan di UI
 
 ### 3.5 Frontend
 
-- `src/app.html` (fetch awal), `services/config.ts`, `api-client.ts`, dan `cms-bootstrap.js` (preset 2D): ambil `k` dari URL, simpan di `localStorage` per slug (agar reload/bookmark tanpa `?k=` tetap jalan), kirim sebagai `X-Invite-Key`. `Garden2DApp.svelte` meneruskan `k` ke iframe seperti `send` sekarang.
+- `src/app.html` (fetch awal), `services/config.ts`, `api-client.ts`, dan `cms-bootstrap.js` (preset 2D): ambil `k` dari URL, kirim sebagai `X-Invite-Key`. Kode TIDAK disimpan browser (diputuskan 2026-11-02): tanpa `?k=` di alamat = terkunci; link di riwayat WA/browser tetap membawa `?k=`. `Garden2DApp.svelte` meneruskan `k` ke iframe seperti `send` sekarang.
 - Nama tamu: kalau server mengirim `guest.name`, itu yang dipakai (bukan `?send=`). Jadi link yang diteruskan tetap menulis nama tamu asli, dan orang tidak bisa mengganti nama sendiri di URL.
 - `TenantBootstrap.svelte`: kalau `privacy === 'private'` dan tidak ada akses → tampilkan layar privat (varian `TenantStateScreen`, gaya sama), jangan load 3D/2D sama sekali.
 - Mode `hide_details`: komponen yang menampilkan maps/rekening/QRIS/alamat kado/buku tamu (3D: `WeddingStageModal`, resepsionis, mailbox/`GuestbookModal`; 2D: panel di `cms-bootstrap.js`/`game.js`) harus menangani field kosong dengan teks pengganti, bukan tombol rusak. Perlu inventaris lengkap saat implementasi.
@@ -127,7 +127,7 @@ Semua kolom punya default yang membuat perilaku persis sama dengan sekarang. 11 
 1. **Perbaikan celah `?site=`** di `routes/multiplayer.js` + noindex (nginx + robots.txt). Kecil, bermanfaat untuk semua undangan, bisa di-deploy duluan kalau mau.
 2. Migration 022 + kode akses di `contacts.js` (generate, revoke, regenerate, serialize) + batas 200 tamu + test Express. Tabel `invitation_contact_devices` (kode, device id, IP hash, waktu) dan kolom `privacy_device_limit` ikut di migration ini.
 3. Middleware `resolveGuestAccess` + penjagaan di config/content/guestbook/wishes/multiplayer + header cache + test Express (tiap mode × tiap jenis kode).
-4. Frontend: kirim `X-Invite-Key`, nama tamu dari server, layar privat, penanganan field kosong di 3D dan 2D.
+4. Frontend: kirim `X-Invite-Key` (hanya dari `?k=` di URL, tidak diingat browser), nama tamu dari server, layar privat, penanganan field kosong di 3D dan 2D.
 5. Dashboard: pilihan mode privasi di Pengaturan, link umum, badge dibuka + salin/nonaktifkan link.
 6. Update teks katalog/tutorial (`static/katalog/index.html`) dan FAQ landing setelah fitur jadi.
 
