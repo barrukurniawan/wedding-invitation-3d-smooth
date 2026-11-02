@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Icon from '$lib/components/icons/Icon.svelte'
-  import { ApiError, createMyContact, deleteMyContact, getMyContacts, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
+  import { ApiError, createMyContact, deleteMyContact, getMyContacts, regenerateMyContactCode, resetMyContactDevices, setMyContactRevoked, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
 
   type Props = { invitation: OwnerInvitation; myConfig: WeddingConfig | null }
   let { invitation, myConfig }: Props = $props()
@@ -9,7 +9,7 @@
   const DEFAULT_TEMPLATE = 'Assalamualaikum Warahmatullahi Wabarakatuh. Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan digital kami di sini:\n{link}\n\nKami tunggu kehadiranmu!'
 
   let contacts = $state<InvitationContact[]>([])
-  let limit = $state(100)
+  let limit = $state(200)
   let loading = $state(true)
   let saving = $state(false)
   let error = $state('')
@@ -87,19 +87,73 @@
     } catch (err) { error = err instanceof ApiError ? err.message : 'Tamu belum dapat dihapus.' }
   }
 
+  // ── Undangan privat: link pribadi per tamu (PLAN_UNDANGAN_PRIVAT.md) ─────────────────
+  const privacyOn = $derived(!!myConfig?.privacy_mode && myConfig.privacy_mode !== 'public')
+  let busyId = $state<string | null>(null)
+  let copiedId = $state<string | null>(null)
+
+  function replaceContact(updated: InvitationContact) {
+    contacts = contacts.map((item) => (item.id === updated.id ? updated : item))
+  }
+
+  async function contactAction(contact: InvitationContact, action: 'revoke' | 'restore' | 'regenerate' | 'reset') {
+    const questions = {
+      revoke: `Nonaktifkan link ${contact.name}? Link yang sudah terkirim tidak bisa dibuka lagi sampai kamu aktifkan kembali.`,
+      regenerate: `Buat link baru untuk ${contact.name}? Link lama langsung tidak berlaku, jadi kirim ulang link barunya.`,
+      reset: `Reset perangkat ${contact.name}? Link yang sama bisa dibuka lagi di perangkat baru (misalnya HP baru).`,
+      restore: '',
+    }
+    if (questions[action] && !confirm(questions[action])) return
+    busyId = contact.id
+    error = ''
+    try {
+      const result = action === 'revoke' || action === 'restore'
+        ? await setMyContactRevoked(contact.id, action === 'revoke')
+        : action === 'regenerate'
+          ? await regenerateMyContactCode(contact.id)
+          : await resetMyContactDevices(contact.id)
+      replaceContact(result.contact)
+      if (action === 'regenerate' && opened.includes(contact.id)) {
+        opened = opened.filter((id) => id !== contact.id)
+        writeJson(openedKey, opened)
+      }
+    } catch (err) {
+      error = err instanceof ApiError ? err.message : 'Perubahan belum dapat disimpan.'
+    } finally { busyId = null }
+  }
+
+  async function copyLink(contact: InvitationContact) {
+    try {
+      await navigator.clipboard.writeText(personalLink(contact))
+      copiedId = contact.id
+      setTimeout(() => { if (copiedId === contact.id) copiedId = null }, 2000)
+    } catch {
+      error = 'Link belum dapat disalin. Salin dari pesan WhatsApp.'
+    }
+  }
+
+  function openedText(contact: InvitationContact) {
+    if (!contact.open_count) return 'Belum dibuka'
+    const devices = privacyOn && contact.device_count ? ` · ${contact.device_count} perangkat` : ''
+    return `Dibuka ${contact.open_count}x${devices}`
+  }
+
+  function personalLink(contact: InvitationContact) {
+    const personalizedUrl = new URL(invitation.public_url.replace(/\/+$/, ''))
+    personalizedUrl.searchParams.set('send', contact.name.trim())
+    personalizedUrl.searchParams.set('g', contact.gender === 'f' ? 'f' : 'm')
+    // Kode akses pribadi: wajib untuk undangan privat, tidak berbahaya untuk undangan publik
+    // (link yang sudah terkirim tetap jalan bila nanti mode privat dinyalakan).
+    if (contact.access_code) personalizedUrl.searchParams.set('k', contact.access_code)
+    personalizedUrl.search = personalizedUrl.searchParams.toString().replace(/\+/g, '%20')
+    return personalizedUrl.toString().replace(/\/?\?send=/, '?send=')
+  }
+
   function messageFor(contact: InvitationContact) {
     const couple = myConfig?.bride_name && myConfig?.groom_name
       ? `${myConfig.bride_name} & ${myConfig.groom_name}`
       : 'pernikahan kami'
-    const personalizedUrl = new URL(invitation.public_url.replace(/\/+$/, ''))
-    personalizedUrl.searchParams.set('send', contact.name.trim())
-    if (contact.gender === 'f') {
-      personalizedUrl.searchParams.set('g', 'f')
-    } else {
-      personalizedUrl.searchParams.set('g', 'm')
-    }
-    personalizedUrl.search = personalizedUrl.searchParams.toString().replace(/\+/g, '%20')
-    const personalizedLink = personalizedUrl.toString().replace(/\/?\?send=/, '?send=')
+    const personalizedLink = personalLink(contact)
     return template.replaceAll('{nama}', contact.name).replaceAll('{mempelai}', couple).replaceAll('{link}', personalizedLink)
   }
 
@@ -207,10 +261,32 @@
           <div class="guest-info">
             <strong>{contact.name}</strong>
             <span>+{contact.phone}</span>
+            <span class="guest-status">
+              {#if contact.revoked}
+                <em class="status-off">Link nonaktif</em>
+              {:else}
+                <em class:status-seen={contact.open_count > 0}>{openedText(contact)}</em>
+                {#if privacyOn && contact.denied_count > 0}<em class="status-warn">Ditolak {contact.denied_count} perangkat</em>{/if}
+              {/if}
+            </span>
+            <span class="guest-tools">
+              <button type="button" disabled={busyId === contact.id || contact.revoked} onclick={() => void copyLink(contact)}>{copiedId === contact.id ? 'Tersalin ✓' : 'Salin link'}</button>
+              {#if contact.revoked}
+                <button type="button" disabled={busyId === contact.id} onclick={() => void contactAction(contact, 'restore')}>Aktifkan lagi</button>
+              {:else}
+                <button type="button" disabled={busyId === contact.id} onclick={() => void contactAction(contact, 'revoke')}>Nonaktifkan</button>
+              {/if}
+              {#if privacyOn && (contact.device_count > 0 || contact.denied_count > 0)}
+                <button type="button" disabled={busyId === contact.id} onclick={() => void contactAction(contact, 'reset')}>Reset perangkat</button>
+              {/if}
+              <button type="button" disabled={busyId === contact.id} onclick={() => void contactAction(contact, 'regenerate')}>Link baru</button>
+            </span>
           </div>
           <div class="guest-actions">
             {#if sent}<span class="sent-tag"><Icon name="check" size={14} /> Terkirim</span>{/if}
-            {#if isActive && cooldownLeft > 0}
+            {#if contact.revoked}
+              <span class="send-btn waiting">Link nonaktif</span>
+            {:else if isActive && cooldownLeft > 0}
               <span class="send-btn waiting">Tunggu {fmtLeft(cooldownLeft)}</span>
             {:else if isActive}
               <a class="send-btn" class:ghost={sent} href={waUrl(contact)} target="_blank" rel="noopener noreferrer" onclick={(e) => onSend(e, contact)}>
@@ -282,6 +358,14 @@
   .guest-info span { color: #7a6a6d; font-size: .82rem; }
   .guest-actions { display: flex; align-items: center; gap: 8px; }
   .sent-tag { display: inline-flex; align-items: center; gap: 4px; color: #15803d; font-size: .78rem; font-weight: 700; white-space: nowrap; --mm-ic: #15803d; --mm-ic-soft: #dcfce7; }
+  .guest-status { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+  .guest-status em { font-style: normal; font-size: .72rem; font-weight: 600; color: #9a8a8d; }
+  .guest-status em.status-seen { color: #2f7a4a; }
+  .guest-status em.status-warn { color: #b0601a; }
+  .guest-status em.status-off { color: #b42345; }
+  .guest-tools { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+  .guest-tools button { padding: 0; border: 0; background: none; color: #8f1d45; font-size: .74rem; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .guest-tools button:disabled { color: #b9adb0; cursor: default; text-decoration: none; }
   .send-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; background: #8f1d45; color: #fff; font-size: .82rem; font-weight: 700; text-decoration: none; white-space: nowrap; --mm-ic: #fff; --mm-ic-soft: rgba(255, 255, 255, .28); }
   .send-btn:hover { background: #761639; }
   .send-btn.ghost { background: #fff; color: #8f1d45; border: 1px solid rgba(143, 29, 69, .3); --mm-ic: #8f1d45; --mm-ic-soft: #f6c5d2; }

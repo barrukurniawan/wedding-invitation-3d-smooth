@@ -400,6 +400,11 @@ export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?
   return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(payload) })
 }
 
+/** Pengaturan undangan privat. Dikirim apa adanya: `privacy_device_limit: null` (tanpa batas) tidak boleh tersaring. */
+export function updateMyPrivacy(settings: { privacy_mode?: PrivacyMode; privacy_device_limit?: number | null }) {
+  return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(settings) })
+}
+
 export function updateMySlug(slug: string) {
   return request<{ invitation: OwnerInvitation }>('/invitations/slug', {
     method: 'PATCH',

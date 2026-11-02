@@ -33,6 +33,7 @@
   import GuestbookManager from './dashboard/GuestbookManager.svelte'
   import PaymentManager from './dashboard/PaymentManager.svelte'
   import InvitationSender from './dashboard/InvitationSender.svelte'
+  import PrivacySettings from './dashboard/PrivacySettings.svelte'
   import OnboardingWizard from './OnboardingWizard.svelte'
   import SupportChat from './SupportChat.svelte'
   import LandingNav from './landing/LandingNav.svelte'
@@ -950,6 +951,8 @@
                 {/if}
               </section>
             {/if}
+
+            <PrivacySettings {invitation} {myConfig} onSaved={(config) => (myConfig = config)} />
 
             <div class="tema-info-grid">
               <div class="tema-info-card">

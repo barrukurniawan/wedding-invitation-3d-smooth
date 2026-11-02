@@ -49,6 +49,7 @@
     pin: `<path class="d" d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/>${heart(12, 10, 2.6)}`,
     map: `<path class="d" d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/>`,
     compass: `<circle class="d" cx="12" cy="12" r="9"/><path class="g" d="m15.5 8.5-2 5-5 2 2-5z"/>`,
+    lock: `<rect class="d" x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle class="f" cx="12" cy="15.5" r="1.3"/>`,
     globe: `<circle class="d" cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>`,
     // Tema & orang
     garden: `<path class="d" d="M5 20C5 11 10 5 20 4c0 10-5 15-15 16z"/><path d="M5 20l8-8"/>`,
