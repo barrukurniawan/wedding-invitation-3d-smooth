@@ -24,6 +24,7 @@ import trackRoutes from './routes/track.js'
 import multiplayerRoutes from './routes/multiplayer.js'
 import pool from './db.js'
 import { attachHostContext, requirePublicInvitation, requireRootHost } from './middleware/tenant.js'
+import { requireGuestLevel, resolveGuestAccess } from './middleware/guestAccess.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -64,8 +65,8 @@ app.get('/api/public/photos/:filename', servePublicPhoto)
 app.get('/api/my/photos/:filename', servePublicPhoto)
 app.get('/api/public/music/:filename', servePublicMusic)
 app.use('/api/public', publicRoutes)
-app.use('/api/guestbook', requirePublicInvitation, guestbookRoutes)
-app.use('/api/config', requirePublicInvitation, configRoutes)
+app.use('/api/guestbook', requirePublicInvitation, resolveGuestAccess(), requireGuestLevel('full'), guestbookRoutes)
+app.use('/api/config', requirePublicInvitation, resolveGuestAccess({ countOpen: true }), configRoutes)
 app.use('/api/auth', requireRootHost, authRoutes)
 app.use('/api/invitations', requireRootHost, invitationRoutes)
 app.use('/api/my', requireRootHost, tenantConfigRoutes)

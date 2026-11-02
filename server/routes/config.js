@@ -5,11 +5,18 @@ import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { normalizeVenue } from '../services/venues.js'
 import { normalizeCharacterStyle } from '../services/characterStyles.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
+import { publicAccessInfo, redactConfigRow } from '../services/guestAccess.js'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  const access = req.guestAccess || { mode: 'public', level: 'full', guest: null, reason: null }
+  // Undangan privat tanpa kode valid: hanya info cukup untuk layar "undangan privat" (200, bukan error,
+  // supaya frontend tidak mencoba ulang). Tidak ada nama, foto, atau data acara.
+  if (access.level === 'none') {
+    return res.json({ id: Number(req.invitation.id), slug: req.invitation.slug || '', ...publicAccessInfo(access) })
+  }
   try {
     const [rows] = await pool.query(
       `SELECT invitation_id AS id, bride_name, groom_name, bride_parents, groom_parents, wedding_photo,
@@ -21,7 +28,7 @@ router.get('/', async (req, res) => {
       [req.invitation.id],
     )
     if (rows.length === 0) return res.status(404).json({ error: { code: 'CONFIG_NOT_FOUND', message: 'Konfigurasi tidak ditemukan.' } })
-    const row = normalizeMusicConfig(rows[0])
+    const row = normalizeMusicConfig(access.level === 'limited' ? redactConfigRow(rows[0]) : rows[0])
     row.id = Number(row.id)
     row.slug = req.invitation?.slug || ''
     row.preset = row.preset || '3d_summer'
@@ -36,6 +43,7 @@ router.get('/', async (req, res) => {
     row.asset_cdn = assetCdnBase()
     // Undangan masa uji coba: tamu melihat label kecil "3 Hari Aktif · MarryMe".
     row.trial = Boolean(req.invitationTrial)
+    Object.assign(row, publicAccessInfo(access))
     res.json(row)
   } catch (err) {
     console.error('GET /api/config error:', err.message)

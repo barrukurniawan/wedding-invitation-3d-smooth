@@ -4,8 +4,71 @@ import pool from '../db.js'
 import { assetCdnBase } from '../services/assetCdn.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
 import { characterStyleAssets } from '../services/characterStyles.js'
+import { requirePublicInvitation } from '../middleware/tenant.js'
+import { computeGuestAccess } from '../middleware/guestAccess.js'
+import { normalizeAccessCode, publicAccessInfo, resolveSite } from '../services/guestAccess.js'
 
 const router = express.Router()
+
+// ── Akses (PLAN_UNDANGAN_PRIVAT.md) ─────────────────────────────────────────────────────
+// Slug TIDAK lagi diambil dari parameter `site` klien (dulu siapa pun bisa membaca data undangan
+// lain lewat ?site=slug-lain). Subdomain undangan → slug dari host + aturan akses tamu;
+// domain utama → hanya demo. Hasil dicache 30 dtk per pengunjung karena /sync dipanggil terus-menerus.
+const ACCESS_RANK = { none: 0, limited: 1, full: 2 }
+const ACCESS_CACHE_TTL_MS = 30_000
+const accessCache = new Map() // key -> { expires, invitation, invitationTrial, guestAccess }
+
+function accessCacheKey(req, site) {
+  const code = normalizeAccessCode(req.get('x-invite-key') || req.query?.k) || ''
+  const device = String(req.get('x-invite-device') || '').slice(0, 64)
+  const session = req.cookies ? Object.keys(req.cookies).sort().map((k) => `${k}=${req.cookies[k]}`).join(';') : ''
+  return crypto.createHash('sha256').update(`${site}|${code}|${device}|${req.get('cf-connecting-ip') || req.ip}|${session}`).digest('hex')
+}
+
+function privateError(res) {
+  res.setHeader('Cache-Control', 'no-store, private')
+  return res.status(403).json({ error: 'Bagian ini khusus tamu undangan.', code: 'INVITATION_PRIVATE' })
+}
+
+function siteAccess(minimum = 'none') {
+  return (req, res, next) => {
+    const site = resolveSite(req.hostContext)
+    req.site = site
+    if (req.hostContext?.type !== 'invitation') {
+      req.guestAccess = { mode: 'public', level: 'full', credential: null, guest: null, reason: null }
+      return next()
+    }
+    res.setHeader('Vary', 'X-Invite-Key, X-Invite-Device, Cookie')
+    const now = Date.now()
+    const key = accessCacheKey(req, site)
+    const cached = accessCache.get(key)
+    const finish = () => (ACCESS_RANK[req.guestAccess.level] >= ACCESS_RANK[minimum] ? next() : privateError(res))
+    if (cached && cached.expires > now) {
+      req.invitation = cached.invitation
+      req.invitationTrial = cached.invitationTrial
+      req.guestAccess = cached.guestAccess
+      return finish()
+    }
+    requirePublicInvitation(req, res, async (err) => {
+      if (err) return next(err)
+      try {
+        req.guestAccess = await computeGuestAccess(req)
+        if (accessCache.size > 5000) {
+          for (const [k, v] of accessCache) if (v.expires <= now) accessCache.delete(k)
+        }
+        accessCache.set(key, {
+          expires: now + ACCESS_CACHE_TTL_MS,
+          invitation: req.invitation,
+          invitationTrial: req.invitationTrial,
+          guestAccess: req.guestAccess,
+        })
+        finish()
+      } catch (error) {
+        next(error)
+      }
+    })
+  }
+}
 
 // In-memory fallback store for offline development and lightning-fast state sync
 const memoryPlayers = new Map() // site -> Map(id -> { id, token, site, state, name, character, message, message_at, seen })
@@ -52,11 +115,11 @@ function cleanupMemoryPlayers(now) {
 }
 
 // POST /join
-router.post(['/join', '/api/join'], async (req, res) => {
+router.post(['/join', '/api/join'], siteAccess('limited'), async (req, res) => {
   try {
     const body = req.body || {}
     const now = Date.now()
-    const site = String(body.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
     
     let state
     try {
@@ -102,11 +165,11 @@ router.post(['/join', '/api/join'], async (req, res) => {
 })
 
 // POST /sync
-router.post(['/sync', '/api/sync'], async (req, res) => {
+router.post(['/sync', '/api/sync'], siteAccess('limited'), async (req, res) => {
   try {
     const body = req.body || {}
     const now = Date.now()
-    const site = String(body.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
 
     if (typeof body.id !== 'string' || typeof body.token !== 'string') {
       return res.status(401).json({ error: 'Session expired' })
@@ -185,10 +248,10 @@ router.post(['/sync', '/api/sync'], async (req, res) => {
 })
 
 // POST /leave
-router.post(['/leave', '/api/leave'], async (req, res) => {
+router.post(['/leave', '/api/leave'], (req, res, next) => { req.site = resolveSite(req.hostContext); next() }, async (req, res) => {
   try {
     const body = req.body || {}
-    const site = String(body.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
 
     if (body.id && memoryPlayers.has(site)) {
       memoryPlayers.get(site).delete(body.id)
@@ -213,11 +276,11 @@ router.post(['/leave', '/api/leave'], async (req, res) => {
 })
 
 // POST /wishes/send
-router.post(['/wishes/send', '/api/wishes/send'], async (req, res) => {
+router.post(['/wishes/send', '/api/wishes/send'], siteAccess('full'), async (req, res) => {
   try {
     const body = req.body || {}
     const now = Date.now()
-    const site = String(body.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
 
     if (typeof body.id !== 'string' || typeof body.token !== 'string') {
       return res.status(401).json({ error: 'Session expired' })
@@ -262,10 +325,10 @@ router.post(['/wishes/send', '/api/wishes/send'], async (req, res) => {
 })
 
 // POST /wishes/list
-router.post(['/wishes/list', '/api/wishes/list'], async (req, res) => {
+router.post(['/wishes/list', '/api/wishes/list'], siteAccess('full'), async (req, res) => {
   try {
     const body = req.body || {}
-    const site = String(body.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
 
     if (!memoryWishes.has(site)) {
       memoryWishes.set(site, [
@@ -295,9 +358,17 @@ router.post(['/wishes/list', '/api/wishes/list'], async (req, res) => {
 })
 
 // GET /content
-router.get(['/content', '/api/content'], async (req, res) => {
+router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) => {
   try {
-    const site = String(req.query.site || req.hostContext?.slug || 'faris-eliza').trim().toLowerCase()
+    const site = req.site
+    const access = req.guestAccess
+    const accessInfo = publicAccessInfo(access)
+    if (access.level === 'none') {
+      // Undangan privat tanpa kode valid: tidak ada data (frontend utama sudah menampilkan layar privat).
+      return res.setHeader('Cache-Control', 'no-store, private').json({ site, revision: 1, config: null, ...accessInfo })
+    }
+    const hidden = access.level === 'limited'
+    const HIDDEN_TEXT = 'Khusus tamu undangan'
     
     // Check if we have tenant config in MySQL
     try {
