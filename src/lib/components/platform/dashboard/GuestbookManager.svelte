@@ -8,8 +8,10 @@
     loadingGuestbook: boolean
     loadGuestbook: () => Promise<void>
     fmtDate: (ts: string) => string
+    /** Link dasar undangan; di mode privat sudah membawa link umum (?k=). */
+    inviteBase?: string
   }
-  let { invitation, myGuestbook, loadingGuestbook, loadGuestbook, fmtDate }: Props = $props()
+  let { invitation, myGuestbook, loadingGuestbook, loadGuestbook, fmtDate, inviteBase }: Props = $props()
 
   let guestNameInput = $state('')
   let generatedUrl = $state('')
@@ -17,8 +19,9 @@
 
   function generateGuestLink() {
     if (!guestNameInput.trim()) return
-    const base = invitation.public_url
-    generatedUrl = `${base}?to=${encodeURIComponent(guestNameInput.trim())}`
+    const url = new URL(inviteBase || invitation.public_url)
+    url.searchParams.set('to', guestNameInput.trim())
+    generatedUrl = url.toString().replace(/\/\?/, '?')
   }
 
   function copyGuestLink() {

@@ -310,6 +310,15 @@
     }
   }
 
+  // Undangan privat: tombol Salin/Buka/QR memakai link umum (?k=), kalau tidak pengunjung
+  // (termasuk pemilik sendiri) mendarat di halaman "khusus tamu undangan".
+  const isPrivateInvite = $derived(!!myConfig?.privacy_mode && myConfig.privacy_mode !== 'public')
+  const invitationLink = $derived.by(() => {
+    if (!invitation) return ''
+    const code = isPrivateInvite ? myConfig?.privacy_general_code : null
+    return code ? `${invitation.public_url.replace(/\/+$/, '')}?k=${code}` : invitation.public_url
+  })
+
   async function saveConfig() {
     if (!myConfig) return
     savingConfig = true
@@ -365,7 +374,7 @@
 
       function copyLink() {
     if (!invitation) return
-    void navigator.clipboard.writeText(invitation.public_url)
+    void navigator.clipboard.writeText(invitationLink)
     copiedToast = true
     setTimeout(() => (copiedToast = false), 2500)
   }
@@ -665,14 +674,14 @@
           <div class="control-card link-card">
             <p class="control-label">Link Undangan Eksklusif Untuk Kamu</p>
             <h2 class="subdomain-url"><code>{invitation.public_url.replace(/^https?:\/\//, '')}</code></h2>
-            <p class="subdomain-note"></p>
+            <p class="subdomain-note">{#if isPrivateInvite}🔒 Undangan privat: tombol di bawah memakai <strong>link umum</strong> (tertulis "Tamu Undangan"). Untuk tamu tertentu, kirim link pribadi dari tab Kirim Undangan.{/if}</p>
 
             <div class="link-actions-row">
               <button type="button" class="primary-btn-sm" onclick={copyLink}>
                 <Icon name="copy" size={16} /> Salin Link
               </button>
                {#if invitation.status === 'active'}
-               <a class="ghost-btn-sm" href={invitation.public_url} target="_blank" rel="noreferrer">
+               <a class="ghost-btn-sm" href={invitationLink} target="_blank" rel="noreferrer">
                  <Icon name="external" size={16} /> Buka Undangan
                </a>
                {/if}
@@ -848,7 +857,7 @@
 
         <!-- Tab 2: Tamu & Buku Tamu -->
         {:else if activeTab === 'tamu'}
-          <GuestbookManager {invitation} {myGuestbook} {loadingGuestbook} {loadGuestbook} {fmtDate} />
+          <GuestbookManager {invitation} inviteBase={invitationLink} {myGuestbook} {loadingGuestbook} {loadGuestbook} {fmtDate} />
 
         <!-- Tab 5: Pembayaran -->
         {:else if activeTab === 'pembayaran'}
@@ -919,7 +928,7 @@
                   {/each}
                 </div>
                 {#if venueMsg}
-                  <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
+                  <p class="venue-switch-msg">{venueMsg} {#if venueMsg.startsWith('✓')}· <a href={invitationLink} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
                 {/if}
               </section>
             {:else}
@@ -954,7 +963,7 @@
                   {/each}
                 </div>
                 {#if styleMsg}
-                  <p class="venue-switch-msg">{styleMsg} {#if styleMsg.startsWith('✓')}· <a href={invitation.public_url} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
+                  <p class="venue-switch-msg">{styleMsg} {#if styleMsg.startsWith('✓')}· <a href={invitationLink} target="_blank" rel="noreferrer">Lihat undangan ↗</a>{/if}</p>
                 {/if}
               </section>
             {/if}
@@ -1045,18 +1054,18 @@
         <p class="modal-desc">QR Code siap cetak untuk kartu undangan, meja penerima tamu, atau media cetak lainnya.</p>
         <div class="qr-image-wrapper">
           <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={encodeURIComponent(invitation.public_url)}"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={encodeURIComponent(invitationLink)}"
             alt="QR Code {invitation.slug}"
           />
         </div>
-        <p class="qr-url-text"><code>{invitation.public_url}</code></p>
+        <p class="qr-url-text"><code>{invitationLink}</code></p>
       </div>
       <div class="modal-actions">
         <button type="button" class="primary-btn-sm" onclick={copyLink}><Icon name="copy" size={16} /> Salin Link</button>
               {#if invitation.status === 'active'}
               <a
           class="ghost-btn-sm"
-          href="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={encodeURIComponent(invitation.public_url)}"
+          href="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={encodeURIComponent(invitationLink)}"
           target="_blank"
           download="QR_{invitation.slug}.png"
         >
