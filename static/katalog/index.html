@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Katalog MarryMe · Undangan Digital 3D & 2D</title>
+  <meta name="description" content="Katalog desain undangan pernikahan digital MarryMe (3D Taman, 3D Pantai, Pixel 2D) beserta harga dan tutorial cara membuatnya." />
+  <meta property="og:title" content="Katalog MarryMe · Undangan Digital 3D & 2D" />
+  <meta property="og:description" content="Lihat semua desain, harga, dan cara membuat undangan pernikahan digital di MarryMe." />
+  <meta property="og:image" content="https://marryme.web.id/media/designs/garden.webp" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #f5b942;
+      --gold-deep: #c98a12;
+      --ink: #1d1618;
+      --muted: #6b5d61;
+      --line: #eadfe2;
+      --maroon: #8f1d45;
+      --maroon-deep: #5e1230;
+      --blush: #fbe7ec;
+      --peach: #fde8d8;
+      --lavender: #ece6fa;
+      --mint: #e2f3ea;
+      --sky: #e3eefb;
+      --paper: #fffdfb;
+      --bg: #efe7e9;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 15px/1.55 'Outfit', 'Segoe UI', system-ui, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: var(--maroon); }
+    h1, h2, h3 { margin: 0; line-height: 1.15; }
+    h2 { font: 700 30px/1.15 'Playfair Display', Georgia, serif; letter-spacing: -0.01em; }
+    h3 { font-size: 18px; font-weight: 700; }
+    p { margin: 0; }
+    ul { margin: 0; padding: 0; list-style: none; }
+
+    /* Toolbar (layar saja) */
+    .toolbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 16px;
+      background: rgba(255, 253, 251, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+    }
+    .wordmark { font: 800 20px/1 'Outfit', sans-serif; color: var(--ink); text-decoration: none; }
+    .wordmark span { color: var(--maroon); }
+    .toolbar .actions { display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 16px; border-radius: 999px; border: 0;
+      font: 700 14px/1 'Outfit', sans-serif; text-decoration: none; cursor: pointer; white-space: nowrap;
+    }
+    .btn.primary { background: var(--maroon); color: #fff; }
+    .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+
+    /* Halaman (A4 di layar lebar & saat cetak) */
+    .doc { padding: 24px 0 48px; display: grid; gap: 24px; justify-content: center; }
+    .page {
+      position: relative;
+      width: 210mm; height: 297mm;
+      padding: 16mm 15mm 14mm;
+      background: var(--paper);
+      border-radius: 6px;
+      box-shadow: 0 18px 40px -24px rgba(60, 20, 35, 0.45);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .page > * { flex-shrink: 0; }
+    .page-foot {
+      margin-top: auto; padding-top: 10px;
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    .eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--maroon);
+      margin-bottom: 6px;
+    }
+    .lead { color: var(--muted); font-size: 15px; margin-top: 8px; max-width: 150mm; }
+    .head { margin-bottom: 18px; }
+
+    /* Sampul */
+    .cover {
+      padding: 0;
+      background: radial-gradient(120% 80% at 0% 0%, #b83a66 0%, var(--maroon) 40%, var(--maroon-deep) 100%);
+      color: #fff;
+    }
+    .cover-top { padding: 18mm 16mm 0; }
+    .cover .wordmark { color: #fff; font-size: 26px; }
+    .cover .wordmark span { color: var(--gold); }
+    .cover h1 {
+      margin-top: 18mm;
+      font: 700 50px/1.05 'Playfair Display', Georgia, serif;
+      letter-spacing: -0.015em;
+    }
+    .cover h1 em { color: var(--gold); font-style: italic; }
+    .cover .sub { margin-top: 14px; font-size: 17px; opacity: 0.88; max-width: 140mm; }
+    .cover-shot {
+      margin: 12mm 16mm 0;
+      border-radius: 14px; overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.55);
+      aspect-ratio: 16 / 10;
+    }
+    .cover-shot img { width: 100%; height: 100%; object-fit: cover; }
+    .cover-bottom {
+      margin-top: auto; padding: 0 16mm 16mm;
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    }
+    .cover-price { background: #fff; color: var(--ink); border-radius: 16px; padding: 14px 18px; min-width: 62mm; }
+    .cover-price .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--maroon); }
+    .cover-price .val { font-size: 30px; font-weight: 800; line-height: 1.1; margin-top: 4px; }
+    .cover-price s { color: var(--muted); font-size: 15px; font-weight: 500; margin-right: 6px; }
+    .cover-price .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .cover-url { text-align: right; }
+    .cover-url .big { font-size: 22px; font-weight: 800; color: var(--gold); }
+    .cover-url .small { font-size: 13px; opacity: 0.85; }
+    .chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .chips-row span { background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.25); padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+
+    /* Kenapa MarryMe */
+    .why-hero { border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; margin-bottom: 18px; }
+    .why-hero img { width: 100%; height: 100%; object-fit: cover; }
+    .why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .why-item { display: flex; gap: 12px; padding: 12px 14px; border-radius: 14px; background: #fff; border: 1px solid var(--line); }
+    .why-item .ic { flex: 0 0 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: var(--blush); }
+    .why-item b { display: block; font-size: 14.5px; }
+    .why-item span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+    /* Kartu desain */
+    .design { display: grid; grid-template-columns: 1fr; gap: 0; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid var(--line); }
+    .design + .design { margin-top: 14px; }
+    .design .shot { position: relative; aspect-ratio: 2.85 / 1; overflow: hidden; }
+    .design .shot img { width: 100%; height: 100%; object-fit: cover; }
+    .tag { position: absolute; top: 12px; left: 12px; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .tag.gold { background: var(--gold); color: var(--ink); }
+    .tag.new { background: #fff; color: var(--maroon); }
+    .tag.light { background: #2f9e62; color: #fff; }
+    .ribbon { position: absolute; top: 12px; right: 12px; background: var(--ink); color: #fff; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .design .body { padding: 14px 18px 16px; display: grid; grid-template-columns: 1fr auto; gap: 6px 18px; align-items: start; }
+    .design .sub { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--maroon); }
+    .design h3 { font: 700 22px/1.15 'Playfair Display', Georgia, serif; }
+    .design .desc { grid-column: 1 / -1; color: var(--muted); font-size: 14px; }
+    .chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chips li { background: var(--blush); color: var(--maroon-deep); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .demo { grid-row: 1 / 3; grid-column: 2; align-self: center; text-align: right; font-size: 12px; color: var(--muted); }
+    .demo a { display: inline-block; margin-top: 3px; font-weight: 700; font-size: 13px; text-decoration: none; background: var(--maroon); color: #fff; padding: 7px 12px; border-radius: 999px; }
+
+    .busana { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1.6fr; gap: 12px; align-items: stretch; }
+    .busana figure { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; text-align: center; font-size: 13px; font-weight: 700; }
+    .busana figure img { height: 78px; width: auto; margin: 0 auto 6px; object-fit: contain; }
+    .busana .txt { background: var(--peach); border-radius: 14px; padding: 14px 16px; font-size: 13.5px; color: var(--ink); }
+    .busana .txt b { display: block; font-size: 15px; margin-bottom: 4px; }
+
+    /* Fitur dashboard */
+    .feat { display: grid; grid-template-columns: 1.05fr 1fr; gap: 18px; align-items: center; padding: 16px; border-radius: 16px; }
+    .feat + .feat { margin-top: 12px; }
+    .feat.rev { grid-template-columns: 1fr 1.05fr; }
+    .feat.rev .media { order: 2; }
+    .feat .media { border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 14px 30px -18px rgba(60, 20, 35, 0.4); }
+    .feat .media img { width: 100%; height: auto; }
+    .feat h3 { font: 700 20px/1.2 'Playfair Display', Georgia, serif; margin-bottom: 6px; }
+    .feat p { font-size: 13.5px; color: var(--muted); }
+    .feat ul { margin-top: 8px; display: grid; gap: 4px; }
+    .feat li { font-size: 13px; font-weight: 600; }
+    .feat li::before { content: '✓ '; color: var(--maroon); }
+    .tone-mint { background: var(--mint); }
+    .tone-lavender { background: var(--lavender); }
+    .tone-sky { background: var(--sky); }
+    .tone-blush { background: var(--blush); }
+    .feat.phone { grid-template-columns: 30mm 1fr; }
+    .feat.phone .media { border-radius: 18px; border: 4px solid var(--ink); }
+
+    /* Harga */
+    .price-card { display: grid; grid-template-columns: 1fr 1.1fr; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: #fff; }
+    .price-left { background: linear-gradient(160deg, var(--maroon) 0%, var(--maroon-deep) 100%); color: #fff; padding: 22px 22px; }
+    .price-left .name { font-size: 14px; font-weight: 700; opacity: 0.9; }
+    .price-left .promo-tag { display: inline-block; margin-top: 12px; background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 999px; }
+    .price-left .amount { margin-top: 12px; font-size: 40px; font-weight: 800; line-height: 1.05; }
+    .price-left s { display: block; font-size: 17px; font-weight: 500; opacity: 0.75; }
+    .price-left .save { margin-top: 4px; font-size: 14px; color: var(--gold); font-weight: 700; }
+    .price-left .note { margin-top: 14px; font-size: 13px; opacity: 0.88; }
+    .price-right { padding: 20px 22px; }
+    .price-right li { padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+    .price-right li:last-child { border-bottom: 0; }
+    .price-right li::before { content: '✓'; color: var(--maroon); font-weight: 800; margin-right: 8px; }
+    .pay-row { margin-top: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .pay-row div { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
+    .pay-row b { display: block; font-size: 16px; }
+    .pay-row span { font-size: 11.5px; color: var(--muted); }
+    .flow { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .flow div { border-radius: 14px; padding: 14px; background: var(--sky); }
+    .flow div:nth-child(2) { background: var(--peach); }
+    .flow div:nth-child(3) { background: var(--mint); }
+    .flow b { display: block; font-size: 15px; margin-bottom: 4px; }
+    .flow span { font-size: 13px; color: var(--muted); }
+    .flow i { font-style: normal; font-size: 22px; display: block; margin-bottom: 4px; }
+
+    /* Tutorial */
+    .steps { display: grid; gap: 12px; }
+    .step { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 14px 16px; border-radius: 16px; background: #fff; border: 1px solid var(--line); }
+    .step .num { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--maroon); color: #fff; font-weight: 800; font-size: 18px; }
+    .step h3 { font-size: 17px; margin-bottom: 4px; }
+    .step p, .step li { font-size: 13.5px; color: var(--muted); }
+    .step ol { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+    .step b, .step strong { color: var(--ink); }
+    .ui { display: inline-block; font-size: 12px; font-weight: 700; color: var(--ink); background: var(--blush); border: 1px solid #f2c9d4; padding: 1px 8px; border-radius: 6px; white-space: nowrap; }
+    .ui.btn-like { background: var(--maroon); color: #fff; border-color: var(--maroon); }
+    .mock-tabs { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #f7f1f3; border-radius: 10px; }
+    .mock-tabs span { font-size: 11.5px; font-weight: 700; padding: 5px 9px; border-radius: 8px; background: #fff; border: 1px solid var(--line); }
+    .mock-tabs span.on { background: var(--maroon); color: #fff; border-color: var(--maroon); }
+    .shot-inline { margin-top: 8px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); max-width: 120mm; }
+    .tip { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: #fff7e3; border: 1px solid #f6dfa5; font-size: 13px; }
+    .tip b { color: var(--gold-deep); }
+
+    /* FAQ & kontak */
+    .faq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .faq div { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+    .faq b { display: block; font-size: 14px; margin-bottom: 4px; }
+    .faq span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+    .contact {
+      margin-top: 18px; border-radius: 20px; padding: 22px;
+      background: radial-gradient(120% 120% at 100% 0%, #b83a66 0%, var(--maroon) 45%, var(--maroon-deep) 100%);
+      color: #fff; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+    }
+    .contact h2 { color: #fff; font-size: 26px; }
+    .contact p { opacity: 0.9; margin-top: 6px; font-size: 14px; }
+    .contact .links { display: grid; gap: 8px; text-align: right; }
+    .contact .links a { color: #fff; text-decoration: none; font-weight: 700; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.3); padding: 9px 14px; border-radius: 999px; font-size: 14px; }
+    .contact .links a.wa { background: #25d366; border-color: #25d366; color: #08331b; }
+
+    [hidden] { display: none !important; }
+
+    /* Layar sempit: halaman jadi fluid */
+    @media screen and (max-width: 860px) {
+      .doc { padding: 0 0 32px; gap: 0; display: block; }
+      .page { width: auto; height: auto; min-height: 0; padding: 28px 16px 20px; border-radius: 0; box-shadow: none; border-bottom: 8px solid var(--bg); }
+      .cover { padding: 0; }
+      .cover-top { padding: 28px 16px 0; }
+      .cover h1 { font-size: 36px; margin-top: 24px; }
+      .cover-shot { margin: 22px 16px 0; }
+      .cover-bottom { margin-top: 22px; padding: 0 16px 24px; flex-direction: column; align-items: stretch; }
+      .cover-url { text-align: left; }
+      h2 { font-size: 25px; }
+      .why-grid, .faq, .price-card, .feat, .feat.rev, .feat.phone, .busana { grid-template-columns: 1fr; }
+      .feat.rev .media { order: 0; }
+      .feat.phone .media { max-width: 50%; margin: 0 auto; }
+      .flow { grid-template-columns: 1fr; }
+      .pay-row { grid-template-columns: repeat(2, 1fr); }
+      .design .body { grid-template-columns: 1fr; }
+      .demo { grid-row: auto; grid-column: 1; text-align: left; }
+      .contact { grid-template-columns: 1fr; }
+      .contact .links { text-align: left; }
+      .toolbar .hide-sm { display: none; }
+    }
+
+    @page { size: A4; margin: 0; }
+    /* aspect-ratio kalah oleh tinggi intrinsik gambar: gambar diposisikan absolut agar bingkai tetap. */
+    .cover-shot, .why-hero, .design .shot { position: relative; }
+    .cover-shot img, .why-hero img, .design .shot img { position: absolute; inset: 0; }
+
+    @media print {
+      body { background: #fff; }
+      /* Box-shadow besar dicetak sebagai blok raster gelap. */
+      .cover-shot, .feat .media { box-shadow: none; }
+      .toolbar { display: none; }
+      .doc { padding: 0; gap: 0; display: block; }
+      .page { border-radius: 0; box-shadow: none; break-after: page; page-break-after: always; }
+      .page:last-child { break-after: auto; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <a class="wordmark" href="/">Marry<span>Me</span></a>
+    <div class="actions">
+      <a class="btn ghost hide-sm" href="/">Buka website</a>
+      <button type="button" class="btn primary" id="print-btn">Simpan PDF</button>
+    </div>
+  </header>
+
+  <main class="doc">
+    <!-- 1. Sampul -->
+    <section class="page cover">
+      <div class="cover-top">
+        <div class="wordmark">Marry<span>Me</span></div>
+        <h1>Undangan pernikahan yang bisa <em>dijelajahi</em> tamu</h1>
+        <p class="sub">Katalog desain, harga, dan panduan membuat undangan digital 3D &amp; 2D. Tamu cukup buka link, lalu berjalan sendiri ke pelaminan kalian.</p>
+        <div class="chips-row">
+          <span>Dunia 3D &amp; 2D</span><span>Buku tamu &amp; RSVP</span><span>Amplop digital</span><span>Kirim via WhatsApp</span>
+        </div>
+      </div>
+      <div class="cover-shot"><img src="/media/designs/garden.webp" alt="Undangan 3D venue Taman" /></div>
+      <div class="cover-bottom">
+        <div class="cover-price" data-pricing hidden>
+          <p class="lbl" data-promo-label>Harga</p>
+          <p class="val"><s data-normal hidden></s><span data-current></span></p>
+          <p class="note" data-cover-note>per undangan, sekali bayar</p>
+        </div>
+        <div class="cover-url">
+          <p class="big">marryme.web.id</p>
+          <p class="small">Katalog &amp; Tutorial · <span data-today></span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Kenapa MarryMe -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Kenapa MarryMe</p>
+        <h2>Bukan template geser, tapi dunia kecil milik kalian</h2>
+        <p class="lead">Tamu mengendalikan karakternya sendiri, menyusuri venue, menulis ucapan di kotak surat, lalu bertemu kalian di pelaminan dengan taburan confetti.</p>
+      </div>
+      <div class="why-hero"><img src="/media/features/stage.webp" alt="Pelaminan 3D dengan pengantin dan tamu" /></div>
+      <div class="why-grid">
+        <div class="why-item"><div class="ic">🔗</div><div><b>Link sendiri</b><span>nama-kalian.marryme.web.id, bisa diubah di pengaturan.</span></div></div>
+        <div class="why-item"><div class="ic">📱</div><div><b>Tanpa install aplikasi</b><span>Cukup buka link di browser HP atau laptop.</span></div></div>
+        <div class="why-item"><div class="ic">🎮</div><div><b>Interaktif</b><span>Joystick di HP, WASD di laptop. Resepsionis &amp; pemandu lokasi.</span></div></div>
+        <div class="why-item"><div class="ic">💌</div><div><b>Buku tamu &amp; RSVP</b><span>Hadir / Ragu / Tidak hadir, lengkap dengan statistik.</span></div></div>
+        <div class="why-item"><div class="ic">🎁</div><div><b>Amplop digital</b><span>QRIS dan rekening bank tampil di undangan.</span></div></div>
+        <div class="why-item"><div class="ic">🖼️</div><div><b>Galeri foto &amp; musik</b><span>Foto prewedding dan lagu latar pilihan kalian.</span></div></div>
+        <div class="why-item"><div class="ic">💬</div><div><b>Kirim via WhatsApp</b><span>Pesan otomatis dengan nama tiap tamu.</span></div></div>
+        <div class="why-item"><div class="ic">🪶</div><div><b>Ringan di semua HP</b><span>Mode hemat otomatis, plus versi 2D untuk HP lama.</span></div></div>
+      </div>
+      <div class="page-foot"><span>MarryMe · Katalog</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 3. Katalog desain 3D -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Katalog desain · 3D</p>
+        <h2>Pilih dunianya, isi undangannya sama</h2>
+        <p class="lead">Semua desain harganya sama dan bisa diganti kapan saja dari dashboard, tanpa mengetik ulang data.</p>
+      </div>
+      <article class="design">
+        <div class="shot"><img src="/media/designs/garden.webp" alt="Desain Summer Fantasy Island, venue Taman" /><span class="tag gold">Terlaris</span></div>
+        <div class="body">
+          <p class="sub">3D · Venue Taman</p>
+          <div class="demo">Coba langsung<br /><a href="https://kia-toni.marryme.web.id" target="_blank" rel="noreferrer">kia-toni.marryme.web.id ↗</a></div>
+          <h3>Summer Fantasy Island</h3>
+          <p class="desc">Taman tropis sore hari: tamu berjalan menyusuri karpet merah menuju pelaminan, lengkap dengan lampu gantung dan pegunungan.</p>
+          <ul class="chips"><li>Joystick &amp; WASD</li><li>Pelaminan + confetti</li><li>Buku tamu 3D</li><li>Resepsionis</li></ul>
+        </div>
+      </article>
+      <article class="design">
+        <div class="shot"><img src="/media/designs/beach.webp" alt="Desain Pantai Sunset" /><span class="tag new">Baru</span></div>
+        <div class="body">
+          <p class="sub">3D · Venue Pantai</p>
+          <div class="demo">Coba langsung<br /><a href="https://jajangglia.marryme.web.id" target="_blank" rel="noreferrer">jajangglia.marryme.web.id ↗</a></div>
+          <h3>Pantai Sunset</h3>
+          <p class="desc">Pulau pasir di tengah laut dengan matahari terbenam, pohon kelapa, dan karpet biru laut. Bisa diganti dari Taman kapan saja.</p>
+          <ul class="chips"><li>Matahari terbenam</li><li>Laut &amp; pohon kelapa</li><li>Karang &amp; kerang</li></ul>
+        </div>
+      </article>
+      <div class="page-foot"><span>MarryMe · Katalog</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 4. Katalog desain 2D + segera hadir + busana -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Katalog desain · 2D &amp; segera hadir</p>
+        <h2>Super ringan, atau tunggu pulau baru kami</h2>
+      </div>
+      <article class="design compact">
+        <div class="shot"><img src="/media/designs/2d.webp" alt="Desain Pixel Garden RPG" /><span class="tag light">Super ringan</span></div>
+        <div class="body">
+          <p class="sub">2D · Pixel art</p>
+          <div class="demo">Coba langsung<br /><a href="https://marryme.web.id/presets/garden-2d/index.html" target="_blank" rel="noreferrer">Demo 2D ↗</a></div>
+          <h3>Pixel Garden RPG</h3>
+          <p class="desc">Taman pernikahan retro pixel art yang lancar di HP lama sekalipun, dengan danau romantis dan multiplayer real-time (tamu bisa saling melihat).</p>
+          <ul class="chips"><li>Ringan di HP lama</li><li>Multiplayer realtime</li><li>Pianis &amp; danau</li></ul>
+        </div>
+      </article>
+      <article class="design compact">
+        <div class="shot"><img src="/media/designs/island.webp" alt="Desain Little Wedding Island" /><span class="tag new">Desain baru</span><span class="ribbon">Segera hadir</span></div>
+        <div class="body">
+          <p class="sub">3D · Pulau tropis</p>
+          <div class="demo">Lihat pratinjau<br /><a href="https://marryme.web.id/presets/wedding-3d/index.html" target="_blank" rel="noreferrer">Demo pulau ↗</a></div>
+          <h3>Little Wedding Island</h3>
+          <p class="desc">Pulau kecil di tengah laut biru: tamu tiba dengan perahu, menyeberangi jembatan, lalu menuju pelaminan dan tenda resepsi. Belum bisa dipilih, demo saja.</p>
+        </div>
+      </article>
+      <div class="page-foot"><span>MarryMe · Katalog</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 5. Fitur dashboard -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Fitur untuk kalian</p>
+        <h2>Semua diatur dari satu dashboard</h2>
+      </div>
+      <div class="feat tone-mint">
+        <div class="media"><img src="/media/features/guestbook.webp" alt="Dashboard buku tamu dan statistik RSVP" /></div>
+        <div>
+          <h3>Ucapan &amp; RSVP masuk sendiri</h3>
+          <p>Tamu menulis ucapan lewat kotak surat di dalam dunia 3D. Kalian melihat siapa yang hadir, ragu, atau berhalangan.</p>
+          <ul><li>Statistik kehadiran otomatis</li><li>Hapus ucapan yang tidak pantas</li></ul>
+        </div>
+      </div>
+      <div class="feat rev tone-lavender">
+        <div class="media"><img src="/media/features/sender_char.webp" alt="Dashboard kirim undangan via WhatsApp" /></div>
+        <div>
+          <h3>Sebar lewat WhatsApp</h3>
+          <p>Simpan daftar tamu, lalu kirim satu per satu dengan pesan yang sudah berisi nama tamu dan link undangan.</p>
+          <ul><li>Template pesan bisa diubah</li><li>Tanda "Terkirim" per tamu</li></ul>
+        </div>
+      </div>
+      <div class="feat phone tone-sky">
+        <div class="media"><img src="/media/features/female_char.webp" alt="Undangan 3D di layar HP" /></div>
+        <div>
+          <h3>Ringan di HP tamu</h3>
+          <p>Dunia 3D dioptimalkan untuk HP kelas menengah dengan mode hemat otomatis. Untuk HP yang benar-benar lama, pilih desain 2D pixel.</p>
+          <ul><li>Tidak perlu aplikasi</li><li>Bisa dibuka di HP &amp; laptop</li><li>Ganti desain kapan saja</li></ul>
+        </div>
+      </div>
+      <div class="busana">
+        <figure><img src="/media/busana/umum.webp" alt="Busana umum" />Umum</figure>
+        <figure><img src="/media/busana/hijab.webp" alt="Busana berhijab" />Berhijab</figure>
+        <div class="txt"><b>Gaya busana karakter</b>Pilih busana umum atau berhijab. Berlaku untuk pengantin, penerima tamu, tamu, dan latar Akad &amp; Resepsi.</div>
+      </div>
+      <div class="page-foot"><span>MarryMe · Katalog</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 6. Harga -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Harga</p>
+        <h2>Sekali bayar, tanpa langganan</h2>
+        <p class="lead">Satu paket berisi semua fitur dan semua desain. Tidak ada biaya tersembunyi, tidak ada watermark.</p>
+      </div>
+      <div class="price-card">
+        <div class="price-left">
+          <p class="name">Undangan MarryMe</p>
+          <div data-pricing hidden>
+            <p class="promo-tag" data-promo-tag hidden></p>
+            <p class="amount"><s data-normal hidden></s><span data-current></span></p>
+            <p class="save" data-save></p>
+            <p class="note" data-price-note></p>
+          </div>
+          <p class="note" data-pricing-fallback>Lihat harga terbaru di marryme.web.id.</p>
+        </div>
+        <ul class="price-right">
+          <li>Link sendiri: nama-kalian.marryme.web.id</li>
+          <li>Semua desain: 3D Taman, 3D Pantai, atau 2D Pixel</li>
+          <li>Buku tamu &amp; RSVP dengan statistik</li>
+          <li>Galeri foto &amp; musik latar</li>
+          <li>Amplop digital: QRIS &amp; rekening</li>
+          <li>Kirim via WhatsApp dengan nama tamu</li>
+          <li>Ganti desain, venue &amp; busana kapan saja</li>
+          <li>Chat bantuan langsung dengan admin</li>
+        </ul>
+      </div>
+      <p class="eyebrow" style="margin-top:22px">Cara bayar</p>
+      <div class="pay-row">
+        <div><b>QRIS</b><span>Semua e-wallet &amp; m-banking</span></div>
+        <div><b>GoPay</b><span>Aplikasi Gojek</span></div>
+        <div><b>DANA</b><span>Aplikasi DANA</span></div>
+        <div><b>PayPal</b><span>Kartu / luar negeri</span></div>
+      </div>
+      <div class="flow">
+        <div><i>🆓</i><b data-trial-title>Coba gratis dulu</b><span data-trial-text>Buat undangan dan pakai semua fitur selama masa uji coba.</span></div>
+        <div><i>💳</i><b>Bayar dari dashboard</b><span>Pilih metode di menu Pembayaran, scan atau bayar di aplikasi.</span></div>
+        <div><i>✅</i><b>Aktif otomatis</b><span>Begitu pembayaran berhasil, undangan langsung aktif selamanya.</span></div>
+      </div>
+      <div class="page-foot"><span>MarryMe · Katalog</span><span>Harga diperbarui: <span data-today></span></span></div>
+    </section>
+
+    <!-- 7. Tutorial 1 -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Tutorial · bagian 1</p>
+        <h2>Cara membuat undangan, sekitar 5 menit</h2>
+        <p class="lead">Bisa dari HP atau laptop. Siapkan nama mempelai, tanggal acara, alamat venue, dan beberapa foto.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><div>
+          <h3>Buka marryme.web.id dan masuk</h3>
+          <p>Klik <span class="ui btn-like">Masuk</span> atau <span class="ui btn-like">Pilih desain</span>, lalu <span class="ui">Lanjutkan dengan Google</span>. Tanpa kata sandi; satu akun Google untuk satu undangan.</p>
+        </div></div>
+        <div class="step"><div class="num">2</div><div>
+          <h3>Tentukan desain &amp; link undangan</h3>
+          <ol>
+            <li>Pilih preset: <b>Dunia 3D</b> atau <b>Pixel 2D</b> (ringan).</li>
+            <li>Kalau 3D, pilih venue: <b>Taman</b> atau <b>Pantai Sunset</b>.</li>
+            <li>Isi <b>Alamat Undangan (Subdomain)</b>, misalnya <b>dina-raka</b> → dina-raka.marryme.web.id.</li>
+            <li>Isi <b>Nama Mempelai Wanita</b> dan <b>Nama Mempelai Pria</b>, lalu klik <span class="ui btn-like">Mulai Buat Undangan</span>.</li>
+          </ol>
+        </div></div>
+        <div class="step"><div class="num">3</div><div>
+          <h3>Lengkapi isi undangan</h3>
+          <p>Di dashboard, buka tab <b>Detail Undangan</b>. Isi satu per satu sub-menunya lalu simpan:</p>
+          <div class="mock-tabs"><span class="on">Data Mempelai</span><span>Detail Acara &amp; Lokasi</span><span>Amplop Digital &amp; Bank</span><span>Galeri Foto 3D</span><span>Quote &amp; Pesan</span><span>Musik</span></div>
+          <ol>
+            <li><b>Data Mempelai</b>: nama lengkap dan nama orang tua.</li>
+            <li><b>Acara &amp; Lokasi</b>: tanggal &amp; jam akad/resepsi, alamat, link Google Maps.</li>
+            <li><b>Amplop</b>: nomor rekening dan/atau gambar QRIS.</li>
+            <li><b>Galeri</b>: foto utama dan foto prewedding yang tampil di dunia 3D.</li>
+            <li><b>Quote &amp; Musik</b>: kutipan/doa dan lagu latar.</li>
+          </ol>
+          <p style="margin-top:6px">Checklist progres di dashboard menunjukkan bagian mana yang belum lengkap.</p>
+        </div></div>
+        <div class="step"><div class="num">4</div><div>
+          <h3>Atur tampilan di tab Tema</h3>
+          <p>Ganti <b>Dunia Undangan</b> (3D/2D), <b>Venue 3D</b>, <b>Gaya busana karakter</b> (umum/berhijab), atau ubah <b>Subdomain</b>. Semua data tetap, cukup klik lalu <span class="ui">Lihat undangan ↗</span> untuk mengecek.</p>
+        </div></div>
+      </div>
+      <div class="page-foot"><span>MarryMe · Tutorial</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 8. Tutorial 2 -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">Tutorial · bagian 2</p>
+        <h2>Aktifkan, sebarkan, pantau</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="num">5</div><div>
+          <h3>Cek undangan seperti tamu</h3>
+          <p>Buka link undangan kalian (tombol <span class="ui">Lihat undangan ↗</span>) di HP. Coba jalan ke resepsionis, kotak surat, dan pelaminan. Kalau ada yang kurang, kembali ke dashboard dan perbaiki; perubahan langsung tampil.</p>
+        </div></div>
+        <div class="step"><div class="num">6</div><div>
+          <h3>Bayar di tab Pembayaran</h3>
+          <p>Pilih <b>QRIS</b>, <b>GoPay</b>, <b>DANA</b>, atau <b>PayPal</b>, lalu selesaikan pembayaran. Status berubah otomatis begitu pembayaran diterima; tidak perlu kirim bukti transfer. <span data-trial-step></span></p>
+        </div></div>
+        <div class="step"><div class="num">7</div><div>
+          <h3>Kirim undangan lewat WhatsApp</h3>
+          <ol>
+            <li>Buka tab <b>Kirim Undangan</b>, tambah nama &amp; nomor WhatsApp tamu.</li>
+            <li>Atur pesan lewat <span class="ui">Ubah pesan</span>. Kode <b>{nama}</b>, <b>{mempelai}</b>, <b>{link}</b> terisi otomatis.</li>
+            <li>Klik <span class="ui btn-like">Kirim via WA</span> per tamu; tamu yang sudah dikirimi ditandai <b>Terkirim</b>.</li>
+          </ol>
+          <div class="shot-inline"><img src="/media/features/sender_char.webp" alt="Tampilan tab Kirim Undangan" /></div>
+        </div></div>
+        <div class="step"><div class="num">8</div><div>
+          <h3>Pantau ucapan &amp; kehadiran</h3>
+          <p>Tab <b>Buku Tamu</b> menampilkan semua ucapan dan RSVP (Hadir / Ragu / Tidak hadir) beserta statistiknya. Ucapan yang tidak pantas bisa dihapus.</p>
+        </div></div>
+      </div>
+      <div class="tip"><b>Butuh bantuan?</b> Klik tombol chat bantuan di pojok dashboard untuk bicara langsung dengan admin, atau hubungi WhatsApp kami di halaman terakhir.</div>
+      <div class="page-foot"><span>MarryMe · Tutorial</span><span>marryme.web.id</span></div>
+    </section>
+
+    <!-- 9. FAQ & kontak -->
+    <section class="page">
+      <div class="head">
+        <p class="eyebrow">FAQ</p>
+        <h2>Pertanyaan yang sering ditanyakan</h2>
+      </div>
+      <div class="faq">
+        <div><b>Tamu perlu install aplikasi?</b><span>Tidak. Tamu cukup membuka link di browser HP atau laptop.</span></div>
+        <div><b>HP tamu yang lama bisa?</b><span>Dunia 3D punya mode hemat otomatis. Untuk HP yang sangat lama, pilih desain 2D pixel yang ringan.</span></div>
+        <div><b>Berapa lama undangan aktif?</b><span data-faq-active>Setelah dibayar, undangan aktif selamanya. Bayar sekali, tanpa langganan.</span></div>
+        <div><b>Bisa ganti desain setelah dibuat?</b><span>Bisa, kapan saja dari tab Tema. Nama, acara, foto, dan ucapan tamu tidak perlu diisi ulang.</span></div>
+        <div><b>Bisa pakai nama link sendiri?</b><span>Ya, kalian memilih sendiri subdomainnya, misalnya nama-kalian.marryme.web.id, dan bisa diubah nanti.</span></div>
+        <div><b>Data tamu aman?</b><span>Ucapan, RSVP, dan daftar kontak hanya bisa dilihat pemilik akun. Login memakai akun Google.</span></div>
+        <div><b>Bingung saat membuat?</b><span>Ada tombol chat bantuan di dashboard yang langsung terhubung ke admin, atau hubungi kami lewat WhatsApp.</span></div>
+        <div><b>Ada desain lain?</b><span>Little Wedding Island sedang disiapkan. Demonya sudah bisa dicoba di website.</span></div>
+      </div>
+      <div class="contact">
+        <div>
+          <h2>Siap membuat undangan kalian?</h2>
+          <p>Buka marryme.web.id, masuk dengan Google, dan undangan kalian bisa langsung dicoba hari ini.</p>
+        </div>
+        <div class="links">
+          <a href="https://marryme.web.id" target="_blank" rel="noreferrer">marryme.web.id ↗</a>
+          <a class="wa" data-wa href="https://marryme.web.id" target="_blank" rel="noreferrer" hidden>WhatsApp <span data-wa-num></span></a>
+        </div>
+      </div>
+      <div class="page-foot"><span>MarryMe · Katalog &amp; Tutorial</span><span>marryme.web.id</span></div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      // Harga & nomor WA selalu dari API (jangan hardcode harga di frontend).
+      var idr = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })
+      function fmt(n) { return idr.format(n).replace(/ /g, ' ') }
+      function all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)) }
+      function setText(sel, txt) { all(sel).forEach(function (el) { el.textContent = txt }) }
+      function show(sel, on) { all(sel).forEach(function (el) { el.hidden = !on }) }
+
+      var today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
+      setText('[data-today]', today)
+
+      document.getElementById('print-btn').addEventListener('click', function () { window.print() })
+
+      function apply(p) {
+        var promoOn = p.promoActive && p.normalPrice && (!p.promoEndsAt || new Date(p.promoEndsAt).getTime() > Date.now())
+        var current = p.isFree ? 'GRATIS' : fmt(p.currentPrice)
+        setText('[data-current]', current)
+        show('[data-pricing]', true)
+        show('[data-pricing-fallback]', false)
+        if (promoOn) {
+          var ends = p.promoEndsAt
+            ? new Date(p.promoEndsAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
+            : ''
+          setText('[data-normal]', fmt(p.normalPrice))
+          show('[data-normal]', true)
+          setText('[data-promo-label]', p.promoLabel || 'Harga promo')
+          setText('[data-promo-tag]', '🎉 ' + (p.promoLabel || 'Promo') + (ends ? ' · sampai ' + ends : ''))
+          show('[data-promo-tag]', true)
+          var pct = Math.round(((p.normalPrice - p.currentPrice) / p.normalPrice) * 100)
+          setText('[data-save]', p.isFree ? 'Hemat ' + fmt(p.normalPrice) : 'Hemat ' + pct + '%')
+          setText('[data-cover-note]', ends ? 'Harga promo sampai ' + ends : 'Harga promo, sekali bayar')
+        } else {
+          setText('[data-save]', 'per undangan, sekali bayar')
+        }
+        var note = p.isFree
+          ? 'Undangan langsung aktif setelah dibuat.'
+          : (p.trialDays ? 'Coba gratis ' + p.trialDays + ' hari dengan semua fitur. ' : '') + 'Bayar sekali, aktif selamanya.'
+        setText('[data-price-note]', note)
+        if (p.trialDays && !p.isFree) {
+          setText('[data-trial-title]', 'Coba gratis ' + p.trialDays + ' hari')
+          setText('[data-trial-text]', 'Undangan baru langsung bisa dibuka tamu selama ' + p.trialDays + ' hari dengan semua fitur.')
+          setText('[data-trial-step]', 'Selama ' + p.trialDays + ' hari pertama undangan sudah bisa dicoba gratis; bayar sebelum masa uji coba habis agar tetap aktif.')
+        }
+        if (p.isFree) {
+          setText('[data-faq-active]', 'Undangan langsung aktif setelah dibuat.')
+          setText('[data-trial-step]', 'Selama promo gratis, langkah ini bisa dilewati.')
+        }
+        if (p.whatsapp) {
+          var num = String(p.whatsapp).replace(/\D/g, '')
+          all('[data-wa]').forEach(function (a) {
+            a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent('Halo MarryMe, saya tertarik membuat undangan digital.')
+            a.hidden = false
+          })
+          setText('[data-wa-num]', '+' + num.replace(/^(\d{2})(\d{3})(\d{4})(\d+)$/, '$1 $2-$3-$4'))
+        }
+      }
+
+      fetch('/api/public/pricing', { headers: { Accept: 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json() })
+        .then(apply)
+        .catch(function () { /* fallback: teks "Lihat harga terbaru" tetap tampil */ })
+        .finally(function () { document.documentElement.setAttribute('data-ready', '1') })
+    })()
+  </script>
+</body>
+</html>

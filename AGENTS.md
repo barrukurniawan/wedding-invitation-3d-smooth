@@ -88,3 +88,7 @@
 - Deploy with minimal downtime: `git pull && docker compose build && docker compose up -d` (build first; `up -d --build` stops containers while building → ~20 s of 52x errors). The frontend retries `/api/config` on transient errors (`src/lib/services/config.ts`), ~16 s window.
 - Ops runbook: `deploy-docker-vps.md` (Docker Compose on VPS: `db`, `migrate`, `api`, `web`/Nginx; Cloudflare in front is required). Never run `docker compose down -v`.
 - Branches: `new_staging` is the branch deployed live on the VPS. `staging` is an old, stale line (not deployed). `main` = stable release, `development` = experiments. Feature work goes on separate branches (e.g. `new_staging_refactor` for venues) and is merged into `new_staging` only when the user approves.
+
+## Katalog & Tutorial (sales)
+- `static/katalog/index.html` → `marryme.web.id/katalog/`: standalone A4-paged catalog + tutorial (designs, features, pricing, how-to, FAQ). Prices/WA number fetched live from `/api/public/pricing` (no hardcoded prices); "Simpan PDF" = `window.print()`.
+- `npm run katalog:pdf -- out.pdf` prints it to PDF with headless Chrome (proxies `/api/public/*` to prod, or `API_ORIGIN`; WebP→JPEG via `sips` keeps the PDF ~2.5 MB). Keep step texts in sync with dashboard labels (`DashboardShell.svelte`, `OnboardingWizard.svelte`).

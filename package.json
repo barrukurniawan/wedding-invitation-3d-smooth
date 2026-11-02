@@ -9,6 +9,7 @@
     "build:nature": "node scripts/build-nature-pack.cjs",
     "build": "npm run build:nature && npm run build:island && vite build",
     "build:island": "node scripts/build-wedding-3d.mjs",
+    "katalog:pdf": "node scripts/katalog/print-pdf.mjs",
     "models:runtime": "node scripts/trim-model-animations.mjs",
     "preview": "vite preview",
     "test": "npm --prefix server test",
