@@ -66,6 +66,11 @@
     (function () {
       var h = location.hostname.toLowerCase()
       var root = h === 'localhost' || h === '127.0.0.1' || h === 'marryme.web.id' || h === 'www.marryme.web.id'
+      if (!root) {
+        // Undangan pasangan tidak diindeks mesin pencari (cadangan header X-Robots-Tag dari nginx).
+        var m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex, nofollow'
+        document.head.appendChild(m)
+      }
       if (!root && location.pathname.indexOf('/admin') !== 0) return
       var shell = document.getElementById('startup-shell')
       if (!shell) return

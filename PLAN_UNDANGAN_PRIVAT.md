@@ -1,6 +1,6 @@
 # Rencana: Undangan Privat
 
-Status: **rencana, belum ada kode**. Branch kerja nanti: `undangan_privat` (dari `new_staging`), dites di `<slug>.localhost:5173`, baru merge + deploy setelah disetujui.
+Status: **sudah diimplementasikan di branch `undangan_privat`, belum di-merge/deploy**. Tahap 6 (katalog/FAQ) belum. Branch kerja nanti: `undangan_privat` (dari `new_staging`), dites di `<slug>.localhost:5173`, baru merge + deploy setelah disetujui.
 
 ## 1. Latar belakang
 
@@ -108,7 +108,7 @@ Di `InvitationSender.svelte`, per tamu:
 Berlaku untuk semua undangan, termasuk `public` (data pribadi pasangan memang tidak perlu ada di Google):
 
 - nginx: `add_header X-Robots-Tag "noindex, nofollow" always;` untuk host `*.marryme.web.id` (bukan root, bukan `/katalog/`).
-- `robots.txt` khusus subdomain: `Disallow: /`.
+- Tanpa `robots.txt Disallow`: kalau Google dilarang merayapi, ia tidak bisa membaca header noindex. Sebagai gantinya ada meta robots di `app.html`.
 - Root `marryme.web.id` tetap terindeks (landing + katalog).
 
 ## 4. Database (migration baru, idempoten)

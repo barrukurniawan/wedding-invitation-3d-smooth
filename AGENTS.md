@@ -61,6 +61,14 @@
 - Support chat (migration 016 `support_messages`, one thread per user): owner widget `platform/SupportChat.svelte` (mounted in `DashboardShell` when logged in) → `/api/support/*` (`server/routes/support.js`, own thread only, CSRF, 10 msg/min); admin menu Pesan (`admin/SupportTab.svelte`) → `/api/admin/support/*`. Polling only, no websockets.
 - Read-only analytics: `GET /api/admin/subdomains`, `/api/admin/subdomains/:id/traffic`, `/api/admin/analytics/traffic` (sources/paths via `server/services/trafficSource.js`).
 
+## Undangan Privat (PLAN_UNDANGAN_PRIVAT.md)
+- `wedding_configs.privacy_mode`: `public` (default) | `hide_details` | `private` (migration 022), + `privacy_general_code` (link umum) and `privacy_device_limit` (default 2, NULL = unlimited, only enforced in non-public modes). Dashboard: `platform/dashboard/PrivacySettings.svelte` (Pengaturan tab).
+- Per-guest code `invitation_contacts.access_code` (lazy-filled by `GET /api/my/contacts`, max 200 contacts); link = `?send=Nama&g=m&k=<code>`. Devices in `invitation_contact_devices` (same IP ≤24 h = same person).
+- Gating is server-side only (`server/middleware/guestAccess.js`, pure helpers in `server/services/guestAccess.js`): `/api/config` returns `{access:'none'}` stub (200) or redacted fields for `limited`; guestbook/wishes need `full`; multiplayer join/sync need `limited`. Responses are `private, no-store` + `Vary: X-Invite-Key, X-Invite-Device, Cookie`.
+- Clients send `X-Invite-Key` / `X-Invite-Device` from localStorage (`mm_invite_key:<host>`, `mm_device_id`): `src/lib/services/inviteAccess.ts` (api-client), `src/app.html` early fetch, garden-2d `window.__inviteHeaders` (index.html) — keep all three in sync. Guest name comes from `config.guest` (server), not `?send=`.
+- Multiplayer/content API ignores the client `site` param: invitation host → its own slug, root host → demo `faris-eliza` only.
+- Invitation subdomains get `X-Robots-Tag: noindex` (nginx `map $host`) + meta robots in app.html; no robots.txt Disallow.
+
 ## Interaction Contracts
 - Same as the prior Nuxt repo: `triggerZones` define interactive locations; `action` matches `ModalType`; NPC zones require `npcData`.
 - Opening `weddingStage` enables confetti; always close via `closeModal()` to reset modal, NPC data, and confetti.
