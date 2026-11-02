@@ -674,7 +674,7 @@
           <div class="control-card link-card">
             <p class="control-label">Link Undangan Eksklusif Untuk Kamu</p>
             <h2 class="subdomain-url"><code>{invitation.public_url.replace(/^https?:\/\//, '')}</code></h2>
-            <p class="subdomain-note">{#if isPrivateInvite}🔒 Undangan privat: tombol di bawah memakai <strong>link umum</strong> (tertulis "Tamu Undangan"). Untuk tamu tertentu, kirim link pribadi dari tab Kirim Undangan.{/if}</p>
+            <p class="subdomain-note">{#if isPrivateInvite}🔒 Undangan privat. Buka & salin hanya lewat tombol di bawah.{/if}</p>
 
             <div class="link-actions-row">
               <button type="button" class="primary-btn-sm" onclick={copyLink}>
