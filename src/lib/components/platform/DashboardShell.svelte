@@ -648,7 +648,11 @@
                 <span class="alert-icon"><Icon name="party" size={20} /></span>
                 <div>
                   <strong>{plan?.phase === 'paid' ? 'Status: Aktif selamanya' : 'Status: Aktif! (Dunia 3D Sudah Terbit)'}</strong>
-                  <p>Undangan pernikahan kalian sudah aktif dan dapat diakses publik oleh seluruh keluarga serta para tamu.</p>
+                  {#if myConfig?.privacy_mode && myConfig.privacy_mode !== 'public'}
+                    <p>Undangan pernikahan kalian sudah aktif dalam mode privat: hanya tamu dengan link khusus yang bisa membukanya.</p>
+                  {:else}
+                    <p>Undangan pernikahan kalian sudah aktif dan dapat diakses publik oleh seluruh keluarga serta para tamu.</p>
+                  {/if}
                 </div>
               </div>
             {/if}
@@ -859,6 +863,9 @@
           />
 
          {:else if activeTab === 'kirim'}
+           <div class="workspace-panel privacy-panel">
+             <PrivacySettings {invitation} {myConfig} onSaved={(config) => (myConfig = config)} />
+           </div>
            <InvitationSender {invitation} {myConfig} />
 
          <!-- Tab 5: Pengaturan -->
@@ -951,8 +958,6 @@
                 {/if}
               </section>
             {/if}
-
-            <PrivacySettings {invitation} {myConfig} onSaved={(config) => (myConfig = config)} />
 
             <div class="tema-info-grid">
               <div class="tema-info-card">

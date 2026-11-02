@@ -40,7 +40,7 @@
 
   function setPrivate(next: boolean) {
     if (next === isPrivate) return
-    if (next) void save({ privacy_mode: 'private' }, 'Undangan sekarang privat. Kirim link pribadi dari tab Kirim Undangan.')
+    if (next) void save({ privacy_mode: 'private' }, 'Undangan sekarang privat. Kirim link pribadi dari daftar tamu di bawah.')
     else void save({ privacy_mode: 'public' }, 'Undangan sekarang publik: siapa pun yang tahu alamatnya bisa membuka.')
   }
 
@@ -77,7 +77,7 @@
   </div>
   <p class="tema-hint privacy-hint">
     {#if isPrivate}
-      Hanya tamu yang membuka lewat link pribadi (tab Kirim Undangan) atau link umum di bawah yang bisa melihat undangan lengkap.
+      Hanya tamu yang membuka lewat link pribadi (daftar di bawah) atau link umum yang bisa melihat undangan lengkap.
     {:else}
       Siapa pun yang tahu alamat undangan bisa membukanya. Pilih Privat bila undangan hanya untuk tamu yang kamu kirimi link.
     {/if}
@@ -110,7 +110,7 @@
           <option value="none">Tanpa batas</option>
         </select>
       </label>
-      <small class="privacy-note">Link yang diteruskan ke orang lain tidak bisa dibuka di perangkat berikutnya. Buka di HP lalu browser lain dari jaringan yang sama tetap dihitung satu. Reset perangkat tamu dari tab Kirim Undangan.</small>
+      <small class="privacy-note">Link yang diteruskan ke orang lain tidak bisa dibuka di perangkat berikutnya. Buka di HP lalu browser lain dari jaringan yang sama tetap dihitung satu. Reset perangkat tamu dari daftar tamu di bawah.</small>
     </fieldset>
 
     <fieldset class="privacy-box" disabled={saving}>

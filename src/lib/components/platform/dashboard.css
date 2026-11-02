@@ -2321,3 +2321,6 @@ div.tema-card:hover { transform: none; }
   font-weight: 600;
   color: #ffe1a6;
 }
+
+/* Undangan privat: pengaturan di atas daftar tamu (tab Kirim Undangan). */
+.privacy-panel { margin-bottom: 18px; }
