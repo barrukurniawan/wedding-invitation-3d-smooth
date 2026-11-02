@@ -6,6 +6,7 @@ import { requireCsrf, requireUser } from '../userAuth.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { VENUE_IDS, normalizeVenue } from '../services/venues.js'
 import { CHARACTER_STYLES, normalizeCharacterStyle } from '../services/characterStyles.js'
+import { generateAccessCode, MAX_DEVICE_LIMIT, normalizeDeviceLimit, normalizePrivacyMode, PRIVACY_MODES } from '../services/guestAccess.js'
 
 const router = Router()
 
@@ -50,6 +51,9 @@ const configSchema = z.object({
   gift_phone: z.union([z.string().trim().max(32).regex(/^[0-9+\-\s()]*$/, 'No. HP penerima tidak valid.'), z.null()]),
   gift_phone_public: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
   gift_note: text(255),
+  privacy_mode: z.enum(PRIVACY_MODES),
+  // null = tanpa batas perangkat
+  privacy_device_limit: z.union([z.number().int().min(1).max(MAX_DEVICE_LIMIT), z.null()]),
   slug: z.string().optional(),
 }).partial().passthrough()
 
@@ -90,6 +94,8 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'gift_phone',
   'gift_phone_public',
   'gift_note',
+  'privacy_mode',
+  'privacy_device_limit',
 ])
 
 function serializeConfig(config) {
@@ -98,6 +104,9 @@ function serializeConfig(config) {
   result.venue = normalizeVenue(result.venue)
   result.character_style = normalizeCharacterStyle(result.character_style)
   result.gift_phone_public = Number(result.gift_phone_public) === 1
+  result.privacy_mode = normalizePrivacyMode(result.privacy_mode)
+  result.privacy_device_limit = 'privacy_device_limit' in result ? normalizeDeviceLimit(result.privacy_device_limit) : 2
+  result.privacy_general_code = result.privacy_general_code || null
   result.gallery_photos = typeof result.gallery_photos === 'string'
     ? JSON.parse(result.gallery_photos)
     : result.gallery_photos || []
@@ -166,6 +175,14 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
       [...values, invitation.id],
     )
 
+    // Mode privat pertama kali dinyalakan: siapkan link umum.
+    if (data.privacy_mode && data.privacy_mode !== 'public') {
+      await pool.query(
+        'UPDATE wedding_configs SET privacy_general_code = ? WHERE invitation_id = ? AND privacy_general_code IS NULL',
+        [generateAccessCode(), invitation.id],
+      )
+    }
+
     if (fields.includes('wedding_date')) {
       if (data.wedding_date) {
         const mysqlDate = data.wedding_date.slice(0, 19).replace('T', ' ')
@@ -204,6 +221,25 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
       [invitation.id],
     )
     res.json(serializeConfig(configRows[0]))
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Link umum baru (undangan privat): link umum lama langsung tidak berlaku.
+router.post('/privacy/general-code', requireUser, requireCsrf, async (req, res, next) => {
+  try {
+    const [invitationRows] = await pool.query(
+      'SELECT id FROM invitations WHERE owner_user_id = ? AND deleted_at IS NULL LIMIT 1',
+      [req.user.id],
+    )
+    const invitation = invitationRows[0]
+    if (!invitation) {
+      return res.status(404).json({ error: { code: 'INVITATION_NOT_FOUND', message: 'Undangan belum dibuat.' } })
+    }
+    const code = generateAccessCode()
+    await pool.query('UPDATE wedding_configs SET privacy_general_code = ? WHERE invitation_id = ?', [code, invitation.id])
+    res.json({ privacy_general_code: code })
   } catch (error) {
     next(error)
   }

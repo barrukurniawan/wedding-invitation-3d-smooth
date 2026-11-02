@@ -388,7 +388,9 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
 
       if (invRows && invRows.length > 0) {
         const c = invRows[0]
-        const gift = publicGiftShipping(c)
+        // Mode hide_details tanpa kode: alamat/peta/rekening/kado diganti teks "Khusus tamu undangan"
+        // (bukan dikosongkan, karena kolom kosong jatuh ke data contoh seperti 'BCA'/'Jakarta').
+        const gift = hidden ? null : publicGiftShipping(c)
         const style = characterStyleAssets(c.character_style)
         let gallery = []
         try {
@@ -441,17 +443,19 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
                   title: 'Akad Nikah',
                   date: c.akad_date || 'Rabu, 15 Juli 2026',
                   time: c.akad_time || '08:00 - 10:00 WIB',
-                  venue: c.akad_location || 'Kediaman Mempelai Wanita',
-                  address: c.venue_address || 'Jakarta',
-                  mapsUrl: c.maps_url || '',
+                  venue: hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai Wanita',
+                  address: hidden ? 'Buka lewat link yang dikirim mempelai.' : c.venue_address || 'Jakarta',
+                  mapsUrl: hidden ? '' : c.maps_url || '',
+                  restricted: hidden,
                 },
                 {
                   title: 'Resepsi',
                   date: c.resepsi_date || 'Rabu, 15 Juli 2026',
                   time: c.resepsi_time || '11:00 - 14:00 WIB',
-                  venue: c.resepsi_location || 'Gedung Serbaguna',
-                  address: c.venue_address || 'Jakarta',
-                  mapsUrl: c.maps_url || '',
+                  venue: hidden ? HIDDEN_TEXT : c.resepsi_location || 'Gedung Serbaguna',
+                  address: hidden ? 'Buka lewat link yang dikirim mempelai.' : c.venue_address || 'Jakarta',
+                  mapsUrl: hidden ? '' : c.maps_url || '',
+                  restricted: hidden,
                 },
               ],
             },
@@ -464,7 +468,12 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
               y: 0.35,
               description: 'Kehadiran dan doa restu Anda merupakan hadiah terindah bagi kami.',
               fields: [],
-              sections: [
+              sections: hidden ? [
+                {
+                  title: 'Amplop digital',
+                  fields: [['Rekening & alamat kado', HIDDEN_TEXT + '. Buka lewat link yang dikirim mempelai.']],
+                },
+              ] : [
                 {
                   title: 'Rekening ' + (c.groom_name || 'Pengantin'),
                   fields: [
@@ -537,14 +546,14 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
               fields: [
                 ['Undanganmu', `Pernikahan ${c.groom_name || 'Toni'} & ${c.bride_name || 'Kia'}`],
                 ['Hari bahagia', c.akad_date || 'Rabu, 15 Juli 2026'],
-                ['Lokasi', c.akad_location || 'Kediaman Mempelai'],
+                ['Lokasi', hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai'],
                 ['Jelajahi taman', 'Ada enam tempat untuk dikunjungi'],
               ],
             },
           ],
         }
 
-        return res.setHeader('Cache-Control', 'no-store').json({ site, revision: 1, config, assetCdn: assetCdnBase() })
+        return res.setHeader('Cache-Control', 'no-store, private').json({ site, revision: 1, config, assetCdn: assetCdnBase(), ...accessInfo })
       }
     } catch {
       // Fall through to default
