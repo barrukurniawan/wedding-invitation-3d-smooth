@@ -875,7 +875,7 @@
            <div class="workspace-panel privacy-panel">
              <PrivacySettings {invitation} {myConfig} onSaved={(config) => (myConfig = config)} />
            </div>
-           <InvitationSender {invitation} {myConfig} />
+           <InvitationSender {invitation} {myConfig} onConfigSaved={(config) => (myConfig = config)} />
 
          <!-- Tab 5: Pengaturan -->
         {:else if activeTab === 'pengaturan'}

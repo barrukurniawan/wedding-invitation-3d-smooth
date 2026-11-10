@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Icon from '$lib/components/icons/Icon.svelte'
-  import { ApiError, createMyContact, deleteMyContact, getMyContacts, regenerateMyContactCode, resetMyContactDevices, setMyContactRevoked, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
+  import { ApiError, createMyContact, deleteMyContact, getMyContacts, regenerateMyContactCode, resetMyContactDevices, setMyContactRevoked, updateMyMessageSettings, type InvitationContact, type OwnerInvitation, type WeddingConfig } from '$lib/api-client'
 
-  type Props = { invitation: OwnerInvitation; myConfig: WeddingConfig | null }
-  let { invitation, myConfig }: Props = $props()
+  type Props = { invitation: OwnerInvitation; myConfig: WeddingConfig | null; onConfigSaved?: (config: WeddingConfig) => void }
+  let { invitation, myConfig, onConfigSaved }: Props = $props()
 
   const DEFAULT_TEMPLATE = 'Assalamualaikum Warahmatullahi Wabarakatuh. Hai {nama}! Kami mengundang kamu ke pernikahan {mempelai}.\n\nBuka undangan digital kami di sini:\n{link}\n\nKami tunggu kehadiranmu!'
 
@@ -16,7 +16,64 @@
   let nameInput = $state('')
   let phoneInput = $state('')
   let genderInput = $state<'m' | 'f'>('m')
+  // Template + teks {mempelai} tersimpan di server (wedding_configs.wa_template / wa_couple_label).
   let template = $state(DEFAULT_TEMPLATE)
+  let coupleLabel = $state('')
+  // Ambil nilai tersimpan saat data undangan (myConfig) termuat/berubah, kecuali sedang diedit.
+  let syncedFrom: string | null = null
+  $effect(() => {
+    const key = `${myConfig?.wa_template ?? ''}\u0000${myConfig?.wa_couple_label ?? ''}`
+    if (editingTemplate || key === syncedFrom) return
+    syncedFrom = key
+    template = myConfig?.wa_template || DEFAULT_TEMPLATE
+    coupleLabel = myConfig?.wa_couple_label || ''
+  })
+  let editingCouple = $state(false)
+  let templateSaving = $state(false)
+  let templateMsg = $state('')
+  const brideName = $derived(myConfig?.bride_name?.trim() || '')
+  const groomName = $derived(myConfig?.groom_name?.trim() || '')
+  const firstWord = (name: string) => name.split(/\s+/)[0] || name
+  // Bawaan (sama seperti dulu): "Nama Wanita & Nama Pria".
+  const defaultCouple = $derived(brideName && groomName ? `${brideName} & ${groomName}` : '')
+  const couple = $derived(coupleLabel.trim() || defaultCouple || 'kami')
+  const coupleOptions = $derived(brideName && groomName ? [
+    { label: 'Pria & Wanita', value: `${groomName} & ${brideName}` },
+    { label: 'Wanita & Pria', value: `${brideName} & ${groomName}` },
+    { label: 'Nama panggilan', value: `${firstWord(groomName)} & ${firstWord(brideName)}` },
+  ] : [])
+
+  async function saveMessageSettings(next: { wa_template?: string | null; wa_couple_label?: string | null }, okText: string) {
+    templateSaving = true
+    templateMsg = 'Menyimpan...'
+    try {
+      const saved = await updateMyMessageSettings(next)
+      onConfigSaved?.(saved)
+      templateMsg = `✓ ${okText}`
+      setTimeout(() => { if (templateMsg === `✓ ${okText}`) templateMsg = '' }, 3000)
+      return true
+    } catch (err) {
+      templateMsg = err instanceof ApiError ? `Gagal: ${err.message}` : 'Gagal menyimpan.'
+      return false
+    } finally { templateSaving = false }
+  }
+
+  async function finishTemplate() {
+    const value = template.trim() && template !== DEFAULT_TEMPLATE ? template : null
+    if (await saveMessageSettings({ wa_template: value, wa_couple_label: coupleLabel.trim() || null }, 'Template pesan tersimpan.')) {
+      editingTemplate = false
+      editingCouple = false
+    }
+  }
+
+  async function resetTemplate() {
+    template = DEFAULT_TEMPLATE
+    await saveMessageSettings({ wa_template: null }, 'Template kembali ke bawaan.')
+  }
+
+  async function saveCouple() {
+    if (await saveMessageSettings({ wa_couple_label: coupleLabel.trim() || null }, 'Nama mempelai di pesan tersimpan.')) editingCouple = false
+  }
   let editingTemplate = $state(false)
 
   const isActive = $derived(invitation.status === 'active')
@@ -150,9 +207,6 @@
   }
 
   function messageFor(contact: InvitationContact) {
-    const couple = myConfig?.bride_name && myConfig?.groom_name
-      ? `${myConfig.bride_name} & ${myConfig.groom_name}`
-      : 'pernikahan kami'
     const personalizedLink = personalLink(contact)
     return template.replaceAll('{nama}', contact.name).replaceAll('{mempelai}', couple).replaceAll('{link}', personalizedLink)
   }
@@ -205,7 +259,7 @@
   const previewText = $derived(
     template
       .replaceAll('{nama}', contacts[0]?.name || 'Budi')
-      .replaceAll('{mempelai}', myConfig?.bride_name && myConfig?.groom_name ? `${myConfig.bride_name} & ${myConfig.groom_name}` : 'kami')
+      .replaceAll('{mempelai}', couple)
       .replaceAll('{link}', '🔗 link undangan')
   )
 </script>
@@ -308,16 +362,33 @@
     {#if editingTemplate}
       <textarea bind:value={template} rows="6" aria-label="Template pesan WhatsApp"></textarea>
       <div class="message-foot">
-        <small>Kode otomatis: <code>{'{nama}'}</code> <code>{'{mempelai}'}</code> <code>{'{link}'}</code></small>
+        <small>Kode otomatis: <code>{'{nama}'}</code> <button type="button" class="code-btn" class:active={editingCouple} title="Atur nama mempelai di pesan" onclick={() => (editingCouple = !editingCouple)}>{'{mempelai}'} <Icon name="edit" size={12} /></button> <code>{'{link}'}</code></small>
         <span class="message-btns">
-          <button type="button" class="link-btn" onclick={() => (template = DEFAULT_TEMPLATE)}>Reset</button>
-          <button type="button" class="done-btn" onclick={() => (editingTemplate = false)}>Selesai</button>
+          <button type="button" class="link-btn" disabled={templateSaving} onclick={() => void resetTemplate()}>Reset</button>
+          <button type="button" class="done-btn" disabled={templateSaving} onclick={() => void finishTemplate()}>{templateSaving ? 'Menyimpan...' : 'Simpan'}</button>
         </span>
       </div>
+      {#if editingCouple}
+        <div class="couple-box">
+          <span class="couple-label">{'{mempelai}'} di pesan jadi:</span>
+          <input bind:value={coupleLabel} maxlength="255" placeholder={defaultCouple || 'Nama mempelai'} aria-label="Nama mempelai di pesan" />
+          {#if coupleOptions.length}
+            <span class="couple-chips">
+              {#each coupleOptions as option (option.label)}
+                <button type="button" class:active={couple === option.value} onclick={() => (coupleLabel = option.value)}>{option.label}</button>
+              {/each}
+            </span>
+          {/if}
+          <span class="couple-actions">
+            <button type="button" class="done-btn" disabled={templateSaving} onclick={() => void saveCouple()}>Simpan nama</button>
+          </span>
+        </div>
+      {/if}
     {:else}
       <p class="message-preview"><Icon name="chat" size={16} /> <span>{previewText}</span></p>
       <button type="button" class="link-btn" onclick={() => (editingTemplate = true)}><Icon name="edit" size={14} /> Ubah pesan</button>
     {/if}
+    {#if templateMsg}<p class="template-msg">{templateMsg}</p>{/if}
   </div>
 
   <p class="sender-foot"><Icon name="tip" size={14} /> Maks. {MAX_PER_MINUTE} kiriman per menit agar nomormu aman. Pesan tetap kamu kirim sendiri di WhatsApp.</p>
@@ -383,6 +454,18 @@
   .message-foot code { padding: 1px 5px; border-radius: 5px; background: #fff; border: 1px solid #eadfdf; font-size: .78rem; }
   .message-btns { display: flex; gap: 8px; }
   .link-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border: 1px solid rgba(143, 29, 69, .25); border-radius: 999px; background: #fff; color: #8f1d45; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .code-btn { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border: 1px solid #c98ea1; border-radius: 5px; background: #fff; color: #8f1d45; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; cursor: pointer; --mm-ic: #8f1d45; }
+  .code-btn.active, .code-btn:hover { background: #8f1d45; color: #fff; --mm-ic: #fff; }
+  .couple-box { display: grid; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; background: #fff; border: 1px solid #eadfdf; }
+  .couple-label { color: #5f5255; font-size: .82rem; font-weight: 700; }
+  .couple-box input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1.5px solid #e6c9d1; border-radius: 10px; font: inherit; font-size: .92rem; font-weight: 600; }
+  .couple-box input:focus { outline: none; border-color: #8f1d45; }
+  .couple-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .couple-chips button { padding: 5px 11px; border: 1px solid #ead7dc; border-radius: 999px; background: #fff; color: #6d4a54; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+  .couple-chips button.active, .couple-chips button:hover { border-color: #8f1d45; color: #8f1d45; background: #fdf2f5; }
+  .couple-actions { display: flex; justify-content: flex-end; }
+  .template-msg { width: 100%; margin: 0; color: #5f5255; font-size: .8rem; font-weight: 600; }
+  .done-btn:disabled, .link-btn:disabled { opacity: .6; cursor: progress; }
   .done-btn { padding: 7px 14px; border: 0; border-radius: 999px; background: #8f1d45; color: #fff; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
   .sender-foot { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; color: #8a7a7d; font-size: .78rem; }
 

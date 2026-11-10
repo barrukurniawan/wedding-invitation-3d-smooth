@@ -53,6 +53,9 @@ export interface WeddingConfig {
   akad_title?: string | null
   resepsi_title?: string | null
   resepsi_enabled?: boolean
+  /** Template pesan Kirim Undangan + teks {mempelai} (dashboard pemilik); null = bawaan. */
+  wa_template?: string | null
+  wa_couple_label?: string | null
   /** Undangan privat (dari /api/config). */
   privacy?: PrivacyMode
   access?: GuestAccessLevel
@@ -406,6 +409,11 @@ export function updateMyConfig(config: Partial<WeddingConfig> & { invitation_id?
 
 /** Pengaturan undangan privat. Dikirim apa adanya: `privacy_device_limit: null` (tanpa batas) tidak boleh tersaring. */
 export function updateMyPrivacy(settings: { privacy_mode?: PrivacyMode; privacy_device_limit?: number | null }) {
+  return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(settings) })
+}
+
+/** Simpan template pesan WhatsApp + teks {mempelai}. null = kembali ke bawaan (dikirim apa adanya). */
+export function updateMyMessageSettings(settings: { wa_template?: string | null; wa_couple_label?: string | null }) {
   return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(settings) })
 }
 

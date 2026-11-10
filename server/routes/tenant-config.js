@@ -56,6 +56,9 @@ const configSchema = z.object({
   akad_title: z.union([z.string().trim().max(60), z.null()]).transform((v) => (v ? v : null)),
   resepsi_title: z.union([z.string().trim().max(60), z.null()]).transform((v) => (v ? v : null)),
   resepsi_enabled: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
+  // Template pesan Kirim Undangan + teks {mempelai}; kosong/null = bawaan.
+  wa_template: z.union([z.string().max(2000), z.null()]).transform((v) => (v && v.trim() ? v : null)),
+  wa_couple_label: z.union([z.string().trim().max(255), z.null()]).transform((v) => (v ? v : null)),
   // null = tanpa batas perangkat
   privacy_device_limit: z.union([z.number().int().min(1).max(MAX_DEVICE_LIMIT), z.null()]),
   slug: z.string().optional(),
@@ -103,6 +106,8 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'akad_title',
   'resepsi_title',
   'resepsi_enabled',
+  'wa_template',
+  'wa_couple_label',
 ])
 
 function serializeConfig(config) {
@@ -115,6 +120,8 @@ function serializeConfig(config) {
   result.akad_title = result.akad_title || null
   result.resepsi_title = result.resepsi_title || null
   result.resepsi_enabled = Number(result.resepsi_enabled ?? 1) === 1
+  result.wa_template = result.wa_template || null
+  result.wa_couple_label = result.wa_couple_label || null
   result.privacy_device_limit = 'privacy_device_limit' in result ? normalizeDeviceLimit(result.privacy_device_limit) : 2
   result.privacy_general_code = result.privacy_general_code || null
   result.gallery_photos = typeof result.gallery_photos === 'string'
