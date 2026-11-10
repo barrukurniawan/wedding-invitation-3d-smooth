@@ -185,10 +185,11 @@
         <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;" class:muted-title={!secondEnabled}>2. {secondTitle}</h4>
         {#if secondEnabled}<button type="button" class="rename-btn" onclick={() => (editingSecond = !editingSecond)}><Icon name="edit" size={13} /> {editingSecond ? 'Selesai' : 'Ubah nama'}</button>{/if}
       </div>
-      <label class="second-toggle">
-        <input type="checkbox" checked={secondEnabled} onchange={(e) => (config.resepsi_enabled = (e.currentTarget as HTMLInputElement).checked)} />
-        Tampilkan acara ini
-      </label>
+      <!-- Sakelar (bukan checkbox+label): aturan global dashboard membuat label kapital & input lebar 100%. -->
+      <button type="button" role="switch" aria-checked={secondEnabled} aria-label="Tampilkan acara kedua" class="second-switch" class:on={secondEnabled} onclick={() => (config.resepsi_enabled = !secondEnabled)}>
+        <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+        {secondEnabled ? 'Ditampilkan' : 'Disembunyikan'}
+      </button>
       {#if secondEnabled && akadIsoDate && resepsiIsoDate !== akadIsoDate}
         <button
           type="button"
@@ -352,8 +353,18 @@
   .rename-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .rename-chips button { padding: 4px 10px; border: 1px solid #ead7dc; border-radius: 999px; background: #fff; color: #6d4a54; font-size: .74rem; cursor: pointer; }
   .rename-chips button:hover { border-color: #8f1d45; color: #8f1d45; }
-  .second-toggle { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; color: #6d4a54; cursor: pointer; }
-  .second-toggle input { accent-color: #8f1d45; }
+  .second-switch { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: #6d4a54; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .switch-track { position: relative; flex: none; width: 40px; height: 24px; border-radius: 999px; background: #d9cfd2; transition: background .15s ease; }
+  .switch-knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); transition: transform .15s ease; }
+  .second-switch.on .switch-track { background: #8f1d45; }
+  .second-switch.on .switch-knob { transform: translateX(16px); }
+  .second-switch:focus-visible .switch-track { outline: 2px solid #8f1d45; outline-offset: 2px; }
+  /* Safari iOS: input tanggal/jam bawaan punya lebar minimum sendiri → keluar kotak & menimpa "s/d". */
+  .grid-2 > label { min-width: 0; }
+  .form-section input[type='date'],
+  .form-section input[type='time'] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; min-height: 46px; text-align: center; }
+  .form-section input[type='date']::-webkit-date-and-time-value,
+  .form-section input[type='time']::-webkit-date-and-time-value { text-align: center; }
   .second-off { margin: 0; padding: 12px 14px; border-radius: 12px; background: #faf6f3; color: #7a6a6d; font-size: .85rem; }
   .muted-title { opacity: .55; }
   .event-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-bottom: 10px; margin-bottom: 14px; }
@@ -362,7 +373,7 @@
   .time-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 76px; align-items: center; gap: 8px; }
   .time-row input { min-width: 0; padding-left: 6px !important; padding-right: 6px !important; }
   .time-row .tz-select { width: 100%; padding: 12px 4px; }
-  .time-sep { color: #a8a29e; font-size: .75rem; font-weight: 700; }
+  .time-sep { color: #a8a29e; font-size: .75rem; font-weight: 700; text-align: center; white-space: nowrap; }
   .maps-label { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
   .maps-open { display: inline-flex; align-items: center; gap: 4px; color: #8f1d45; font-size: .78rem; font-weight: 700; text-decoration: none; text-transform: none; letter-spacing: 0; white-space: nowrap; }
   .maps-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
