@@ -291,3 +291,8 @@ body.garden-ready .mini-load,body[data-phase="playing"] .mini-load{display:none}
 @media(prefers-reduced-motion:reduce){.mini-dot{animation:none}}
 #continueButton.is-pending{opacity:.75;cursor:progress}
 #continueButton.is-pending::after{content:'…'}
+
+/* Sapaan di venue jadwal (lebih kecil dari judul venue biasa) + satu acara tanpa panah. */
+#detailTitle.greeting{font-size:clamp(20px,3.6vw,30px);line-height:1.25;max-width:22ch;margin-left:auto;margin-right:auto}
+.ceremony-carousel.single{grid-template-columns:minmax(0,1fr)}
+.ceremony-carousel.single .story-arrow[hidden]{display:none}
