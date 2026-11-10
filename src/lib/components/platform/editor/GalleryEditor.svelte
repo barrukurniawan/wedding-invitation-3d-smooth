@@ -20,7 +20,8 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
   let isDragging = $state(false)
   let deletingUrl = $state<string | null>(null)
 
-  const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
+  // Batas file asli sebelum dioptimalkan di browser (hasil akhir ≤ 4 MB, biasanya ≤ 2 MB).
+  const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
   // Pratinjau kartu pembuka undangan 2D saat belum ada foto utama (lihat garden-2d/cms-bootstrap.js).
   const NAME_PREFIXES = new Set(['muhammad', 'muhamad', 'mohammad', 'mohamad', 'mochammad', 'moch', 'moch.', 'moh', 'moh.', 'm', 'm.', 'siti'])
@@ -36,7 +37,7 @@ import { ApiError, uploadPhoto, deletePhoto } from '$lib/api-client'
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       return 'Format harus JPG, PNG, atau WebP.'
     }
-    if (file.size > MAX_SIZE) return 'Ukuran file maksimal 5 MB.'
+    if (file.size > MAX_SIZE) return 'Ukuran file maksimal 10 MB.'
     return null
   }
 

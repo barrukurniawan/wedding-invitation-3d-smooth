@@ -11,6 +11,15 @@
 
   let { config = $bindable() }: { config: WeddingConfig } = $props()
 
+  // Nama acara bisa diubah (mis. "Pemberkatan"); acara kedua bisa dimatikan.
+  // Reset memakai '' (bukan null) karena payload dashboard membuang nilai null; server mengubah '' → null.
+  const firstTitle = $derived(config.akad_title?.trim() || 'Akad Nikah')
+  const firstShort = $derived(config.akad_title?.trim() || 'Akad')
+  const secondTitle = $derived(config.resepsi_title?.trim() || 'Resepsi')
+  const secondEnabled = $derived(config.resepsi_enabled !== false)
+  let editingFirst = $state(false)
+  let editingSecond = $state(false)
+
   // Initialize Akad state
   let akadIsoDate = $state(extractIsoDate(config.wedding_date || config.akad_date))
   const initialAkadTimes = extractTimes(config.akad_time)
@@ -32,7 +41,7 @@
       config.wedding_date = combineToIsoDateTime(akadIsoDate, akadStartTime)
     } else {
       config.wedding_date = ''
-      config.akad_date = 'Tanggal akad segera diumumkan'
+      config.akad_date = `Tanggal ${firstShort.toLowerCase()} segera diumumkan`
     }
     config.akad_time = buildTimeString(akadStartTime, akadEndTime, akadTimezone)
   }
@@ -74,7 +83,7 @@
 <div class="form-section">
   <h3>Jadwal Acara &amp; Lokasi Venue</h3>
   <p class="section-desc">
-    Tanggal akad dipakai untuk hitung mundur di undangan.
+    Tanggal acara pertama dipakai untuk hitung mundur di undangan. Nama acara bisa diubah, misalnya jadi <strong>Pemberkatan</strong>.
   </p>
 
   <!-- 1. AKAD NIKAH -->
@@ -82,7 +91,8 @@
     <div class="event-head border-b border-stone-100">
       <div class="event-title">
         <span class="text-lg"><Icon name="rings" size={20} /></span>
-        <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">1. Akad Nikah</h4>
+        <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">1. {firstTitle}</h4>
+        <button type="button" class="rename-btn" onclick={() => (editingFirst = !editingFirst)}><Icon name="edit" size={13} /> {editingFirst ? 'Selesai' : 'Ubah nama'}</button>
       </div>
       {#if akadIsoDate}
         <span class="text-xs text-rose-800 font-semibold bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
@@ -95,10 +105,21 @@
       {/if}
     </div>
 
+    {#if editingFirst}
+      <div class="rename-row">
+        <input bind:value={config.akad_title} maxlength="60" placeholder="Akad Nikah" aria-label="Nama acara pertama" />
+        <span class="rename-chips">
+          {#each ['Akad Nikah', 'Pemberkatan', 'Pemberkatan Nikah', 'Holy Matrimony', 'Tasyakuran'] as option (option)}
+            <button type="button" onclick={() => (config.akad_title = option === 'Akad Nikah' ? '' : option)}>{option}</button>
+          {/each}
+        </span>
+      </div>
+    {/if}
+
     <div class="grid-2">
       <!-- Tanggal Akad -->
       <label>
-        Tanggal Akad
+        Tanggal {firstShort}
         <input
           type="date"
           value={akadIsoDate}
@@ -111,7 +132,7 @@
 
       <!-- Waktu Akad -->
       <label>
-        Jam Akad
+        Jam {firstShort}
         <div class="time-row">
           <input
             type="time"
@@ -145,7 +166,7 @@
 
       <!-- Tempat Akad -->
       <label class="col-span-2">
-        Tempat Akad
+        Tempat {firstShort}
         <input
           bind:value={config.akad_location}
           placeholder="Masjid / Kediaman mempelai"
@@ -161,23 +182,41 @@
     <div class="event-head border-b border-stone-100">
       <div class="event-title">
         <span class="text-lg"><Icon name="party" size={20} /></span>
-        <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;">2. Resepsi Pernikahan</h4>
+        <h4 style="margin: 0; font-size: 1.1rem; color: #8f1d45;" class:muted-title={!secondEnabled}>2. {secondTitle}</h4>
+        {#if secondEnabled}<button type="button" class="rename-btn" onclick={() => (editingSecond = !editingSecond)}><Icon name="edit" size={13} /> {editingSecond ? 'Selesai' : 'Ubah nama'}</button>{/if}
       </div>
-      {#if akadIsoDate && resepsiIsoDate !== akadIsoDate}
+      <label class="second-toggle">
+        <input type="checkbox" checked={secondEnabled} onchange={(e) => (config.resepsi_enabled = (e.currentTarget as HTMLInputElement).checked)} />
+        Tampilkan acara ini
+      </label>
+      {#if secondEnabled && akadIsoDate && resepsiIsoDate !== akadIsoDate}
         <button
           type="button"
           class="text-xs text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer"
           onclick={copyAkadDateToResepsi}
         >
-          <Icon name="zap" size={14} /> Samakan Tanggal Akad
+          <Icon name="zap" size={14} /> Samakan tanggal {firstShort.toLowerCase()}
         </button>
       {/if}
     </div>
 
+    {#if !secondEnabled}
+      <p class="second-off">Acara kedua disembunyikan. Undangan hanya menampilkan <strong>{firstTitle}</strong>.</p>
+    {:else}
+    {#if editingSecond}
+      <div class="rename-row">
+        <input bind:value={config.resepsi_title} maxlength="60" placeholder="Resepsi" aria-label="Nama acara kedua" />
+        <span class="rename-chips">
+          {#each ['Resepsi', 'Ramah Tamah', 'Syukuran', 'Ngunduh Mantu', 'Wedding Party'] as option (option)}
+            <button type="button" onclick={() => (config.resepsi_title = option === 'Resepsi' ? '' : option)}>{option}</button>
+          {/each}
+        </span>
+      </div>
+    {/if}
     <div class="grid-2">
       <!-- Tanggal Resepsi -->
       <label>
-        Tanggal Resepsi
+        Tanggal {secondTitle}
         <input
           type="date"
           value={resepsiIsoDate}
@@ -190,7 +229,7 @@
 
       <!-- Waktu Resepsi -->
       <label>
-        Jam Resepsi
+        Jam {secondTitle}
         <div class="time-row">
           <input
             type="time"
@@ -224,7 +263,7 @@
 
       <!-- Tempat Resepsi -->
       <label class="col-span-2">
-        Tempat Resepsi
+        Tempat {secondTitle}
         <input
           bind:value={config.resepsi_location}
           placeholder="Gedung / Ballroom hotel"
@@ -233,6 +272,7 @@
         />
       </label>
     </div>
+    {/if}
   </div>
 
   <!-- 3. LOKASI VENUE & GOOGLE MAPS -->
@@ -305,6 +345,17 @@
 </div>
 
 <style>
+  .rename-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: 1px solid rgba(143, 29, 69, .25); border-radius: 999px; background: #fff; color: #8f1d45; font-size: .74rem; font-weight: 700; cursor: pointer; }
+  .rename-btn:hover { background: #fdf2f5; }
+  .rename-row { display: grid; gap: 8px; margin: 0 0 14px; padding: 12px; border-radius: 12px; background: #fdf6f8; }
+  .rename-row input { padding: 9px 12px; border: 1.5px solid #e6c9d1; border-radius: 10px; font-size: .95rem; font-weight: 600; }
+  .rename-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rename-chips button { padding: 4px 10px; border: 1px solid #ead7dc; border-radius: 999px; background: #fff; color: #6d4a54; font-size: .74rem; cursor: pointer; }
+  .rename-chips button:hover { border-color: #8f1d45; color: #8f1d45; }
+  .second-toggle { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; color: #6d4a54; cursor: pointer; }
+  .second-toggle input { accent-color: #8f1d45; }
+  .second-off { margin: 0; padding: 12px 14px; border-radius: 12px; background: #faf6f3; color: #7a6a6d; font-size: .85rem; }
+  .muted-title { opacity: .55; }
   .event-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-bottom: 10px; margin-bottom: 14px; }
   .event-head > :last-child { white-space: nowrap; }
   .event-title { display: flex; align-items: center; gap: 8px; min-width: 0; }

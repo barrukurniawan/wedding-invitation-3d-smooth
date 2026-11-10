@@ -23,7 +23,8 @@ router.get('/', async (req, res) => {
         wedding_date, akad_date, akad_time, akad_location, resepsi_date, resepsi_time,
         resepsi_location, qris_image, bank_name, bank_account, bank_holder, maps_url,
          venue_address, gallery_photos, quote, bgm_url, bgm_title, preset, venue, character_style,
-         gift_recipient, gift_address, gift_phone, gift_phone_public, gift_note, updated_at
+         gift_recipient, gift_address, gift_phone, gift_phone_public, gift_note, updated_at,
+         akad_title, resepsi_title, resepsi_enabled
        FROM wedding_configs WHERE invitation_id = ?`,
       [req.invitation.id],
     )
@@ -40,6 +41,10 @@ router.get('/', async (req, res) => {
     row.bgm_title ||= 'Marry You'
     row.gift_shipping = publicGiftShipping(row)
     for (const key of ['gift_recipient', 'gift_address', 'gift_phone', 'gift_phone_public', 'gift_note']) delete row[key]
+    // Nama acara (bawaan Akad Nikah & Resepsi); acara kedua bisa dimatikan.
+    row.akad_title = row.akad_title || null
+    row.resepsi_title = row.resepsi_title || null
+    row.resepsi_enabled = Number(row.resepsi_enabled ?? 1) === 1
     row.asset_cdn = assetCdnBase()
     // Undangan masa uji coba: tamu melihat label kecil "3 Hari Aktif · MarryMe".
     row.trial = Boolean(req.invitationTrial)

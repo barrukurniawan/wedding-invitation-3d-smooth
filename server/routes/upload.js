@@ -17,7 +17,7 @@ const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 // ── Helper: multer error → JSON ───────────────────────────────────────────────
 export const multerErrorHandler = (err, req, res, next) => {
   if (err?.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ error: { code: 'FILE_TOO_LARGE', message: 'Ukuran foto maksimal 2 MB.' } })
+    return res.status(400).json({ error: { code: 'FILE_TOO_LARGE', message: 'Ukuran file terlalu besar. Pilih foto lain atau kecilkan dulu.' } })
   }
   if (err?.message) {
     return res.status(400).json({ error: { code: 'INVALID_FILE', message: err.message } })
@@ -50,7 +50,8 @@ const PHOTOS_DIR  = path.join(process.cwd(), 'uploads', 'photos')
 const MUSIC_DIR   = path.join(process.cwd(), 'uploads', 'music')
 
 const uploadProof = makeUploader(PROOFS_DIR, 'proof', 5 * 1024 * 1024)
-export const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo', 2 * 1024 * 1024)
+// 4 MB (dulu 2 MB): cadangan bila kompresi di browser tidak berhasil (mis. Safari iPhone).
+export const uploadPhoto = makeUploader(PHOTOS_DIR, 'photo', 4 * 1024 * 1024)
 
 function makeMusicUploader(dir, prefix) {
   fs.mkdirSync(dir, { recursive: true })

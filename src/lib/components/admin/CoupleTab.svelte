@@ -23,7 +23,7 @@
       {:else}
         <span class="photo empty"><Icon name="image" /></span>
       {/if}
-      <FilePick label={config.wedding_photo ? 'Ganti foto' : 'Unggah foto'} accept="image/*" onChange={onUploadPhoto} hint="Maks. 2 MB (JPG/PNG/WebP)" />
+      <FilePick label={config.wedding_photo ? 'Ganti foto' : 'Unggah foto'} accept="image/*" onChange={onUploadPhoto} hint="Maks. 4 MB (JPG/PNG/WebP)" />
     </div>
   </div>
 

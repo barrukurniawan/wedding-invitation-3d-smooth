@@ -71,7 +71,7 @@ let path=[],pendingPlace=null,nearby=null,last=0,t=0,view={scale:1,x:0,y:0,w:0,h
 const remotePlayers=new Map();let session=null,networkBusy=false,nextSync=0,queuedMessage=null;
 // Interpret the CMS's Indonesian event date and starting time independently of the guest's timezone.
 function ceremonyStart(config){
- const events=config.places.find(p=>p.id==='ceremony')?.events||[],event=events.find(e=>/akad/i.test(e.title))||events[0];
+ const events=config.places.find(p=>p.id==='ceremony')?.events||[],event=events[0];
  const months=['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
  const date=event?.date?.toLowerCase().match(/\b(\d{1,2})\s+([a-z]+)\s+(\d{4})\b/),time=event?.time?.match(/\b(\d{1,2})[.:](\d{2})\b/);
  if(!date||!time)return null;
@@ -82,15 +82,18 @@ function ceremonyStart(config){
  const zone=event.time.match(/\b(WIB|WITA|WIT)\b/i)?.[1].toUpperCase()||'WIB',offset={WIB:7,WITA:8,WIT:9}[zone];
  return local-offset*3600000;
 }
+// Nama acara pertama (bawaan "Akad"; bisa diganti pasangan, mis. "Pemberkatan").
+function ceremonyLabel(config){const e=(config?.places?.find(p=>p.id==='ceremony')?.events||[])[0];return (e?.short||e?.title||'Akad').trim();}
 function countdownText(start,now){
- if(start===null)return 'Jadwal akad segera hadir';
- if(now>=start)return 'Akad telah dimulai';
+ const label=ceremonyLabel(window.WEDDING);
+ if(start===null)return 'Jadwal '+label.toLowerCase()+' segera hadir';
+ if(now>=start)return label+' telah dimulai';
  const seconds=Math.ceil((start-now)/1000),days=Math.floor(seconds/86400),hours=Math.floor(seconds%86400/3600),minutes=Math.floor(seconds%3600/60),remaining=seconds%60;
  const pad=value=>String(value).padStart(2,'0');return `${days} hari · ${pad(hours)}:${pad(minutes)}:${pad(remaining)}`;
 }
 const ceremonyCountdown=document.createElement('div'),countdownHeading=document.createElement('span'),countdownValue=document.createElement('strong');
 ceremonyCountdown.id='ceremonyCountdown';ceremonyCountdown.setAttribute('role','timer');ceremonyCountdown.setAttribute('aria-live','off');countdownHeading.textContent='Menuju akad';ceremonyCountdown.append(countdownHeading,countdownValue);document.querySelector('main').append(ceremonyCountdown);
-function updateCountdown(){setText(countdownValue,countdownText(ceremonyStart(window.WEDDING),Date.now()));}
+function updateCountdown(){setText(countdownHeading,'Menuju '+ceremonyLabel(window.WEDDING).toLowerCase());setText(countdownValue,countdownText(ceremonyStart(window.WEDDING),Date.now()));}
 updateCountdown();setInterval(()=>{if(!document.hidden)updateCountdown();},1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateCountdown();});
 function localState(){return {name:playerName,character:pairMode?'pair':selectedCharacter,x:player.x,y:player.y,dir:player.dir,walking:player.walking&&!document.querySelector('dialog[open]'),companion:pairMode?{...companion}:null};}
 async function api(route,data){const response=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(typeof window.__inviteHeaders==='function'?window.__inviteHeaders():{})},body:JSON.stringify({...data,site:window.CMS_SITE,preview:window.CMS_PREVIEW}),signal:AbortSignal.timeout(8000)});if(!response.ok){if(response.status===401)session=null;throw Error('connection');}return response.json();}
@@ -224,7 +227,7 @@ function renderGifts(place,parent){
 function renderCeremony(place,parent){
  const items=place.events||[];let index=0;
  const carousel=document.createElement('section'),previous=document.createElement('button'),next=document.createElement('button'),card=document.createElement('article'),title=document.createElement('h3'),date=document.createElement('p'),time=document.createElement('p'),venue=document.createElement('p'),address=document.createElement('p'),link=document.createElement('a'),count=document.createElement('p');
- carousel.className='story-carousel ceremony-carousel';carousel.setAttribute('aria-label','Jadwal akad dan resepsi');previous.type=next.type='button';previous.className=next.className='story-arrow';previous.textContent='‹';next.textContent='›';previous.setAttribute('aria-label','Acara sebelumnya');next.setAttribute('aria-label','Acara berikutnya');card.className='story-slide ceremony-slide';card.setAttribute('aria-live','polite');card.setAttribute('aria-atomic','true');date.className='event-date';time.className='event-time';venue.className='event-venue';address.className='event-address';link.className='event-map-link';link.textContent='Buka Google Maps';link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',playButtonSound);count.className='story-slide-count';card.append(title,date,time,venue,address,link,count);
+ carousel.className='story-carousel ceremony-carousel';carousel.setAttribute('aria-label','Jadwal acara');previous.type=next.type='button';previous.className=next.className='story-arrow';previous.textContent='‹';next.textContent='›';previous.setAttribute('aria-label','Acara sebelumnya');next.setAttribute('aria-label','Acara berikutnya');card.className='story-slide ceremony-slide';card.setAttribute('aria-live','polite');card.setAttribute('aria-atomic','true');date.className='event-date';time.className='event-time';venue.className='event-venue';address.className='event-address';link.className='event-map-link';link.textContent='Buka Google Maps';link.target='_blank';link.rel='noopener noreferrer';link.addEventListener('click',playButtonSound);count.className='story-slide-count';card.append(title,date,time,venue,address,link,count);
  function show(){const event=items[index];title.textContent=event?.title||'Jadwal segera hadir';date.textContent=event?.date||'';time.textContent=event?.time?'Pukul '+event.time:'';venue.textContent=event?.venue||'';address.textContent=event?.address||'';link.hidden=!event||!!event.restricted;link.href=event?.mapsUrl||'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((event?.venue||'')+', '+(event?.address||''));count.textContent=event?'Acara '+(index+1)+' dari '+items.length:'';previous.disabled=index===0;next.disabled=index>=items.length-1;}
  previous.onclick=()=>{if(index>0){index--;show();}};next.onclick=()=>{if(index<items.length-1){index++;show();}};carousel.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const control=e.key==='ArrowLeft'?previous:next;if(!control.disabled)control.click();}};carousel.append(previous,card,next);parent.append(carousel);show();
  const background=place.ceremonyBackground||'/assets/ceremony-background.png';$('#details').style.setProperty('--story-background','url('+JSON.stringify(background)+')');startStoryIntro(background);

@@ -240,7 +240,7 @@
       guideText.textContent =
         'Selamat datang di taman ' +
         name +
-        '. Buka venue Akad & Resepsi untuk jadwal acara beserta alamatnya.' +
+        '. Buka venue ' + ((config.places || []).find((p) => p.id === 'ceremony')?.title || 'Akad & Resepsi') + ' untuk jadwal acara beserta alamatnya.' +
         (config.demo ? ' Informasi pernikahan saat ini menggunakan data contoh.' : '');
     }
 
@@ -309,6 +309,17 @@
     },
   };
 
+  // Nama acara (sama dengan server/services/eventTitles.js): kosong = 'Akad Nikah' / 'Resepsi'.
+  function eventTitles(c) {
+    const clean = (v) => (typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, 60) : '');
+    const customFirst = clean(c.akad_title);
+    const first = customFirst || 'Akad Nikah';
+    const second = clean(c.resepsi_title) || 'Resepsi';
+    const secondEnabled = !(c.resepsi_enabled === false || c.resepsi_enabled === 0 || c.resepsi_enabled === '0');
+    const firstShort = customFirst || 'Akad';
+    return { first, second, secondEnabled, firstShort, placeTitle: secondEnabled ? firstShort + ' & ' + second : first };
+  }
+
   function transformMarryMeConfig(c) {
     if (!c || c.access === 'none') return null;
     const style = STYLE_ASSETS[c.character_style] || STYLE_ASSETS.umum;
@@ -317,6 +328,7 @@
     const hidden = c.access === 'limited';
     const HIDDEN_TEXT = 'Khusus tamu undangan';
     const HIDDEN_HINT = 'Buka lewat link yang dikirim mempelai.';
+    const titles = eventTitles(c);
     return {
       demo: false,
       access: c.access || 'full',
@@ -349,7 +361,7 @@
       places: [
         {
           id: 'ceremony',
-          title: 'Akad & Resepsi',
+          title: titles.placeTitle,
           subtitle: 'Jadwal hari bahagia kami',
           symbol: '♡',
           x: 0.5,
@@ -359,7 +371,8 @@
           ceremonyBackground: style.ceremonyBackground,
           events: [
             {
-              title: 'Akad Nikah',
+              title: titles.first,
+              short: titles.firstShort,
               date: c.akad_date || 'Rabu, 15 Juli 2026',
               time: c.akad_time || '08:00 - 10:00 WIB',
               venue: hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai Wanita',
@@ -367,15 +380,15 @@
               mapsUrl: hidden ? '' : c.maps_url || '',
               restricted: hidden,
             },
-            {
-              title: 'Resepsi',
+            ...(titles.secondEnabled ? [{
+              title: titles.second,
               date: c.resepsi_date || 'Rabu, 15 Juli 2026',
               time: c.resepsi_time || '11:00 - 14:00 WIB',
               venue: hidden ? HIDDEN_TEXT : c.resepsi_location || 'Gedung Serbaguna',
               address: hidden ? HIDDEN_HINT : c.venue_address || 'Jakarta',
               mapsUrl: hidden ? '' : c.maps_url || '',
               restricted: hidden,
-            },
+            }] : []),
           ],
         },
         {
@@ -474,7 +487,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261102p';
+    script.src = 'game.js?v=20261110a';
     document.body.append(script);
   }
 

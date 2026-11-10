@@ -2,8 +2,10 @@
   import { activeModal, guestName, openModal, closeModal } from '../../stores/gameState.svelte'
   import { weddingConfig } from '../../stores/weddingConfig.svelte'
   import { resolveVenue } from '../../venues'
+  import { eventTitles } from '../../utils/eventTitles'
 
   const credits = $derived(resolveVenue($weddingConfig.venue).credits ?? [])
+  const titles = $derived(eventTitles($weddingConfig))
 
   let showPayment = $state(false)
   // Undangan privat: mode hide_details tanpa kode → tanpa alamat/rekening/buku tamu.
@@ -194,23 +196,25 @@
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Akad Nikah</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">{titles.first}</p>
                     <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.akad_date}</p>
                     <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.akad_time}</p>
                     <p class="text-xs text-[var(--deep-rose)]/65">{restricted ? 'Lokasi khusus tamu undangan' : $weddingConfig.akad_location}</p>
                   </div>
                 </div>
               </div>
+              {#if titles.secondEnabled}
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
                   <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">Resepsi</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--deep-rose)]/80">{titles.second}</p>
                     <p class="text-sm font-semibold text-[var(--deep-rose)]">{$weddingConfig.resepsi_date}</p>
                     <p class="text-xs text-[var(--deep-rose)]/75">{$weddingConfig.resepsi_time}</p>
                     <p class="text-xs text-[var(--deep-rose)]/65">{restricted ? 'Lokasi khusus tamu undangan' : $weddingConfig.resepsi_location}</p>
                   </div>
                 </div>
               </div>
+              {/if}
               <div class="rounded-xl p-3 w-card">
                 <div class="flex items-center gap-2">
                   <div class="text-xs leading-relaxed text-[var(--deep-rose)]/80">

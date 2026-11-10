@@ -49,6 +49,10 @@ export interface WeddingConfig {
   gift_shipping?: { recipient: string | null; address: string; phone: string | null; note: string | null } | null
   slug?: string
   updated_at: string
+  /** Nama acara; null = bawaan 'Akad Nikah' / 'Resepsi'. resepsi_enabled false = hanya satu acara. */
+  akad_title?: string | null
+  resepsi_title?: string | null
+  resepsi_enabled?: boolean
   /** Undangan privat (dari /api/config). */
   privacy?: PrivacyMode
   access?: GuestAccessLevel

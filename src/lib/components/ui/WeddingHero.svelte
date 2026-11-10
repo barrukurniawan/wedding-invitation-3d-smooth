@@ -10,8 +10,10 @@
   const brideFirstName = $derived(firstName($weddingConfig.bride_name, 'Mempelai'))
   const groomFirstName = $derived(firstName($weddingConfig.groom_name, 'Mempelai'))
   const coupleTitle = $derived(`${brideFirstName} & ${groomFirstName}`)
+  // Acara kedua dimatikan (mis. hanya Pemberkatan): pakai tanggal acara pertama.
   const receptionDate = $derived(
-    $weddingConfig.resepsi_date?.trim() || 'Tanggal resepsi segera diumumkan'
+    ($weddingConfig.resepsi_enabled === false ? $weddingConfig.akad_date : $weddingConfig.resepsi_date)?.trim() ||
+      'Tanggal acara segera diumumkan'
   )
 
   function firstName(name: string | null | undefined, fallback: string) {

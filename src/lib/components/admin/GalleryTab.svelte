@@ -9,7 +9,7 @@
 <div class="head">
   <div>
     <h2 class="adm-card-title">Galeri Foto</h2>
-    <p class="adm-card-sub">{config.gallery_photos.length} foto · unggah satu per satu, maks. 2 MB per foto.</p>
+    <p class="adm-card-sub">{config.gallery_photos.length} foto · unggah satu per satu, maks. 4 MB per foto.</p>
   </div>
   <FilePick label="Tambah foto" accept="image/*" onChange={onUploadPhoto} />
 </div>

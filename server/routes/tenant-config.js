@@ -52,6 +52,10 @@ const configSchema = z.object({
   gift_phone_public: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
   gift_note: text(255),
   privacy_mode: z.enum(PRIVACY_MODES),
+  // Nama acara: kosong/null = nama bawaan. resepsi_enabled false = hanya satu acara.
+  akad_title: z.union([z.string().trim().max(60), z.null()]).transform((v) => (v ? v : null)),
+  resepsi_title: z.union([z.string().trim().max(60), z.null()]).transform((v) => (v ? v : null)),
+  resepsi_enabled: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
   // null = tanpa batas perangkat
   privacy_device_limit: z.union([z.number().int().min(1).max(MAX_DEVICE_LIMIT), z.null()]),
   slug: z.string().optional(),
@@ -96,6 +100,9 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'gift_note',
   'privacy_mode',
   'privacy_device_limit',
+  'akad_title',
+  'resepsi_title',
+  'resepsi_enabled',
 ])
 
 function serializeConfig(config) {
@@ -105,6 +112,9 @@ function serializeConfig(config) {
   result.character_style = normalizeCharacterStyle(result.character_style)
   result.gift_phone_public = Number(result.gift_phone_public) === 1
   result.privacy_mode = normalizePrivacyMode(result.privacy_mode)
+  result.akad_title = result.akad_title || null
+  result.resepsi_title = result.resepsi_title || null
+  result.resepsi_enabled = Number(result.resepsi_enabled ?? 1) === 1
   result.privacy_device_limit = 'privacy_device_limit' in result ? normalizeDeviceLimit(result.privacy_device_limit) : 2
   result.privacy_general_code = result.privacy_general_code || null
   result.gallery_photos = typeof result.gallery_photos === 'string'

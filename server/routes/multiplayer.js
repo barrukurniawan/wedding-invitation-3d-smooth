@@ -4,6 +4,7 @@ import pool from '../db.js'
 import { assetCdnBase } from '../services/assetCdn.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
 import { characterStyleAssets } from '../services/characterStyles.js'
+import { eventTitles } from '../services/eventTitles.js'
 import { requirePublicInvitation } from '../middleware/tenant.js'
 import { computeGuestAccess } from '../middleware/guestAccess.js'
 import { normalizeAccessCode, publicAccessInfo, resolveSite } from '../services/guestAccess.js'
@@ -378,7 +379,7 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
                 wc.resepsi_location, wc.bank_name, wc.bank_account, wc.bank_holder, wc.maps_url,
                 wc.venue_address, wc.gallery_photos, wc.quote, wc.bgm_url,
                 wc.gift_recipient, wc.gift_address, wc.gift_phone, wc.gift_phone_public, wc.gift_note,
-                wc.character_style
+                wc.character_style, wc.akad_title, wc.resepsi_title, wc.resepsi_enabled
          FROM invitations i
          LEFT JOIN wedding_configs wc ON wc.invitation_id = i.id
          WHERE i.slug = ? AND i.deleted_at IS NULL
@@ -391,6 +392,7 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
         // Mode hide_details tanpa kode: alamat/peta/rekening/kado diganti teks "Khusus tamu undangan"
         // (bukan dikosongkan, karena kolom kosong jatuh ke data contoh seperti 'BCA'/'Jakarta').
         const gift = hidden ? null : publicGiftShipping(c)
+        const titles = eventTitles(c)
         const style = characterStyleAssets(c.character_style)
         let gallery = []
         try {
@@ -430,7 +432,7 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
           places: [
             {
               id: 'ceremony',
-              title: 'Akad & Resepsi',
+              title: titles.placeTitle,
               subtitle: 'Jadwal hari bahagia kami',
               symbol: '♡',
               x: 0.5,
@@ -440,7 +442,8 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
               ceremonyBackground: style.ceremonyBackground,
               events: [
                 {
-                  title: 'Akad Nikah',
+                  title: titles.first,
+                  short: titles.firstShort,
                   date: c.akad_date || 'Rabu, 15 Juli 2026',
                   time: c.akad_time || '08:00 - 10:00 WIB',
                   venue: hidden ? HIDDEN_TEXT : c.akad_location || 'Kediaman Mempelai Wanita',
@@ -448,15 +451,15 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
                   mapsUrl: hidden ? '' : c.maps_url || '',
                   restricted: hidden,
                 },
-                {
-                  title: 'Resepsi',
+                ...(titles.secondEnabled ? [{
+                  title: titles.second,
                   date: c.resepsi_date || 'Rabu, 15 Juli 2026',
                   time: c.resepsi_time || '11:00 - 14:00 WIB',
                   venue: hidden ? HIDDEN_TEXT : c.resepsi_location || 'Gedung Serbaguna',
                   address: hidden ? 'Buka lewat link yang dikirim mempelai.' : c.venue_address || 'Jakarta',
                   mapsUrl: hidden ? '' : c.maps_url || '',
                   restricted: hidden,
-                },
+                }] : []),
               ],
             },
             {
