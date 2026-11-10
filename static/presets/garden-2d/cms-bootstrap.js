@@ -487,7 +487,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261110a';
+    script.src = 'game.js?v=20261110b';
     document.body.append(script);
   }
 

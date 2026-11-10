@@ -72,6 +72,9 @@
 ## Nama Acara
 - `wedding_configs.akad_title` / `resepsi_title` (NULL = 'Akad Nikah' / 'Resepsi') and `resepsi_enabled` (0 = only one event, e.g. "Pemberkatan"), migration 023. Same title logic in `server/services/eventTitles.js`, `src/lib/utils/eventTitles.ts` and garden-2d `cms-bootstrap.js` (`eventTitles`) — keep in sync. Edited in `platform/editor/EventDetailsEditor.svelte`; reset uses `''` because the dashboard payload drops nulls.
 
+## Ucapan 2D
+- 2D wishes (`/api/wishes/send|list` in `routes/multiplayer.js`) are stored in `guestbook_entries` (same as the 3D guestbook) on invitation hosts, with `attendance` and `request_id` (idempotent), so they show in the owner's Buku Tamu + attendance stats. Max 300 graphemes, profanity filter applies. Old `wedding_wishes` rows were copied by migration 024 (attendance 'Ragu-ragu'); the table is kept but no longer written for real invitations. Root host demo keeps in-memory wishes.
+
 ## Interaction Contracts
 - Same as the prior Nuxt repo: `triggerZones` define interactive locations; `action` matches `ModalType`; NPC zones require `npcData`.
 - Opening `weddingStage` enables confetti; always close via `closeModal()` to reset modal, NPC data, and confetti.

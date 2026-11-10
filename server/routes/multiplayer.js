@@ -7,7 +7,9 @@ import { characterStyleAssets } from '../services/characterStyles.js'
 import { eventTitles } from '../services/eventTitles.js'
 import { requirePublicInvitation } from '../middleware/tenant.js'
 import { computeGuestAccess } from '../middleware/guestAccess.js'
-import { normalizeAccessCode, publicAccessInfo, resolveSite } from '../services/guestAccess.js'
+import { clientIp, normalizeAccessCode, publicAccessInfo, resolveSite } from '../services/guestAccess.js'
+import { normalizeWish, toWishItem } from '../services/wishes2d.js'
+import { validateGuestbookContent } from '../services/profanityFilter.js'
 
 const router = express.Router()
 
@@ -277,6 +279,18 @@ router.post(['/leave', '/api/leave'], (req, res, next) => { req.site = resolveSi
 })
 
 // POST /wishes/send
+// Subdomain undangan: simpan ke guestbook_entries (buku tamu yang sama dengan 3D → tampil di dashboard
+// pasangan beserta kehadiran). Domain utama (demo Faris & Eliza): hanya di memori, seperti dulu.
+const wishSendLog = new Map() // ip -> [timestamps]
+function tooManyWishes(ip, now) {
+  const recent = (wishSendLog.get(ip) || []).filter((t) => now - t < 15 * 60_000)
+  if (wishSendLog.size > 10_000) wishSendLog.clear()
+  if (recent.length >= 15) { wishSendLog.set(ip, recent); return true }
+  recent.push(now)
+  wishSendLog.set(ip, recent)
+  return false
+}
+
 router.post(['/wishes/send', '/api/wishes/send'], siteAccess('full'), async (req, res) => {
   try {
     const body = req.body || {}
@@ -287,37 +301,34 @@ router.post(['/wishes/send', '/api/wishes/send'], siteAccess('full'), async (req
       return res.status(401).json({ error: 'Session expired' })
     }
 
-    const message = typeof body.message === 'string' ? body.message.trim() : ''
-    if (!message || message.length > 50 || typeof body.requestId !== 'string') {
-      return res.status(400).json({ error: 'Ucapan harus berisi 1–50 karakter' })
+    const player = memoryPlayers.get(site)?.get(body.id)
+    const parsed = normalizeWish(body, player?.name)
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error })
+    const wish = parsed.value
+
+    if (tooManyWishes(clientIp(req), now)) {
+      return res.status(429).json({ error: 'Terlalu banyak ucapan. Coba lagi beberapa menit lagi.' })
     }
 
-    const siteMap = memoryPlayers.get(site)
-    const player = siteMap?.get(body.id)
-    const name = player?.name || 'Tamu Undangan'
+    if (req.invitation) {
+      const moderation = validateGuestbookContent({ name: wish.name, message: wish.message })
+      if (!moderation.isValid) return res.status(400).json({ error: moderation.error || 'Ucapan mengandung kata yang tidak pantas.' })
+      await pool.query(
+        `INSERT INTO guestbook_entries (id, invitation_id, name, attendance, message, status, request_id)
+         VALUES (?, ?, ?, ?, ?, 'visible', ?)
+         ON DUPLICATE KEY UPDATE id = id`,
+        [crypto.randomUUID(), req.invitation.id, wish.name, wish.attendance, wish.message, wish.requestId],
+      )
+      return res.setHeader('Cache-Control', 'no-store').json({ ok: true })
+    }
 
+    // Demo di domain utama: memori saja (tidak ada undangan di database).
     if (!memoryWishes.has(site)) memoryWishes.set(site, [])
     const wishesList = memoryWishes.get(site)
-    if (!wishesList.some((w) => w.request_id === body.requestId)) {
-      wishesList.unshift({
-        id: wishesList.length + 1,
-        request_id: body.requestId,
-        name,
-        message,
-        hidden: 0,
-        created_at: now,
-      })
+    if (!wishesList.some((w) => w.request_id === wish.requestId)) {
+      wishesList.unshift({ id: now, request_id: wish.requestId, name: wish.name, message: wish.message, attendance: wish.attendance, hidden: 0, created_at: now })
+      if (wishesList.length > 200) wishesList.length = 200
     }
-
-    try {
-      await pool.query(
-        'INSERT INTO wedding_wishes (request_id, site, name, message, created_at) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE id = id',
-        [body.requestId, site, name, message, now],
-      )
-    } catch {
-      // Memory store is authoritative fallback
-    }
-
     return res.setHeader('Cache-Control', 'no-store').json({ ok: true })
   } catch (err) {
     console.error('Multiplayer wish error:', err)
@@ -328,28 +339,24 @@ router.post(['/wishes/send', '/api/wishes/send'], siteAccess('full'), async (req
 // POST /wishes/list
 router.post(['/wishes/list', '/api/wishes/list'], siteAccess('full'), async (req, res) => {
   try {
-    const body = req.body || {}
     const site = req.site
+    if (req.invitation) {
+      const [rows] = await pool.query(
+        `SELECT id, name, attendance, message, created_at FROM guestbook_entries
+         WHERE invitation_id = ? AND status = 'visible'
+         ORDER BY created_at DESC LIMIT 50`,
+        [req.invitation.id],
+      )
+      return res.setHeader('Cache-Control', 'no-store').json({ wishes: rows.map(toWishItem), hasMore: false })
+    }
 
+    // Demo: contoh ucapan + kiriman pengunjung demo (memori).
     if (!memoryWishes.has(site)) {
       memoryWishes.set(site, [
-        { id: 1, name: 'Bpk. Hendra & Keluarga', message: 'Selamat berbahagia selalu untuk kedua mempelai! ♡', hidden: 0, created_at: Date.now() - 3600000 },
-        { id: 2, name: 'Siti & Sahabat', message: 'Barakallahu lakuma, semoga langgeng dan samawa yaa ✨', hidden: 0, created_at: Date.now() - 1800000 },
+        { id: 1, name: 'Bpk. Hendra & Keluarga', message: 'Selamat berbahagia selalu untuk kedua mempelai! ♡', attendance: 'Hadir', hidden: 0, created_at: Date.now() - 3600000 },
+        { id: 2, name: 'Siti & Sahabat', message: 'Barakallahu lakuma, semoga langgeng dan samawa yaa ✨', attendance: 'Hadir', hidden: 0, created_at: Date.now() - 1800000 },
       ])
     }
-
-    try {
-      const [rows] = await pool.query(
-        'SELECT id, name, message, created_at FROM wedding_wishes WHERE site = ? AND hidden = 0 ORDER BY id DESC LIMIT 50',
-        [site],
-      )
-      if (rows && rows.length > 0) {
-        return res.setHeader('Cache-Control', 'no-store').json({ wishes: rows, hasMore: false })
-      }
-    } catch {
-      // Fall through to memory store
-    }
-
     const list = memoryWishes.get(site).filter((w) => !w.hidden)
     return res.setHeader('Cache-Control', 'no-store').json({ wishes: list.slice(0, 50), hasMore: false })
   } catch (err) {

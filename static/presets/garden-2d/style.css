@@ -296,3 +296,14 @@ body.garden-ready .mini-load,body[data-phase="playing"] .mini-load{display:none}
 #detailTitle.greeting{font-size:clamp(20px,3.6vw,30px);line-height:1.25;max-width:22ch;margin-left:auto;margin-right:auto}
 .ceremony-carousel.single{grid-template-columns:minmax(0,1fr)}
 .ceremony-carousel.single .story-arrow[hidden]{display:none}
+
+/* Ucapan 2D: pilihan kehadiran (sama dengan buku tamu 3D, tampil di dashboard pasangan). */
+.wish-attendance{margin:18px 0 0;padding:0;border:0;min-width:0}
+.wish-attendance legend{margin-bottom:10px;font-size:15px;font-weight:800;color:#61432f}
+.wish-attendance{display:flex;flex-wrap:wrap;gap:8px}
+.wish-attendance legend{width:100%}
+.wish-attendance label{position:relative;cursor:pointer}
+.wish-attendance input{position:absolute;opacity:0;pointer-events:none}
+.wish-attendance span{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border:1.5px solid #dbc9ab;border-radius:999px;background:#fffdf7;color:#796349;font-size:14px;font-weight:800}
+.wish-attendance input:checked+span{border-color:#8a5a3b;background:#8a5a3b;color:#fffaf0}
+.wish-attendance input:focus-visible+span{outline:2px solid #8a5a3b;outline-offset:2px}
