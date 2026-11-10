@@ -69,6 +69,9 @@
 - Multiplayer/content API ignores the client `site` param: invitation host → its own slug, root host → demo `faris-eliza` only.
 - Invitation subdomains get `X-Robots-Tag: noindex` (nginx `map $host`) + meta robots in app.html; no robots.txt Disallow.
 
+## Nama Acara
+- `wedding_configs.akad_title` / `resepsi_title` (NULL = 'Akad Nikah' / 'Resepsi') and `resepsi_enabled` (0 = only one event, e.g. "Pemberkatan"), migration 023. Same title logic in `server/services/eventTitles.js`, `src/lib/utils/eventTitles.ts` and garden-2d `cms-bootstrap.js` (`eventTitles`) — keep in sync. Edited in `platform/editor/EventDetailsEditor.svelte`; reset uses `''` because the dashboard payload drops nulls.
+
 ## Interaction Contracts
 - Same as the prior Nuxt repo: `triggerZones` define interactive locations; `action` matches `ModalType`; NPC zones require `npcData`.
 - Opening `weddingStage` enables confetti; always close via `closeModal()` to reset modal, NPC data, and confetti.
