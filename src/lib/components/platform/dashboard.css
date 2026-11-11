@@ -2324,3 +2324,7 @@ div.tema-card:hover { transform: none; }
 
 /* Undangan privat: pengaturan di atas daftar tamu (tab Kirim Undangan). */
 .privacy-panel { margin-bottom: 18px; }
+
+/* Sub-tab yang belum tersedia untuk tema ini (mis. Cerita Kami di 3D). */
+.sub-tab-btn:disabled { opacity: .5; cursor: not-allowed; }
+.sub-tab-note { font-size: .68rem; font-weight: 600; opacity: .8; }

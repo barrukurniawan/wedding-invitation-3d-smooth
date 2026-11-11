@@ -75,6 +75,9 @@
 ## Ucapan 2D
 - 2D wishes (`/api/wishes/send|list` in `routes/multiplayer.js`) are stored in `guestbook_entries` (same as the 3D guestbook) on invitation hosts, with `attendance` and `request_id` (idempotent), so they show in the owner's Buku Tamu + attendance stats. Max 300 graphemes, profanity filter applies. Old `wedding_wishes` rows were copied by migration 024 (attendance 'Ragu-ragu'); the table is kept but no longer written for real invitations. Root host demo keeps in-memory wishes.
 
+## Cerita Kami (2D)
+- `wedding_configs.story_moments` (JSON text, migration 026): up to 5 `{time,title,description,photo}`; cleaned by `server/services/storyMoments.js` (photo must be `/api/public/photos/...`). Edited in `platform/editor/StoryEditor.svelte` (sub-tab enabled only for preset 2D); photos via `POST /api/my/upload/photo?type=story` (upload only, URL saved with the config). Rendered as the story place `timeline` (server `routes/multiplayer.js` + `cms-bootstrap.js`); empty = one default "Hari bahagia" moment.
+
 ## Interaction Contracts
 - Same as the prior Nuxt repo: `triggerZones` define interactive locations; `action` matches `ModalType`; NPC zones require `npcData`.
 - Opening `weddingStage` enables confetti; always close via `closeModal()` to reset modal, NPC data, and confetti.

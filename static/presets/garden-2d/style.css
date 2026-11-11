@@ -307,3 +307,10 @@ body.garden-ready .mini-load,body[data-phase="playing"] .mini-load{display:none}
 .wish-attendance span{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border:1.5px solid #dbc9ab;border-radius:999px;background:#fffdf7;color:#796349;font-size:14px;font-weight:800}
 .wish-attendance input:checked+span{border-color:#8a5a3b;background:#8a5a3b;color:#fffaf0}
 .wish-attendance input:focus-visible+span{outline:2px solid #8a5a3b;outline-offset:2px}
+
+/* Cerita Kami: foto momen (opsional) + satu momen tanpa panah. */
+.story-slide .story-slide-photo{display:block;align-self:center;width:min(100%,360px);max-height:240px;object-fit:cover;border-radius:18px;margin:0 0 18px;border:2px solid #e2caaa;background:#eddec7}
+.story-slide .story-slide-photo[hidden]{display:none}
+.story-carousel.single{grid-template-columns:minmax(0,1fr)}
+.story-carousel.single .story-arrow[hidden]{display:none}
+@media (max-width:520px){.story-slide .story-slide-photo{max-height:190px}}

@@ -6,6 +6,7 @@ import { requireCsrf, requireUser } from '../userAuth.js'
 import { normalizeMusicConfig } from '../services/configDefaults.js'
 import { VENUE_IDS, normalizeVenue } from '../services/venues.js'
 import { CHARACTER_STYLES, normalizeCharacterStyle } from '../services/characterStyles.js'
+import { normalizeStoryMoments } from '../services/storyMoments.js'
 import { generateAccessCode, MAX_DEVICE_LIMIT, normalizeDeviceLimit, normalizePrivacyMode, PRIVACY_MODES } from '../services/guestAccess.js'
 
 const router = Router()
@@ -57,6 +58,8 @@ const configSchema = z.object({
   resepsi_title: z.union([z.string().trim().max(60), z.null()]).transform((v) => (v ? v : null)),
   resepsi_enabled: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => (v === true || v === 1 ? 1 : 0)),
   // Template pesan Kirim Undangan + teks {mempelai}; kosong/null = bawaan.
+  // Cerita Kami (2D): dibersihkan oleh normalizeStoryMoments, disimpan sebagai JSON.
+  story_moments: z.array(z.object({}).passthrough()).max(20).transform((v) => normalizeStoryMoments(v)),
   wa_template: z.union([z.string().max(2000), z.null()]).transform((v) => (v && v.trim() ? v : null)),
   wa_couple_label: z.union([z.string().trim().max(255), z.null()]).transform((v) => (v ? v : null)),
   // null = tanpa batas perangkat
@@ -108,6 +111,7 @@ const ALLOWED_CONFIG_COLUMNS = new Set([
   'resepsi_enabled',
   'wa_template',
   'wa_couple_label',
+  'story_moments',
 ])
 
 function serializeConfig(config) {
@@ -120,6 +124,7 @@ function serializeConfig(config) {
   result.akad_title = result.akad_title || null
   result.resepsi_title = result.resepsi_title || null
   result.resepsi_enabled = Number(result.resepsi_enabled ?? 1) === 1
+  result.story_moments = normalizeStoryMoments(result.story_moments)
   result.wa_template = result.wa_template || null
   result.wa_couple_label = result.wa_couple_label || null
   result.privacy_device_limit = 'privacy_device_limit' in result ? normalizeDeviceLimit(result.privacy_device_limit) : 2
@@ -181,7 +186,7 @@ router.patch('/config', requireUser, requireCsrf, async (req, res, next) => {
     }
 
     const values = fields.map((field) => {
-      if (field === 'gallery_photos') return JSON.stringify(data[field])
+      if (field === 'gallery_photos' || field === 'story_moments') return JSON.stringify(data[field])
       if (field === 'wedding_date') return data[field] ? data[field].slice(0, 19).replace('T', ' ') : null
       return data[field]
     })

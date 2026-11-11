@@ -446,6 +446,8 @@
           fields: [
             ['Hari bahagia', `${c.akad_date || '15 Juli 2026'} — mengikat janji suci`],
           ],
+          // Momen yang diisi pasangan (dashboard → Cerita Kami); kosong = 1 momen bawaan di atas.
+          ...(Array.isArray(c.story_moments) && c.story_moments.length ? { timeline: c.story_moments.slice(0, 5) } : {}),
         },
         {
           id: 'gallery',
@@ -487,7 +489,7 @@
     if (gameScriptLoaded) return;
     gameScriptLoaded = true;
     const script = document.createElement('script');
-    script.src = 'game.js?v=20261110b';
+    script.src = 'game.js?v=20261111a';
     document.body.append(script);
   }
 

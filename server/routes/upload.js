@@ -193,8 +193,11 @@ router.post(
 
       const photoUrl = `/api/public/photos/${req.file.filename}`
 
-      // type: 'cover' (wedding_photo) | 'gallery' (append to gallery_photos)
-      const type = req.query.type === 'cover' ? 'cover' : 'gallery'
+      // type: 'cover' (wedding_photo) | 'gallery' (append to gallery_photos) | 'story' (Cerita Kami 2D)
+      const type = req.query.type === 'cover' ? 'cover' : req.query.type === 'story' ? 'story' : 'gallery'
+
+      // Foto momen Cerita Kami: hanya unggah; URL disimpan lewat story_moments saat pasangan menekan Simpan.
+      if (type === 'story') return res.json({ photo_url: photoUrl, type })
 
       if (type === 'cover') {
         // Replace wedding_photo

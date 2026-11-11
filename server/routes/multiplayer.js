@@ -5,6 +5,7 @@ import { assetCdnBase } from '../services/assetCdn.js'
 import { publicGiftShipping } from '../services/giftShipping.js'
 import { characterStyleAssets } from '../services/characterStyles.js'
 import { eventTitles } from '../services/eventTitles.js'
+import { normalizeStoryMoments } from '../services/storyMoments.js'
 import { requirePublicInvitation } from '../middleware/tenant.js'
 import { computeGuestAccess } from '../middleware/guestAccess.js'
 import { clientIp, normalizeAccessCode, publicAccessInfo, resolveSite } from '../services/guestAccess.js'
@@ -386,7 +387,7 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
                 wc.resepsi_location, wc.bank_name, wc.bank_account, wc.bank_holder, wc.maps_url,
                 wc.venue_address, wc.gallery_photos, wc.quote, wc.bgm_url,
                 wc.gift_recipient, wc.gift_address, wc.gift_phone, wc.gift_phone_public, wc.gift_note,
-                wc.character_style, wc.akad_title, wc.resepsi_title, wc.resepsi_enabled
+                wc.character_style, wc.akad_title, wc.resepsi_title, wc.resepsi_enabled, wc.story_moments
          FROM invitations i
          LEFT JOIN wedding_configs wc ON wc.invitation_id = i.id
          WHERE i.slug = ? AND i.deleted_at IS NULL
@@ -400,6 +401,7 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
         // (bukan dikosongkan, karena kolom kosong jatuh ke data contoh seperti 'BCA'/'Jakarta').
         const gift = hidden ? null : publicGiftShipping(c)
         const titles = eventTitles(c)
+        const moments = normalizeStoryMoments(c.story_moments)
         const style = characterStyleAssets(c.character_style)
         let gallery = []
         try {
@@ -527,6 +529,8 @@ router.get(['/content', '/api/content'], siteAccess('none'), async (req, res) =>
               fields: [
                 ['Hari bahagia', `${c.akad_date || '15 Juli 2026'} — mengikat janji suci`],
               ],
+              // Momen yang diisi pasangan (dashboard → Cerita Kami); kosong = 1 momen bawaan di atas.
+              ...(moments.length ? { timeline: moments } : {}),
             },
             {
               id: 'gallery',

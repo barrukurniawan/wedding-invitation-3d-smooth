@@ -53,6 +53,8 @@ export interface WeddingConfig {
   akad_title?: string | null
   resepsi_title?: string | null
   resepsi_enabled?: boolean
+  /** Cerita Kami (undangan 2D): maks 5 momen, foto opsional. Kosong = 1 momen bawaan. */
+  story_moments?: StoryMoment[]
   /** Template pesan Kirim Undangan + teks {mempelai} (dashboard pemilik); null = bawaan. */
   wa_template?: string | null
   wa_couple_label?: string | null
@@ -66,6 +68,14 @@ export interface WeddingConfig {
   privacy_mode?: PrivacyMode
   privacy_device_limit?: number | null
   privacy_general_code?: string | null
+}
+
+export interface StoryMoment {
+  time: string
+  title: string
+  description: string
+  /** URL foto di server sendiri (/api/public/photos/...), '' = tanpa foto. */
+  photo: string
 }
 
 export interface GuestbookEntry {
@@ -589,7 +599,7 @@ function xhrUpload<T>(
 
 export function uploadPhoto(
   file: File,
-  type: 'cover' | 'gallery' = 'gallery',
+  type: 'cover' | 'gallery' | 'story' = 'gallery',
   onProgress?: (pct: number) => void
 ): Promise<{ photo_url: string; type: string }> {
   return xhrUpload<{ photo_url: string; type: string }>(`/api/my/upload/photo?type=${type}`, file, onProgress)

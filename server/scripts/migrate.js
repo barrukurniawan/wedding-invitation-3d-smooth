@@ -30,6 +30,7 @@ const migrations = [
   '023_event_titles.sql',
   '024_ucapan_2d_ke_buku_tamu.sql',
   '025_wa_message_template.sql',
+  '026_story_moments.sql',
 ]
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDirectory = process.env.MIGRATIONS_DIR

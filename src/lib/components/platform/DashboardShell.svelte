@@ -30,6 +30,7 @@
   import GalleryEditor from './editor/GalleryEditor.svelte'
   import QuoteEditor from './editor/QuoteEditor.svelte'
   import MusicEditor from './editor/MusicEditor.svelte'
+  import StoryEditor from './editor/StoryEditor.svelte'
   import GuestbookManager from './dashboard/GuestbookManager.svelte'
   import PaymentManager from './dashboard/PaymentManager.svelte'
   import InvitationSender from './dashboard/InvitationSender.svelte'
@@ -74,7 +75,7 @@
   // Konteks chat bantuan: subdomain + tab yang sedang dibuka, supaya admin tahu letak kendalanya.
   const supportContext = $derived(invitation ? `${invitation.slug} · ${activeTab}` : 'onboarding')
   let ownerTabs = $state<HTMLElement | null>(null)
-  let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik'>('mempelai')
+  let editSubTab = $state<'mempelai' | 'acara' | 'amplop' | 'lokasi' | 'galeri' | 'quote' | 'musik' | 'cerita'>('mempelai')
   // Di HP baris sub-tab bisa digeser; pastikan tombol yang dipilih selalu terlihat utuh.
   $effect(() => {
     void editSubTab
@@ -820,6 +821,17 @@
               >
                 <Icon name="music" size={16} /> Musik
               </button>
+              <!-- Cerita Kami hanya ada di undangan 2D (taman pixel). -->
+              <button
+                type="button"
+                class="sub-tab-btn"
+                class:active={editSubTab === 'cerita'}
+                disabled={myConfig?.preset !== '2d_garden'}
+                title={myConfig?.preset === '2d_garden' ? 'Cerita Kami' : 'Hanya untuk tema Pixel 2D (ubah di tab Tema)'}
+                onclick={() => (editSubTab = 'cerita')}
+              >
+                <Icon name="heart" size={16} /> Cerita Kami{#if myConfig?.preset !== '2d_garden'} <small class="sub-tab-note">khusus 2D</small>{/if}
+              </button>
             </div>
 
             {#if loadingConfig}
@@ -838,6 +850,10 @@
                   <QuoteEditor bind:config={myConfig} />
                 {:else if editSubTab === 'musik'}
                   <MusicEditor bind:config={myConfig} />
+                {:else if editSubTab === 'cerita' && myConfig.preset === '2d_garden'}
+                  <StoryEditor bind:config={myConfig} />
+                {:else if editSubTab === 'cerita'}
+                  <p class="muted-loading">Cerita Kami hanya tersedia untuk tema Pixel 2D. Ganti tema di tab Tema.</p>
                 {/if}
 
                 <!-- Save Action Footer Bar -->
