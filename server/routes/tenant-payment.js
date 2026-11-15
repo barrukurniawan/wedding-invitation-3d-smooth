@@ -12,6 +12,7 @@ import { TAKO_METHODS, TakoError, createTakoGift, takoConfigured } from '../serv
 import { openTakoPayments, syncTakoPayment } from '../services/takoPayments.js'
 import { isFreeForUser } from '../services/freePlan.js'
 import { priceFor } from '../services/trial.js'
+import { evaluatePromo, PROMO_VALID_DAYS } from '../services/promoCodes.js'
 
 const router = Router()
 const PAYMENT_MODE = paymentMode()
@@ -234,6 +235,28 @@ router.post('/payment/tako', requireUser, requireCsrf, takoLimit, async (req, re
 
 // Dipanggil dashboard saat menunggu/kembali dari halaman bayar Tako: cek langsung ke API Tako
 // (menutup risiko callback yang hilang) lalu kembalikan status terbaru.
+// Kode promo (mis. THREADS): pasang harga khusus berlaku 7 hari. Tako memakai harga ini otomatis.
+const promoSchema = z.object({ code: z.string().trim().min(1).max(32) }).strict()
+const promoLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false })
+router.post('/payment/promo', requireUser, requireCsrf, promoLimit, async (req, res, next) => {
+  const parsed = promoSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Masukkan kode promo.' } })
+  try {
+    const invitation = await ownerInvitation(req.user.id)
+    if (!invitation) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Undangan tidak ditemukan.' } })
+    const result = evaluatePromo(parsed.data.code, { paid: invitation.paid_at != null, currentAmount: priceFor(invitation).amount })
+    if (!result.ok) return res.status(400).json({ error: { code: result.code, message: result.message } })
+    await pool.query(
+      `UPDATE invitations SET offer_price = ?, offer_expires_at = UTC_TIMESTAMP() + INTERVAL ? DAY WHERE id = ? AND paid_at IS NULL`,
+      [result.price, PROMO_VALID_DAYS, invitation.id],
+    )
+    console.log(`[promo] ${result.code} dipakai undangan #${invitation.id} (${invitation.slug}) → Rp${result.price}`)
+    res.json({ code: result.code, price: result.price, valid_days: PROMO_VALID_DAYS })
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.get('/payment/tako/status', requireUser, async (req, res, next) => {
   try {
     const invitation = await ownerInvitation(req.user.id)

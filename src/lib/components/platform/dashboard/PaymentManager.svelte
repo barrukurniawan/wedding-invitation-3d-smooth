@@ -10,6 +10,7 @@
     uploadPaymentProof,
     type PublicPricing,
     type TakoMethod,
+    applyPromoCode,
   } from '$lib/api-client'
   import { onMount } from 'svelte'
 
@@ -147,6 +148,30 @@
   // Harga untuk undangan ini (harga khusus dari email pengingat bila masih berlaku).
   const amountDue = $derived(plan?.price ?? PACKAGE_AMOUNT)
   const offerActive = $derived(Boolean(plan?.offer_expires_at && new Date(plan.offer_expires_at).getTime() > Date.now()))
+
+  // Kode promo (mis. THREADS untuk pengguna Threads). Harga ditentukan server (env PROMO_CODES).
+  let promoInput = $state('')
+  let promoBusy = $state(false)
+  let promoMsg = $state('')
+  let promoOk = $state(false)
+  async function submitPromo(event: SubmitEvent) {
+    event.preventDefault()
+    if (!promoInput.trim() || promoBusy) return
+    promoBusy = true
+    promoMsg = ''
+    try {
+      const result = await applyPromoCode(promoInput)
+      promoOk = true
+      promoMsg = `✓ Kode ${result.code} terpasang: Rp ${result.price.toLocaleString('id-ID')}, berlaku ${result.valid_days} hari.`
+      promoInput = ''
+      await onStatusChange?.(invitation.status)
+    } catch (err) {
+      promoOk = false
+      promoMsg = err instanceof Error && err.message ? err.message : 'Kode promo belum bisa dipakai.'
+    } finally {
+      promoBusy = false
+    }
+  }
   const isTako = $derived(PAYMENT_MODE === 'tako' && amountDue > 0 && !invitation.free_plan && !isPaid)
   let takoMethod = $state<TakoMethod>('qris')
   let takoWaiting = $state(false)
@@ -275,6 +300,13 @@
     </div>
     {#if offerActive && !isPaid}<p class="package-offer">Harga khusus untuk kalian, berlaku sampai {fmtDate(plan?.offer_expires_at || '')}</p>{/if}
     {#if inTrial}<p class="package-offer">Bayar sekali, undangan aktif selamanya.</p>{/if}
+    {#if !isPaid && !isFreePackage && invitation.trial}
+      <form class="promo-form" onsubmit={submitPromo}>
+        <input bind:value={promoInput} maxlength="32" placeholder="Punya kode promo?" aria-label="Kode promo" autocapitalize="characters" />
+        <button type="submit" disabled={promoBusy || !promoInput.trim()}>{promoBusy ? 'Memeriksa...' : 'Pakai'}</button>
+      </form>
+      {#if promoMsg}<p class="promo-msg" class:ok={promoOk}>{promoMsg}</p>{/if}
+    {/if}
     <ul class="package-features">
       <li><Icon name="check" size={16} /> Subdomain eksklusif (slug.marryme.web.id)</li>
       <li><Icon name="check" size={16} /> Dunia 3D interaktif seumur hidup event</li>
@@ -502,6 +534,14 @@
     color: #a97625;
     margin-bottom: 4px;
   }
+  .promo-form { display: flex; gap: 8px; margin: 12px 0 4px; }
+  .promo-form input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px dashed #c98ea1; border-radius: 10px; background: #fff; font: inherit; font-size: .9rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .promo-form input::placeholder { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .promo-form input:focus { outline: none; border-style: solid; border-color: #8f1d45; }
+  .promo-form button { padding: 10px 16px; border: 0; border-radius: 10px; background: #8f1d45; color: #fff; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+  .promo-form button:disabled { opacity: .5; cursor: default; }
+  .promo-msg { margin: 4px 0 0; color: #b42345; font-size: .82rem; font-weight: 600; }
+  .promo-msg.ok { color: #2f7a4a; }
   .package-price {
     font-size: 1.75rem;
     font-weight: 700;

@@ -427,6 +427,11 @@ export function updateMyMessageSettings(settings: { wa_template?: string | null;
   return request<WeddingConfig>('/my/config', { method: 'PATCH', body: JSON.stringify(settings) })
 }
 
+/** Pasang kode promo (mis. THREADS): harga khusus 7 hari, dipakai otomatis saat bayar. */
+export function applyPromoCode(code: string) {
+  return request<{ code: string; price: number; valid_days: number }>('/my/payment/promo', { method: 'POST', body: JSON.stringify({ code }) })
+}
+
 export function updateMySlug(slug: string) {
   return request<{ invitation: OwnerInvitation }>('/invitations/slug', {
     method: 'PATCH',
